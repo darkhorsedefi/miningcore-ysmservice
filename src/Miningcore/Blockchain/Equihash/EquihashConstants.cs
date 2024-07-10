@@ -8,7 +8,23 @@ public class EquihashConstants
 
     public static readonly System.Numerics.BigInteger ZCashDiff1b =
         System.Numerics.BigInteger.Parse("0007ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", NumberStyles.HexNumber);
+
+    // Koto-specific constants
+    public const string KotoSymbol = "KOTO";
+    public const int KotoMainnetRpcPort = 8432;
+    public const int KotoTestnetRpcPort = 18432;
+    public const int KotoRegtestRpcPort = 18444;
+
+    public static readonly string[] KotoDaemonCommands = new[]
+    {
+        "getblocktemplate",
+        "submitblock",
+        "getblock",
+        "getblockhash",
+        "getdifficulty"
+    };
 }
+
 
 public class VeruscoinConstants
 {
