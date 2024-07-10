@@ -5,6 +5,7 @@ using AspNetCoreRateLimit;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
+using MiningCore.Blockchain.Koto.Configuration;
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
 // ReSharper disable ClassNeverInstantiated.Global
@@ -51,117 +52,120 @@ public enum CoinFamily
 
     [EnumMember(Value = "progpow")]
     Progpow,
+
+    [EnumMember(Value = "koto")]
+    Koto,
 }
 
-public abstract partial class CoinTemplate
-{
-    /// <summary>
-    /// Name
-    /// </summary>
-    [JsonProperty(Order = -10)]
-    public string Name { get; set; }
-
-    /// <summary>
-    /// Canonical Name
-    /// </summary>
-    [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-    public string CanonicalName { get; set; }
-
-    /// <summary>
-    /// Trade Symbol
-    /// </summary>
-    [JsonProperty(Order = -9)]
-    public string Symbol { get; set; }
-
-    /// <summary>
-    /// Website
-    /// </summary>
-    [JsonProperty(Order = -9)]
-    public string Website { get; set; }
-
-    /// <summary>
-    /// Market
-    /// </summary>
-    [JsonProperty(Order = -9)]
-    public string Market { get; set; }
-
-
-    /// <summary>
-    /// Family
-    /// </summary>
-    [JsonConverter(typeof(StringEnumConverter), true)]
-    [JsonProperty(Order = -8)]
-    public CoinFamily Family { get; set; }
-
-    /// <summary>
-    /// Dictionary mapping block type to a block explorer Url
-    /// Supported placeholders: $height$ and $hash$
-    /// </summary>
-    public Dictionary<string, string> ExplorerBlockLinks { get; set; }
-
-    /// <summary>
-    /// Block explorer URL for transactions
-    /// Can be alternatively used to define the url for the default Block type
-    /// Supported placeholders: $height$ and $hash$
-    /// </summary>
-    public string ExplorerBlockLink { get; set; }
-
-    /// <summary>
-    /// Block explorer URL for transactions
-    /// Supported placeholders: {0}
-    /// </summary>
-    public string ExplorerTxLink { get; set; }
-
-    /// <summary>
-    /// Block explorer URL for accounts
-    /// Supported placeholders: {0}
-    /// </summary>
-    public string ExplorerAccountLink { get; set; }
-
-    /// <summary>
-    /// Twitter Link
-    /// </summary>
-    [JsonProperty(Order = -9)]
-    public string Twitter { get; set; }
-
-    /// <summary>
-    /// Discord Link
-    /// </summary>
-    [JsonProperty(Order = -9)]
-    public string Discord { get; set; }
-
-    /// <summary>
-    /// Telegram Group Link
-    /// </summary>
-    [JsonProperty(Order = -9)]
-    public string Telegram { get; set; }
-
-    /// <summary>
-    /// Arbitrary extension data
-    /// </summary>
-    [JsonExtensionData]
-    public IDictionary<string, object> Extra { get; set; }
-
-    /// <summary>
-    /// Coin Family associciations
-    /// </summary>
-    [JsonIgnore]
-    public static readonly Dictionary<CoinFamily, Type> Families = new()
+    public abstract partial class CoinTemplate
     {
-        {CoinFamily.Alephium, typeof(AlephiumCoinTemplate)},
-        {CoinFamily.Beam, typeof(BeamCoinTemplate)},
-        {CoinFamily.Bitcoin, typeof(BitcoinTemplate)},
-        {CoinFamily.Conceal, typeof(ConcealCoinTemplate)},
-        {CoinFamily.Cryptonote, typeof(CryptonoteCoinTemplate)},
-        {CoinFamily.Equihash, typeof(EquihashCoinTemplate)},
-        {CoinFamily.Ergo, typeof(ErgoCoinTemplate)},
-        {CoinFamily.Ethereum, typeof(EthereumCoinTemplate)},
-        {CoinFamily.Handshake, typeof(BitcoinTemplate)},
-        {CoinFamily.Kaspa, typeof(KaspaCoinTemplate)},
-        {CoinFamily.Nexa, typeof(BitcoinTemplate)},
-        {CoinFamily.Progpow, typeof(ProgpowCoinTemplate)},
-    };
-}
+        /// <summary>
+        /// Name
+        /// </summary>
+        [JsonProperty(Order = -10)]
+        public string Name { get; set; }
+
+        /// <summary>
+        /// Canonical Name
+        /// </summary>
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string CanonicalName { get; set; }
+
+        /// <summary>
+        /// Trade Symbol
+        /// </summary>
+        [JsonProperty(Order = -9)]
+        public string Symbol { get; set; }
+
+        /// <summary>
+        /// Website
+        /// </summary>
+        [JsonProperty(Order = -9)]
+        public string Website { get; set; }
+
+        /// <summary>
+        /// Market
+        /// </summary>
+        [JsonProperty(Order = -9)]
+        public string Market { get; set; }
+
+        /// <summary>
+        /// Family
+        /// </summary>
+        [JsonConverter(typeof(StringEnumConverter), true)]
+        [JsonProperty(Order = -8)]
+        public CoinFamily Family { get; set; }
+
+        /// <summary>
+        /// Dictionary mapping block type to a block explorer Url
+        /// Supported placeholders: $height$ and $hash$
+        /// </summary>
+        public Dictionary<string, string> ExplorerBlockLinks { get; set; }
+
+        /// <summary>
+        /// Block explorer URL for transactions
+        /// Can be alternatively used to define the url for the default Block type
+        /// Supported placeholders: $height$ and $hash$
+        /// </summary>
+        public string ExplorerBlockLink { get; set; }
+
+        /// <summary>
+        /// Block explorer URL for transactions
+        /// Supported placeholders: {0}
+        /// </summary>
+        public string ExplorerTxLink { get; set; }
+
+        /// <summary>
+        /// Block explorer URL for accounts
+        /// Supported placeholders: {0}
+        /// </summary>
+        public string ExplorerAccountLink { get; set; }
+
+        /// <summary>
+        /// Twitter Link
+        /// </summary>
+        [JsonProperty(Order = -9)]
+        public string Twitter { get; set; }
+
+        /// <summary>
+        /// Discord Link
+        /// </summary>
+        [JsonProperty(Order = -9)]
+        public string Discord { get; set; }
+
+        /// <summary>
+        /// Telegram Group Link
+        /// </summary>
+        [JsonProperty(Order = -9)]
+        public string Telegram { get; set; }
+
+        /// <summary>
+        /// Arbitrary extension data
+        /// </summary>
+        [JsonExtensionData]
+        public IDictionary<string, object> Extra { get; set; }
+
+        /// <summary>
+        /// Coin Family associations
+        /// </summary>
+        [JsonIgnore]
+        public static readonly Dictionary<CoinFamily, Type> Families = new()
+        {
+            {CoinFamily.Alephium, typeof(AlephiumCoinTemplate)},
+            {CoinFamily.Beam, typeof(BeamCoinTemplate)},
+            {CoinFamily.Bitcoin, typeof(BitcoinTemplate)},
+            {CoinFamily.Conceal, typeof(ConcealCoinTemplate)},
+            {CoinFamily.Cryptonote, typeof(CryptonoteCoinTemplate)},
+            {CoinFamily.Equihash, typeof(EquihashCoinTemplate)},
+            {CoinFamily.Ergo, typeof(ErgoCoinTemplate)},
+            {CoinFamily.Ethereum, typeof(EthereumCoinTemplate)},
+            {CoinFamily.Handshake, typeof(BitcoinTemplate)},
+            {CoinFamily.Kaspa, typeof(KaspaCoinTemplate)},
+            {CoinFamily.Nexa, typeof(BitcoinTemplate)},
+            {CoinFamily.Progpow, typeof(ProgpowCoinTemplate)},
+            {CoinFamily.Koto, typeof(KotoCoinTemplate)}, // Kotoの追加
+        };
+    }
 
 public partial class AlephiumCoinTemplate : CoinTemplate
 {
