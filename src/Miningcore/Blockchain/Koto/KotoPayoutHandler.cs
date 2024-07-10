@@ -2,18 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MiningCore.Blockchain.Koto.Configuration;
-using MiningCore.Configuration;
-using MiningCore.Extensions;
-using MiningCore.Persistence;
-using MiningCore.Persistence.Model;
-using MiningCore.Persistence.Repositories;
-using MiningCore.Util;
+using Miningcore.Blockchain.Koto.Configuration;
+using Miningcore.Configuration;
+using Miningcore.Extensions;
+using Miningcore.Persistence;
+using Miningcore.Persistence.Model;
+using Miningcore.Persistence.Repositories;
+using Miningcore.Util;
 using NLog;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace MiningCore.Blockchain.Koto
+namespace Miningcore.Blockchain.Koto
 {
     [CoinFamily(CoinFamily.Koto)]
     public class KotoPayoutHandler : PayoutHandlerBase, IPayoutHandler

@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace MiningCore.Blockchain.Koto.DaemonResponses
+namespace Miningcore.Blockchain.Koto.DaemonResponses
 {
     public class Block
     {

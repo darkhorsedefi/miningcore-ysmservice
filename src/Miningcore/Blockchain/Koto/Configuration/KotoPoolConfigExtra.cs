@@ -1,9 +1,9 @@
 
 using System;
-using MiningCore.Blockchain.Common.Configuration;
+using Miningcore.Blockchain.Common.Configuration;
 using Newtonsoft.Json;
 
-namespace MiningCore.Blockchain.Koto.Configuration
+namespace Miningcore.Blockchain.Koto.Configuration
 {
     public class KotoPoolConfigExtra : PoolConfigExtra
     {

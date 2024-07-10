@@ -1,17 +1,17 @@
 using System;
 using System.Threading.Tasks;
 using Autofac;
-using MiningCore.Blockchain.Bitcoin;
-using MiningCore.Blockchain.Koto.Configuration;
-using MiningCore.Configuration;
-using MiningCore.Mining;
-using MiningCore.Notifications;
-using MiningCore.Persistence;
-using MiningCore.Stratum;
+using Miningcore.Blockchain.Bitcoin;
+using Miningcore.Blockchain.Koto.Configuration;
+using Miningcore.Configuration;
+using Miningcore.Mining;
+using Miningcore.Notifications;
+using Miningcore.Persistence;
+using Miningcore.Stratum;
 using Newtonsoft.Json;
 using NLog;
 
-namespace MiningCore.Blockchain.Koto
+namespace Miningcore.Blockchain.Koto
 {
     [CoinFamily(CoinFamily.Koto)]
     public class KotoPool : PoolBase

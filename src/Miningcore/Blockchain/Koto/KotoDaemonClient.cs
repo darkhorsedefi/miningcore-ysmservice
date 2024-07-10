@@ -1,10 +1,10 @@
 using System.Threading.Tasks;
-using MiningCore.Blockchain.Koto.DaemonResponses;
-using MiningCore.Rpc;
+using Miningcore.Blockchain.Koto.DaemonResponses;
+using Miningcore.Rpc;
 using Newtonsoft.Json.Linq;
 using NLog;
 
-namespace MiningCore.Blockchain.Koto
+namespace Miningcore.Blockchain.Koto
 {
     public class KotoDaemonClient
     {

@@ -4,14 +4,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using MiningCore.Blockchain;
-using MiningCore.Configuration;
-using MiningCore.Contracts;
-using MiningCore.Stratum;
+using Miningcore.Blockchain;
+using Miningcore.Configuration;
+using Miningcore.Contracts;
+using Miningcore.Stratum;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 
-namespace MiningCore.Blockchain.Koto
+namespace Miningcore.Blockchain.Koto
 {
     public class KotoJob : JobBase
     {

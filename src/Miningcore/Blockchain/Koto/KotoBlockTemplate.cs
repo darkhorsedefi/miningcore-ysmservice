@@ -1,7 +1,7 @@
 using System;
 using Newtonsoft.Json;
 
-namespace MiningCore.Blockchain.Koto
+namespace Miningcore.Blockchain.Koto
 {
     public class KotoBlockTemplate : BlockTemplate
     {

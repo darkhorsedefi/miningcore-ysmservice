@@ -1,9 +1,9 @@
 using System;
-using MiningCore.Crypto;
-using MiningCore.Extensions;
+using Miningcore.Crypto;
+using Miningcore.Extensions;
 using NBitcoin;
 
-namespace MiningCore.Blockchain.Koto
+namespace Miningcore.Blockchain.Koto
 {
     public class KotoExtraNonceProvider : IExtraNonceProvider
     {

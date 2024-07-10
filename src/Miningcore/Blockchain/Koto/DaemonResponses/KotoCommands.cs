@@ -1,4 +1,4 @@
-namespace MiningCore.Blockchain.Koto.DaemonResponses
+namespace Miningcore.Blockchain.Koto.DaemonResponses
 {
     public static class KotoCommands
     {

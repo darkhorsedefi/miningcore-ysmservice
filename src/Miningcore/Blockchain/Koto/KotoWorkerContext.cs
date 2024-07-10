@@ -1,7 +1,7 @@
 using System;
-using MiningCore.Stratum;
+using Miningcore.Stratum;
 
-namespace MiningCore.Blockchain.Koto
+namespace Miningcore.Blockchain.Koto
 {
     public class KotoWorkerContext : StratumWorkerContext
     {

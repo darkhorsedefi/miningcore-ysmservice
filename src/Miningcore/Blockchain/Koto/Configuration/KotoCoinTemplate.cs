@@ -1,8 +1,8 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using MiningCore.Configuration;
+using Miningcore.Configuration;
 
-namespace MiningCore.Blockchain.Koto.Configuration
+namespace Miningcore.Blockchain.Koto.Configuration
 {
     public partial class KotoCoinTemplate : CoinTemplate
     {

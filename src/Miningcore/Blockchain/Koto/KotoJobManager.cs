@@ -4,20 +4,20 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
-using MiningCore.Blockchain.Koto.Configuration;
-using MiningCore.Blockchain.Koto.DaemonResponses;
-using MiningCore.Configuration;
-using MiningCore.Contracts;
-using MiningCore.Crypto;
-using MiningCore.Mining;
-using MiningCore.Rpc;
-using MiningCore.Stratum;
+using Miningcore.Blockchain.Koto.Configuration;
+using Miningcore.Blockchain.Koto.DaemonResponses;
+using Miningcore.Configuration;
+using Miningcore.Contracts;
+using Miningcore.Crypto;
+using Miningcore.Mining;
+using Miningcore.Rpc;
+using Miningcore.Stratum;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NBitcoin;
 using NLog;
 
-namespace MiningCore.Blockchain.Koto
+namespace Miningcore.Blockchain.Koto
 {
     public class KotoJobManager : JobManagerBase<KotoJob>
     {

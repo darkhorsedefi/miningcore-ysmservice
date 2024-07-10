@@ -5,7 +5,7 @@ using AspNetCoreRateLimit;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
-using MiningCore.Blockchain.Koto.Configuration;
+using Miningcore.Blockchain.Koto.Configuration;
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
 // ReSharper disable ClassNeverInstantiated.Global
