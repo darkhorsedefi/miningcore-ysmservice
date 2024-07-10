@@ -37,7 +37,7 @@ namespace MiningCore.Blockchain.Koto
             await manager.StartAsync(ct);
         }
 
-        protected override async Task OnRequest(CancellationToken ct, StratumClient client, Timestamped<JsonRpcRequest> request)
+        protected override async Task OnRequestAsync(StratumConnection client, Timestamped<JsonRpcRequest> tsRequest, CancellationToken ct)
         {
             var context = client.ContextAs<BitcoinWorkerContext>();
             var requestId = request.Value.Id;
@@ -75,7 +75,7 @@ namespace MiningCore.Blockchain.Koto
             }
         }
 
-        private async Task OnSubscribeAsync(CancellationToken ct, StratumClient client, object requestId, JToken[] parameters)
+        private async Task OnSubscribeAsync(CancellationToken ct, StratumConnection client, object requestId, JToken[] parameters)
         {
             var context = client.ContextAs<BitcoinWorkerContext>();
 
@@ -95,7 +95,7 @@ namespace MiningCore.Blockchain.Koto
             await client.RespondAsync(response, requestId, false);
         }
 
-        private async Task OnAuthorizeAsync(CancellationToken ct, StratumClient client, object requestId, JToken[] parameters)
+        private async Task OnAuthorizeAsync(CancellationToken ct, StratumConnection client, object requestId, JToken[] parameters)
         {
             var workerName = parameters[0].ToString();
             var password = parameters[1]?.ToString();
@@ -108,7 +108,7 @@ namespace MiningCore.Blockchain.Koto
             await client.RespondAsync(true, requestId);
         }
 
-        private async Task OnSubmitAsync(CancellationToken ct, StratumClient client, object requestId, JToken[] parameters)
+        private async Task OnSubmitAsync(CancellationToken ct, StratumConnection client, object requestId, JToken[] parameters)
         {
             var context = client.ContextAs<BitcoinWorkerContext>();
             var workerName = context.MinerName;
@@ -125,7 +125,7 @@ namespace MiningCore.Blockchain.Koto
                 await client.RespondAsync(false, requestId);
         }
 
-        private async Task OnGetTransactionsAsync(CancellationToken ct, StratumClient client, object requestId, JToken[] parameters)
+        private async Task OnGetTransactionsAsync(CancellationToken ct, StratumConnection client, object requestId, JToken[] parameters)
         {
             var context = client.ContextAs<BitcoinWorkerContext>();
 
@@ -133,7 +133,7 @@ namespace MiningCore.Blockchain.Koto
             await client.RespondAsync(transactions, requestId);
         }
 
-        private async Task OnGetJobAsync(CancellationToken ct, StratumClient client, object requestId, JToken[] parameters)
+        private async Task OnGetJobAsync(CancellationToken ct, StratumConnection client, object requestId, JToken[] parameters)
         {
             var context = client.ContextAs<BitcoinWorkerContext>();
             var jobParams = manager.GetJobParamsForStratum(context.IsAuthorized);
@@ -141,7 +141,7 @@ namespace MiningCore.Blockchain.Koto
             await client.RespondAsync(jobParams, requestId);
         }
 
-        private async Task OnMiningSubscribeAsync(CancellationToken ct, StratumClient client, object requestId, JToken[] parameters)
+        private async Task OnMiningSubscribeAsync(CancellationToken ct, StratumConnection client, object requestId, JToken[] parameters)
         {
             var context = client.ContextAs<BitcoinWorkerContext>();
 

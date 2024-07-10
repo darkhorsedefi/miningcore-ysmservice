@@ -194,7 +194,7 @@ namespace MiningCore.Blockchain.Koto
             return txHashes[0];
         }
 
-        public (Share Share, string BlockHex) ProcessShare(StratumClient worker, string extraNonce1, string extraNonce2, string nTime, string nonce)
+        public (Share Share, string BlockHex) ProcessShare(StratumConnection worker, string extraNonce1, string extraNonce2, string nTime, string nonce)
         {
             var shareError = (string error) =>
             {

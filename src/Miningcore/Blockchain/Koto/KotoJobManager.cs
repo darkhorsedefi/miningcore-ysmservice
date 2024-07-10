@@ -104,7 +104,7 @@ namespace MiningCore.Blockchain.Koto
             return response;
         }
 
-        public override void PrepareWorker(StratumClient worker)
+        public override void PrepareWorker(StratumConnection worker)
         {
             var context = worker.ContextAs<KotoWorkerContext>();
 
