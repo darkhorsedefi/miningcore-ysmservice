@@ -46,7 +46,7 @@ namespace MiningCore.Blockchain.Koto
             var p1 = SerializeCoinbasePart1(extraNoncePlaceholder);
             var p2 = SerializeCoinbasePart2();
 
-            return p1//Combine(p1, extraNoncePlaceholder, p2);
+            return p1;//Combine(p1, extraNoncePlaceholder, p2);
         }
 
         private byte[] SerializeCoinbasePart1(byte[] extraNoncePlaceholder)
