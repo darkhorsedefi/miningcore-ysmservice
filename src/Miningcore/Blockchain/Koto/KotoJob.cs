@@ -280,7 +280,6 @@ namespace Miningcore.Blockchain.Koto
             {
                 BlockHeight = (long) BlockTemplate.Height,
                 BlockReward = BlockTemplate.CoinbaseValue,
-                Difficulty = context.Difficulty,
                 Difficulty = shareDiff,
                 NetworkDifficulty = blockDiffAdjusted,
                 BlockHash = blockHash,

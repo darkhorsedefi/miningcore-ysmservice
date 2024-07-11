@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Miningcore.Blockchain.Koto.Configuration;
+using Miningcore.Blockchain.Koto.DaemonResponses;
 using Miningcore.Blockchain.Bitcoin;
 using Miningcore.Configuration;
 using Miningcore.Extensions;
@@ -35,25 +36,6 @@ namespace Miningcore.Blockchain.Koto
             poolConfigExtra = poolConfig.Extra.SafeExtensionDataAs<KotoPoolConfigExtra>();
         }
 
-        public async Task<Block[]> ClassifyBlocksAsync(IMiningPool pool, Block[] blocks)
-        {
-            // Classify blocks as unlocked, immature or orphaned
-            var unlocked = new List<Block>();
-            var immature = new List<Block>();
-            var orphaned = new List<Block>();
-
-            foreach (var block in blocks)
-            {
-                // Block maturation logic here
-                // For example, if a block has at least 100 confirmations, it can be considered as unlocked
-                if (block.Confirmations >= 100)
-                    unlocked.Add(block);
-                else
-                    immature.Add(block);
-            }
-
-            return unlocked.ToArray();
-        }
 
         public async Task PayoutAsync(IMiningPool pool, Balance[] balances, CancellationToken ct)
         {
@@ -128,28 +110,7 @@ namespace Miningcore.Blockchain.Koto
             }
         }
         protected override string LogCategory => "Koto Payout Handler";
-        public async Task<Block[]> ClassifyBlocksAsync(IMiningPool pool, Block[] blocks, CancellationToken ct)
-        {
-            var unlocked = new List<Block>();
-            var immature = new List<Block>();
-            var orphaned = new List<Block>();
 
-            foreach (var block in blocks)
-            {
-                if (block.Status == BlockStatus.Confirmed && block.Confirmations >= 100)
-                    unlocked.Add(block);
-                else if (block.Status == BlockStatus.Pending)
-                    immature.Add(block);
-                else
-                    orphaned.Add(block);
-            }
-
-            return unlocked.ToArray();
-        }
-        public double AdjustBlockEffort(double effort)
-        {
-            return effort;
-        }
 
     }
 }
