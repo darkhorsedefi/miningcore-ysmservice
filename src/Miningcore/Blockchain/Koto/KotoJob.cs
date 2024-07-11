@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using Miningcore.Blockchain.Koto.DaemonResponses;
+using Miningcore.Blockchain.Koto.Configuration;
 using Miningcore.Blockchain;
 using Miningcore.Configuration;
 using Miningcore.Contracts;
@@ -26,14 +27,16 @@ namespace Miningcore.Blockchain.Koto
         public string Time { get; private set; }
         public string Nonce { get; private set; }
         public double Difficulty { get; set; }
-        protected EquihashCoinTemplate coin;
+        public string JobId { get; set; }
+        protected KotoCoinTemplate coin;
         protected Network network;
         private readonly ConcurrentDictionary<string, bool> submits = new(StringComparer.OrdinalIgnoreCase);
 
         public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig) : base(id)
         {
+            JobId = id;
             BlockTemplate = blockTemplate;
-            coin = poolConfig.Template.As<EquihashCoinTemplate>();
+            coin = poolConfig.Template.As<KotoCoinTemplate>();
             networkParams = coin.GetNetwork(network.ChainName);
             Difficulty = (double) new BigRational(networkParams.Diff1BValue, BlockTemplate.Target.HexToReverseByteArray().AsSpan().ToBigInteger());
             PoolConfig = poolConfig;

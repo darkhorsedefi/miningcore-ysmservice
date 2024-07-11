@@ -84,7 +84,7 @@ namespace Miningcore.Blockchain.Koto
 
             return new object[]
             {
-                job.Id,
+                job.JobId,
                 job.PreviousBlockHash,
                 job.CoinbaseTransaction,
                 job.Transactions,
@@ -114,7 +114,7 @@ namespace Miningcore.Blockchain.Koto
             var context = worker.ContextAs<KotoWorkerContext>();
 
             context.ExtraNonce1 = extraNonceProvider.Next();
-            context.ExtraNonce2Size = extraNonceProvider.Size;
+            context.ExtraNonce2Size = extraNonceProvider.size;
         }
 
         public string[] GetTransactionsForStratum()
@@ -207,7 +207,7 @@ namespace Miningcore.Blockchain.Koto
         if(string.IsNullOrEmpty(solution))
             throw new StratumException(StratumError.Other, "missing or invalid solution");
 
-        EquihashJob job;
+        KotoJob job;
 
         lock(jobLock)
         {
