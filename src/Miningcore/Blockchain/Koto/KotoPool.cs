@@ -69,16 +69,12 @@ namespace Miningcore.Blockchain.Koto
                     break;
 
                 case BitcoinStratumMethods.GetTransactions:
-                    await OnGetTransactionsAsync(ct, connection, requestId, request.Value.Params);
+                    await OnGetTransactionsAsync(ct, connection, requestId, request);
                     break;
 
         //        case BitcoinStratumMethods.GetJob:
         //            await OnGetJobAsync(ct, connection, requestId, request.Value.Params);
         //            break;
-
-                case BitcoinStratumMethods.Subscribe:
-                    await OnMiningSubscribeAsync(ct, connection, requestId, request.Value.Params);
-                    break;
 
                 default:
                     logger.Warn(() => $"[{LogCategory}] Unsupported RPC request: {method}");
@@ -90,10 +86,6 @@ namespace Miningcore.Blockchain.Koto
     {
         var multiplier = BitcoinConstants.Pow2x32;
         var result = shares * multiplier / interval;
-
-        if(coin.HashrateMultiplier.HasValue)
-            result *= coin.HashrateMultiplier.Value;
-
         return result;
     }
 
@@ -285,7 +277,7 @@ namespace Miningcore.Blockchain.Koto
         }
     }
 
-        private async Task OnGetTransactionsAsync(CancellationToken ct, StratumConnection client, object requestId, JToken[] parameters)
+        private async Task OnGetTransactionsAsync(CancellationToken ct, StratumConnection client, object requestId, Timestamped<JsonRpcRequest> tsRequest)
         {
             var context = client.ContextAs<BitcoinWorkerContext>();
 

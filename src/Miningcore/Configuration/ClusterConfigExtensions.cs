@@ -34,7 +34,20 @@ public partial class KotoCoinTemplate
     {
         return "yescrypt";
     }
+    public KotoNetworkParams GetNetwork(ChainName chain)
+    {
+        if(Networks == null || Networks.Count == 0)
+            return null;
 
+        if(chain == ChainName.Mainnet)
+            return Networks["main"];
+        else if(chain == ChainName.Testnet)
+            return Networks["test"];
+        else if(chain == ChainName.Regtest)
+            return Networks["regtest"];
+
+        throw new NotSupportedException("unsupported network type");
+    }
     #endregion
 }
 public partial class AlephiumCoinTemplate
