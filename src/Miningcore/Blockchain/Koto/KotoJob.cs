@@ -354,15 +354,6 @@ public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig
             return (share, blockHex);
         }
 
-
-        private byte[] SerializeCoinbase(byte[] extraNonce1, byte[] extraNonce2)
-        {
-            var p1 = SerializeCoinbasePart1(extraNonce1);
-            var p2 = SerializeCoinbasePart2();
-
-            return Combine(p1, extraNonce1, extraNonce2, p2);
-        }
-
         private byte[] SerializeHeader(byte[] merkleRoot, string nTime, string nonce)
         {
             int headerSize = BlockTemplate.Version == 5 ? 112 : 80;
