@@ -5,7 +5,7 @@ using NBitcoin;
 
 namespace Miningcore.Blockchain.Koto
 {
-    public class KotoExtraNonceProvider : IExtraNonceProvider
+    public class KotoExtraNonceProvider : ExtraNonceProviderBase
     {
         private int counter = -1;
         private readonly int size;
