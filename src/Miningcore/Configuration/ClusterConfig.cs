@@ -188,6 +188,9 @@ public partial class KotoCoinTemplate : CoinTemplate
         [JsonProperty("solver")]
         public JObject Solver { get; set; }
     }
+    [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+    public Dictionary<string, KotoNetworkParams> Networks { get; set; }
+
 }
 
 

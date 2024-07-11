@@ -17,26 +17,26 @@ namespace Miningcore.Blockchain.Koto
             this.logger = logger;
         }
 
-        public async Task<DaemonResponse<KotoBlockTemplate>> GetBlockTemplateAsync()
+        public async Task<DaemonResponse<KotoBlockTemplate>> GetBlockTemplateAsync(CancellationToken ct)
         {
-            return await rpcClient.ExecuteAsync<KotoBlockTemplate>(logger, KotoCommands.GetBlockTemplate);
+            return await rpcClient.ExecuteAsync<KotoBlockTemplate>(logger, KotoCommands.GetBlockTemplate, ct);
         }
 
-        public async Task<DaemonResponse<JToken>> SubmitBlockAsync(string blockHex)
+        public async Task<DaemonResponse<JToken>> SubmitBlockAsync(string blockHex, CancellationToken ct)
         {
-            return await rpcClient.ExecuteAsync<JToken>(logger, KotoCommands.SubmitBlock, new[] { blockHex });
+            return await rpcClient.ExecuteAsync<JToken>(logger, KotoCommands.SubmitBlock, ct, new[] { blockHex });
         }
 
-        public async Task<DaemonResponse<string>> SendManyAsync(string fromAddress, JArray recipients, int minConf, decimal fee)
+        public async Task<DaemonResponse<string>> SendManyAsync(string fromAddress, JArray recipients, int minConf, decimal fee, CancellationToken ct)
         {
             var args = new JArray { fromAddress, recipients, minConf, fee };
-            return await rpcClient.ExecuteAsync<string>(logger, KotoCommands.SendMany, args);
+            return await rpcClient.ExecuteAsync<string>(logger, KotoCommands.SendMany, ct, args);
         }
 
-        public async Task<DaemonResponse<string>> GetOperationResultAsync(string operationId)
+        public async Task<DaemonResponse<string>> GetOperationResultAsync(string operationId, CancellationToken ct)
         {
             var args = new JArray { new JArray { operationId } };
-            return await rpcClient.ExecuteAsync<string>(logger, KotoCommands.GetOperationResult, args);
+            return await rpcClient.ExecuteAsync<string>(logger, KotoCommands.GetOperationResult, ct, args);
         }
     }
 }

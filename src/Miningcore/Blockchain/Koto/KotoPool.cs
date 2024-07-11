@@ -7,6 +7,7 @@ using Miningcore.Blockchain.Koto.Configuration;
 using Miningcore.Persistence.Repositories;
 using Miningcore.JsonRpc;
 using Miningcore.Messaging;
+using Miningcore.Notifications.Messages;
 using Miningcore.Configuration;
 using Miningcore.Mining;
 using Miningcore.Notifications;
@@ -28,7 +29,8 @@ namespace Miningcore.Blockchain.Koto
         private KotoCoinTemplate coin;
         private readonly IMessageBus messageBus;
         private object currentJobParams;
-        public KotoPool(IComponentContext ctx, JsonSerializerSettings serializerSettings, IConnectionFactory cf, IStatsRepository statsRepo, IMapper mapper, IMasterClock clock, IMessageBus messageBus) : base(ctx, serializerSettings, cf, statsRepo, mapper, clock)
+        private double hashrateDivisor;
+        public KotoPool(IComponentContext ctx, JsonSerializerSettings serializerSettings, IConnectionFactory cf, IStatsRepository statsRepo, IMapper mapper, IMasterClock clock, IMessageBus messageBus) : base(ctx, serializerSettings, cf, statsRepo, mapper, clock, messageBus)
         {
              this.messageBus = messageBus;
         }
@@ -67,11 +69,11 @@ namespace Miningcore.Blockchain.Koto
                     await OnGetTransactionsAsync(ct, connection, requestId, request.Value.Params);
                     break;
 
-                case BitcoinStratumMethods.GetJob:
-                    await OnGetJobAsync(ct, connection, requestId, request.Value.Params);
-                    break;
+        //        case BitcoinStratumMethods.GetJob:
+        //            await OnGetJobAsync(ct, connection, requestId, request.Value.Params);
+        //            break;
 
-                case BitcoinStratumMethods.MiningSubscribe:
+                case BitcoinStratumMethods.Subscribe:
                     await OnMiningSubscribeAsync(ct, connection, requestId, request.Value.Params);
                     break;
 
@@ -81,14 +83,17 @@ namespace Miningcore.Blockchain.Koto
             }
         }
 
-        public override double HashrateFromShares(double shares, double interval)
-        {
-            var multiplier = BitcoinConstants.Pow2x32;
-            var result = shares * multiplier / interval / 1000000 * 2;
-        
-            result /= hashrateDivisor;
-            return result;
-        }
+    public override double HashrateFromShares(double shares, double interval)
+    {
+        var multiplier = BitcoinConstants.Pow2x32;
+        var result = shares * multiplier / interval;
+
+        if(coin.HashrateMultiplier.HasValue)
+            result *= coin.HashrateMultiplier.Value;
+
+        return result;
+    }
+
 
     protected virtual async Task OnSubscribeAsync(StratumConnection connection, Timestamped<JsonRpcRequest> tsRequest)
     {
@@ -312,5 +317,6 @@ namespace Miningcore.Blockchain.Koto
         {
             return new KotoWorkerContext();
         }
+        protected override string LogCategory => "Koto Pool";
     }
 }

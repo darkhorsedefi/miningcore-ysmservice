@@ -22,11 +22,19 @@ namespace Miningcore.Blockchain.Koto
     [CoinFamily(CoinFamily.Koto)]
     public class KotoPayoutHandler : BitcoinPayoutHandler
     {
-        public KotoPayoutHandler(IConnectionFactory cf, IBlockRepository blocks, IShareRepository shares, IBalanceRepository balances, IPaymentRepository payments, ClusterConfig clusterConfig, ILogger logger) :
-            base(cf, blocks, shares, balances, payments, clusterConfig, logger)
-        {
-        }
-
+        public KotoPayoutHandler(
+        IComponentContext ctx,
+        IConnectionFactory cf,
+        IMapper mapper,
+        IShareRepository shareRepo,
+        IBlockRepository blockRepo,
+        IBalanceRepository balanceRepo,
+        IPaymentRepository paymentRepo,
+        IMasterClock clock,
+        IMessageBus messageBus) :
+        base(ctx, cf, mapper, shareRepo, blockRepo, balanceRepo, paymentRepo, clock, messageBus)
+    {
+    }
         private KotoPoolConfigExtra poolConfigExtra;
 
         public override async Task ConfigureAsync(ClusterConfig cc, PoolConfig pc, CancellationToken ct)

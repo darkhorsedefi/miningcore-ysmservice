@@ -49,7 +49,7 @@ namespace Miningcore.Blockchain.Koto
 
         protected async Task<(bool IsNew, string Blob)> BuildJobAsync(CancellationToken ct)
         {
-            var response = await daemonClient.GetBlockTemplateAsync();
+            var response = await daemonClient.GetBlockTemplateAsync(ct);
 
             if (response.Error != null)
             {
@@ -98,10 +98,27 @@ namespace Miningcore.Blockchain.Koto
                 isNew
             };
         }
+    public virtual object[] GetSubscriberData(StratumConnection worker)
+    {
+        Contract.RequiresNonNull(worker);
 
+        var context = worker.ContextAs<KotoWorkerContext>();
+
+        // assign unique ExtraNonce1 to worker (miner)
+        context.ExtraNonce1 = extraNonceProvider.Next();
+
+        // setup response data
+        var responseData = new object[]
+        {
+            context.ExtraNonce1,
+            BitcoinConstants.ExtranoncePlaceHolderLength - ExtranonceBytes,
+        };
+
+        return responseData;
+    }
         protected async Task<DaemonResponse<KotoBlockTemplate>> GetBlockTemplateAsync(CancellationToken ct)
         {
-            var response = await daemonClient.GetBlockTemplateAsync();
+            var response = await daemonClient.GetBlockTemplateAsync(ct);
 
             if (response.Error != null)
             {
