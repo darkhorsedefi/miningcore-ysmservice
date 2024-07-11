@@ -53,8 +53,73 @@ namespace Miningcore.Blockchain.Koto
             var extraNoncePlaceholder = new byte[4]; // Placeholder for extraNonce
 
             var p1 = SerializeCoinbasePart1(extraNoncePlaceholder);
-            var p2 = SerializeCoinbasePart2();
-            coinbaseInitial = p1;
+            //var p2 = SerializeCoinbasePart2();
+            //coinbaseInitial = p1;
+                    txOut = CreateOutputTransaction();
+
+        using(var stream = new MemoryStream())
+        {   
+            var bs = new BitcoinStream(stream, true);
+
+            if(isOverwinterActive)
+            {
+                uint mask = (isOverwinterActive ? 1u : 0u );
+                uint shiftedMask = mask << 31;
+                uint versionWithOverwinter = txVersion | shiftedMask;
+
+                // version
+                bs.ReadWrite(ref versionWithOverwinter);
+            }
+            else
+            {
+                // version
+                bs.ReadWrite(ref txVersion);
+            }
+
+            if(isOverwinterActive || isSaplingActive)
+            {
+                bs.ReadWrite(ref txVersionGroupId);
+            }
+
+            // serialize (simulated) input transaction
+            bs.ReadWriteAsVarInt(ref txInputCount);
+            bs.ReadWrite(sha256Empty);
+            bs.ReadWrite(ref coinbaseIndex);
+            bs.ReadWrite(ref script);
+            bs.ReadWrite(ref coinbaseSequence);
+
+            // serialize output transaction
+            var txOutBytes = SerializeOutputTransaction(txOut);
+            bs.ReadWrite(txOutBytes);
+
+            // misc
+            bs.ReadWrite(ref txLockTime);
+
+            if(isOverwinterActive || isSaplingActive)
+            {
+                txExpiryHeight = (uint) BlockTemplate.Height;
+                bs.ReadWrite(ref txExpiryHeight);
+            }
+
+            if(isSaplingActive)
+            {
+                bs.ReadWrite(ref txBalance);
+                bs.ReadWriteAsVarInt(ref txVShieldedSpend);
+                bs.ReadWriteAsVarInt(ref txVShieldedOutput);
+            }
+
+            if(isOverwinterActive || isSaplingActive)
+            {
+                bs.ReadWriteAsVarInt(ref txJoinSplits);
+            }
+
+            // done
+            coinbaseInitial = stream.ToArray();
+
+            coinbaseInitialHash = new byte[32];
+            sha256D.Digest(coinbaseInitial, coinbaseInitialHash);
+            p2 = coinbaseInitialHash;
+        }
             return p1;//Combine(p1, extraNoncePlaceholder, p2);
         }
 
