@@ -41,9 +41,9 @@ namespace Miningcore.Blockchain.Koto
         protected override async Task SetupJobManager(CancellationToken ct)
         {
             coin = poolConfig.Template.As<KotoCoinTemplate>();
-            manager = ctx.Resolve<KotoJobManager>();
-            extraNonceProvider = ctx.Resolve<KotoExtraNonceProvider>();
+            manager = ctx.Resolve<KotoJobManager>(new TypedParameter(typeof(IExtraNonceProvider), new KotoExtraNonceProvider(poolConfig.Id, clusterConfig.InstanceId)));;
             manager.Configure(poolConfig, clusterConfig);
+            extraNonceProvider = manager.extraNonceProvider;
             await manager.StartAsync(ct);
         }
 
