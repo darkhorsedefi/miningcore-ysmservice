@@ -46,7 +46,7 @@ public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig
     Difficulty = (double)new BigRational(networkParams.Diff1BValue, BlockTemplate.Target.HexToReverseByteArray().AsSpan().ToBigInteger());
     PoolConfig = poolConfig;
     PreviousBlockHash = blockTemplate.PreviousBlockHash;
-    SetGenerationTransaction()
+    SetGenerationTransaction();
     CoinbaseTransaction = GenerationTransaction[0].ToString();
     Transactions = blockTemplate.Transactions.Select(dr => dr.ToString()).ToArray();
     MerkleRoot = CalculateMerkleRoot();
