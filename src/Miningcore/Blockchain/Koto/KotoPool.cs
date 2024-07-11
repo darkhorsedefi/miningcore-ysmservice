@@ -3,11 +3,13 @@ using System.Threading.Tasks;
 using Autofac;
 using Miningcore.Blockchain.Bitcoin;
 using Miningcore.Blockchain.Koto.Configuration;
+using Miningcore.Persistence.Repositories;
 using Miningcore.Configuration;
 using Miningcore.Mining;
 using Miningcore.Notifications;
 using Miningcore.Persistence;
 using Miningcore.Stratum;
+using Miningcore.Time;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -38,36 +40,36 @@ namespace Miningcore.Blockchain.Koto
             await manager.StartAsync(ct);
         }
 
-        protected override async Task OnRequestAsync(StratumConnection client, Timestamped<JsonRpcRequest> tsRequest, CancellationToken ct)
+        protected override async Task OnRequestAsync(StratumConnection connection, Timestamped<JsonRpcRequest> tsRequest, CancellationToken ct)
         {
-            var context = client.ContextAs<BitcoinWorkerContext>();
+            var context = connection.ContextAs<BitcoinWorkerContext>();
             var requestId = request.Value.Id;
             var method = request.Value.Method;
 
             switch (method)
             {
                 case BitcoinStratumMethods.Subscribe:
-                    await OnSubscribeAsync(ct, client, requestId, request.Value.Params);
+                    await OnSubscribeAsync(ct, connection, requestId, request.Value.Params);
                     break;
 
                 case BitcoinStratumMethods.Authorize:
-                    await OnAuthorizeAsync(ct, client, requestId, request.Value.Params);
+                    await OnAuthorizeAsync(ct, connection, requestId, request.Value.Params);
                     break;
 
                 case BitcoinStratumMethods.SubmitShare:
-                    await OnSubmitAsync(ct, client, requestId, request.Value.Params);
+                    await OnSubmitAsync(ct, connection, requestId, request.Value.Params);
                     break;
 
                 case BitcoinStratumMethods.GetTransactions:
-                    await OnGetTransactionsAsync(ct, client, requestId, request.Value.Params);
+                    await OnGetTransactionsAsync(ct, connection, requestId, request.Value.Params);
                     break;
 
                 case BitcoinStratumMethods.GetJob:
-                    await OnGetJobAsync(ct, client, requestId, request.Value.Params);
+                    await OnGetJobAsync(ct, connection, requestId, request.Value.Params);
                     break;
 
                 case BitcoinStratumMethods.MiningSubscribe:
-                    await OnMiningSubscribeAsync(ct, client, requestId, request.Value.Params);
+                    await OnMiningSubscribeAsync(ct, connection, requestId, request.Value.Params);
                     break;
 
                 default:
