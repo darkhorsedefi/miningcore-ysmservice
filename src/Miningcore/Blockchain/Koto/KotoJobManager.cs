@@ -96,7 +96,7 @@ namespace Miningcore.Blockchain.Koto
             };
         }
 
-        protected override async Task<DaemonResponse<KotoBlockTemplate>> GetBlockTemplateAsync(CancellationToken ct)
+        protected async Task<DaemonResponse<KotoBlockTemplate>> GetBlockTemplateAsync(CancellationToken ct)
         {
             var response = await daemonClient.GetBlockTemplateAsync();
 
@@ -109,7 +109,7 @@ namespace Miningcore.Blockchain.Koto
             return response;
         }
 
-        public override void PrepareWorker(StratumConnection worker)
+        public void PrepareWorker(StratumConnection worker)
         {
             var context = worker.ContextAs<KotoWorkerContext>();
 
