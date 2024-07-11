@@ -72,6 +72,6 @@ namespace Miningcore.Blockchain.Koto.DaemonResponses
 
 
         public decimal Fee { get; set; }
-}
+
     }
 }
