@@ -25,11 +25,17 @@ namespace Miningcore.Blockchain.Koto
         public string Bits { get; private set; }
         public string Time { get; private set; }
         public string Nonce { get; private set; }
+        public double Difficulty { get; set; }
+        protected EquihashCoinTemplate coin;
+        protected Network network;
         private readonly ConcurrentDictionary<string, bool> submits = new(StringComparer.OrdinalIgnoreCase);
 
         public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig) : base(id)
         {
             BlockTemplate = blockTemplate;
+            coin = poolConfig.Template.As<EquihashCoinTemplate>();
+            networkParams = coin.GetNetwork(network.ChainName);
+            Difficulty = (double) new BigRational(networkParams.Diff1BValue, BlockTemplate.Target.HexToReverseByteArray().AsSpan().ToBigInteger());
             PoolConfig = poolConfig;
             PreviousBlockHash = blockTemplate.PrevBlockHash;
             CoinbaseTransaction = CreateCoinbaseTransaction();
