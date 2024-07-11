@@ -227,6 +227,7 @@ public class AutofacModule : Module
         builder.RegisterType<ProgpowJobManager>();
 
         builder.RegisterType<KotoJobManager>();
+        builder.RegisterType<KotoExtraNonceProvider>().As<IExtraNonceProvider>().SingleInstance();
 
         base.Load(builder);
     }
