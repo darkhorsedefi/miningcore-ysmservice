@@ -333,10 +333,10 @@ namespace Miningcore.Blockchain.Koto
             transactions.ForEach(tx => block.AddRange(tx));
 
             // POSコインの場合は0バイトを追加
-            if (PoolConfig.Template.Reward == RewardType.POS)
-            {
-                block.Add(0);
-            }
+//            if (PoolConfig.Template.Reward == RewardType.POS)
+//            {
+//                block.Add(0);
+ //           }
 
             return block.ToArray();
         }
