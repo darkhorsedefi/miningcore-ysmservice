@@ -9,6 +9,11 @@ namespace Miningcore.Blockchain.Koto.Configuration
         [JsonProperty("networkParams")]
         public KotoNetworkParams NetworkParams { get; set; }
 
+        public override string GetAlgorithmName()
+        {
+            // Return the appropriate algorithm name for Koto
+            return "yescrypt";
+        }
         public partial class KotoNetworkParams
         {
             [JsonProperty("diff1")]
