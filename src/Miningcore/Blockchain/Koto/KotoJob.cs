@@ -12,6 +12,7 @@ using Miningcore.Contracts;
 using Miningcore.Stratum;
 using NBitcoin;
 using NBitcoin.DataEncoders;
+using NBitcoin.BouncyCastle.Math;
 
 namespace Miningcore.Blockchain.Koto
 {
@@ -235,13 +236,13 @@ namespace Miningcore.Blockchain.Koto
             var extraNonce2Buffer = Encoders.Hex.DecodeData(extraNonce2);
 
             var coinbaseBuffer = SerializeCoinbase(extraNonce1Buffer, extraNonce2Buffer);
-            var coinbaseHash = Sha256Hash(coinbaseBuffer);
+            var coinbaseHash = Sha256Hash(coinbaseBuffer).ToString();
 
             var merkleRoot = ComputeMerkleRoot(new List<string> { coinbaseHash });
             var merkleRootReversed = ReverseBytes(Encoders.Hex.DecodeData(merkleRoot));
 
             var headerBuffer = SerializeHeader(merkleRootReversed, nTime, nonce);
-            var headerHash = Sha256Hash(headerBuffer);
+            var headerHash = Sha256Hash(headerBuffer).ToString();
             var headerBigNum = new NBitcoin.BouncyCastle.Math.BigInteger(1, headerHash);
 
             var shareDiff = (double)NBitcoin.BouncyCastle.Math.BigInteger.ValueOf(0x00000000FFFF0000).ToDouble() / headerBigNum.ToDouble();
@@ -249,7 +250,7 @@ namespace Miningcore.Blockchain.Koto
 
             string blockHash = null;
             string blockHex = null;
-
+            var context = worker.ContextAs<KotoWorkerContext>();
             if (BlockTemplate.Target.CompareTo(headerBigNum) >= 0)
             {
                 blockHex = SerializeBlock(headerBuffer, coinbaseBuffer);
@@ -257,7 +258,6 @@ namespace Miningcore.Blockchain.Koto
             }
             else
             {   
-                var context = worker.ContextAs<KotoWorkerContext>();
                 if (shareDiff / context.Difficulty < 0.99)
                 {
                     if (context.PreviousDifficulty.HasValue && shareDiff >= context.PreviousDifficulty)
@@ -275,7 +275,7 @@ namespace Miningcore.Blockchain.Koto
             {
                 BlockHeight = (long) BlockTemplate.Height,
                 BlockReward = BlockTemplate.CoinbaseValue,
-                Difficulty = worker.Difficulty,
+                Difficulty = context.Difficulty,
                 Difficulty = shareDiff,
                 NetworkDifficulty = blockDiffAdjusted,
                 BlockHash = blockHash,
