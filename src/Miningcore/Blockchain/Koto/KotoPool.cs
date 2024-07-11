@@ -13,9 +13,11 @@ using Miningcore.Mining;
 using Miningcore.Notifications;
 using Miningcore.Persistence;
 using Miningcore.Stratum;
+using Miningcore.Nicehash;
 using Miningcore.Time;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Microsoft.IO;
 using NLog;
 using AutoMapper;
 
