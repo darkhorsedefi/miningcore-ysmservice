@@ -57,7 +57,7 @@ namespace Miningcore.Blockchain.Koto
             var p1 = SerializeCoinbasePart1(extraNoncePlaceholder);
             var p2 = SerializeCoinbasePart2();
 
-            return p1;//Combine(p1, extraNoncePlaceholder, p2);
+            return p1.ToString();//Combine(p1, extraNoncePlaceholder, p2);
         }
 
         private byte[] SerializeCoinbasePart1(byte[] extraNoncePlaceholder)
@@ -71,7 +71,7 @@ namespace Miningcore.Blockchain.Koto
             var txInSequence = BitConverter.GetBytes(uint.MaxValue);
 
             var scriptSigPart1 = Combine(
-                SerializeNumber(BlockTemplate.Height),
+                SerializeNumber((long)BlockTemplate.Height),
                 SerializeNumber(DateTimeOffset.UtcNow.ToUnixTimeSeconds()),
                 new[] { (byte)extraNoncePlaceholder.Length }
             );
@@ -82,10 +82,10 @@ namespace Miningcore.Blockchain.Koto
                 BitConverter.GetBytes(txVersion),
                 nVersionGroupId,
                 new byte[0], // txTimestamp for POS coins
-                VarIntBuffer(txInputsCount),
+                VarIntBuffer((ulong)txInputsCount),
                 txInPrevOutHash,
                 txInPrevOutIndex,
-                VarIntBuffer(scriptSigPart1.Length + extraNoncePlaceholder.Length),
+                VarIntBuffer((ulong)(scriptSigPart1.Length + extraNoncePlaceholder.Length)),
                 scriptSigPart1
             );
 
@@ -207,10 +207,6 @@ namespace Miningcore.Blockchain.Koto
 
     public virtual (Share Share, string BlockHex) ProcessShare(StratumConnection worker, string extraNonce2, string nTime, string solution)
         {
-            var shareError = (string error) =>
-            {
-                return (new Share { Error = error }, null);
-            };
             var context = worker.ContextAs<KotoWorkerContext>();
             var extraNonce1 = context.ExtraNonce1;
             var nonce = context.ExtraNonce1 + extraNonce2;
@@ -259,7 +255,7 @@ namespace Miningcore.Blockchain.Koto
             if (BlockTemplate.Target.CompareTo(headerBigNum) >= 0)
             {
                 blockHex = SerializeBlock(headerBuffer.ToString(), coinbaseBuffer.ToString());
-                blockHash = Sha256Hash(headerBuffer).ToString();
+                blockHash = Sha256Hash(headerBuffer.ToString());
             }
             else
             {   
