@@ -28,6 +28,8 @@ namespace Miningcore.Blockchain.Koto
         public double Difficulty { get; set; }
         protected EquihashCoinTemplate coin;
         protected Network network;
+        protected Money rewardToPool;
+        protected byte[] coinbaseInitial;
         private readonly ConcurrentDictionary<string, bool> submits = new(StringComparer.OrdinalIgnoreCase);
 
         public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig) : base(id)
@@ -52,7 +54,7 @@ namespace Miningcore.Blockchain.Koto
 
             var p1 = SerializeCoinbasePart1(extraNoncePlaceholder);
             var p2 = SerializeCoinbasePart2();
-
+            coinbaseInitial = p1;
             return p1;//Combine(p1, extraNoncePlaceholder, p2);
         }
 
@@ -88,7 +90,7 @@ namespace Miningcore.Blockchain.Koto
             return p1;
         }
 
-        private byte[] SerializeCoinbasePart2()
+/*        private byte[] SerializeCoinbasePart2()
         {
             var txInSequence = BitConverter.GetBytes(uint.MaxValue);
             var txLockTime = BitConverter.GetBytes(0);
@@ -115,7 +117,7 @@ namespace Miningcore.Blockchain.Koto
             );
 
             return p2;
-        }
+        }*/
 
         private byte[] GetVersionGroupId(int txVersion)
         {
@@ -151,11 +153,84 @@ namespace Miningcore.Blockchain.Koto
             return (txVersion & 0x7fffffff) >= 2 ? new byte[] { 0 } : new byte[0];
         }
 
-        private byte[] GenerateOutputTransactions()
+    protected virtual byte[] CreateOutputTransaction()
+    {
+        var txNetwork = Network.GetNetwork(networkParams.CoinbaseTxNetwork);
+        var tx = Transaction.Create(txNetwork);
+
+        // set versions
+        tx.Version = txVersion;
+
+        // calculate outputs
+        if(networkParams.PayFundingStream)
         {
-            // TODO: Implement output transactions generation logic
-            return new byte[0];
+            rewardToPool = new Money(Math.Round(blockReward * (1m - (networkParams.PercentFoundersReward) / 100m)) + rewardFees, MoneyUnit.Satoshi);
+            tx.Outputs.Add(rewardToPool, poolAddressDestination);
+
+            foreach(FundingStream fundingstream in BlockTemplate.Subsidy.FundingStreams)
+            {
+                var amount = new Money(Math.Round(fundingstream.ValueZat / 1m), MoneyUnit.Satoshi);
+                var destination = FoundersAddressToScriptDestination(fundingstream.Address);
+                tx.Outputs.Add(amount, destination);
+            }
         }
+        else if(networkParams.vOuts)
+        {
+            rewardToPool = new Money(Math.Round(blockReward * (1m - (networkParams.vPercentFoundersReward) / 100m)) + rewardFees, MoneyUnit.Satoshi);
+            tx.Outputs.Add(rewardToPool, poolAddressDestination);
+            var destination = FoundersAddressToScriptDestination(networkParams.vTreasuryRewardAddress);
+            var amount = new Money(Math.Round(blockReward * (networkParams.vPercentTreasuryReward / 100m)), MoneyUnit.Satoshi);
+            tx.Outputs.Add(amount, destination);
+            destination = FoundersAddressToScriptDestination(networkParams.vSecureNodesRewardAddress);
+            amount = new Money(Math.Round(blockReward * (networkParams.percentSecureNodesReward / 100m)), MoneyUnit.Satoshi);
+            tx.Outputs.Add(amount, destination);
+            destination = FoundersAddressToScriptDestination(networkParams.vSuperNodesRewardAddress);
+            amount = new Money(Math.Round(blockReward * (networkParams.percentSuperNodesReward / 100m)), MoneyUnit.Satoshi);
+            tx.Outputs.Add(amount, destination);
+        }
+        else if(networkParams.PayFoundersReward &&
+                (networkParams.LastFoundersRewardBlockHeight >= BlockTemplate.Height ||
+                    networkParams.TreasuryRewardStartBlockHeight > 0))
+        {
+            // founders or treasury reward?
+            if(networkParams.TreasuryRewardStartBlockHeight > 0 &&
+               BlockTemplate.Height >= networkParams.TreasuryRewardStartBlockHeight)
+            {
+                // pool reward (t-addr)
+                rewardToPool = new Money(Math.Round(blockReward * (1m - (networkParams.PercentTreasuryReward) / 100m)) + rewardFees, MoneyUnit.Satoshi);
+                tx.Outputs.Add(rewardToPool, poolAddressDestination);
+
+                // treasury reward (t-addr)
+                var destination = FoundersAddressToScriptDestination(GetTreasuryRewardAddress());
+                var amount = new Money(Math.Round(blockReward * (networkParams.PercentTreasuryReward / 100m)), MoneyUnit.Satoshi);
+                tx.Outputs.Add(amount, destination);
+            }
+
+            else
+            {
+                // pool reward (t-addr)
+                rewardToPool = new Money(Math.Round(blockReward * (1m - (networkParams.PercentFoundersReward) / 100m)) + rewardFees, MoneyUnit.Satoshi);
+                tx.Outputs.Add(rewardToPool, poolAddressDestination);
+
+                // founders reward (t-addr)
+                var destination = FoundersAddressToScriptDestination(GetFoundersRewardAddress());
+                var amount = new Money(Math.Round(blockReward * (networkParams.PercentFoundersReward / 100m)), MoneyUnit.Satoshi);
+                tx.Outputs.Add(amount, destination);
+            }
+        }
+
+        else
+        {
+            // no founders reward
+            // pool reward (t-addr)
+            rewardToPool = new Money(blockReward + rewardFees, MoneyUnit.Satoshi);
+            tx.Outputs.Add(rewardToPool, poolAddressDestination);
+        }
+
+        tx.Inputs.Add(TxIn.CreateCoinbase((int) BlockTemplate.Height));
+
+        return tx;
+    }
 
         private byte[] SerializeNumber(long value)
         {
