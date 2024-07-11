@@ -35,6 +35,7 @@ namespace Miningcore.Blockchain.Koto
         IExtraNonceProvider extraNonceProvider;
         public KotoJobManager(IComponentContext ctx, IMasterClock clock, IMessageBus messageBus, IExtraNonceProvider extraNonceProvider) 
             : base(ctx, clock, messageBus, extraNonceProvider)
+        {
     
             this.extraNonceProvider = extraNonceProvider as KotoExtraNonceProvider;
             ConfigureDaemons();
