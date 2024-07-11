@@ -1,9 +1,11 @@
 using System;
 using System.Threading.Tasks;
+using System.Reactive;
 using Autofac;
 using Miningcore.Blockchain.Bitcoin;
 using Miningcore.Blockchain.Koto.Configuration;
 using Miningcore.Persistence.Repositories;
+using Miningcore.JsonRpc;
 using Miningcore.Configuration;
 using Miningcore.Mining;
 using Miningcore.Notifications;
