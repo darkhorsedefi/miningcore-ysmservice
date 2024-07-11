@@ -1,6 +1,5 @@
 
 using System;
-using Miningcore.Blockchain.Common.Configuration;
 using Newtonsoft.Json;
 
 namespace Miningcore.Blockchain.Koto.Configuration
