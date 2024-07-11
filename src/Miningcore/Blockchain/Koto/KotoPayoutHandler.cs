@@ -27,9 +27,9 @@ namespace Miningcore.Blockchain.Koto
 
         private KotoPoolConfigExtra poolConfigExtra;
 
-        public override void Configure(PoolConfig poolConfig)
+        public override async Task ConfigureAsync(ClusterConfig cc, PoolConfig pc, CancellationToken ct)
         {
-            base.Configure(poolConfig);
+            await base.ConfigureAsync(cc, pc, ct);
 
             poolConfigExtra = poolConfig.Extra.SafeExtensionDataAs<KotoPoolConfigExtra>();
         }
@@ -54,7 +54,7 @@ namespace Miningcore.Blockchain.Koto
             return unlocked.ToArray();
         }
 
-        public async Task PayoutAsync(IMiningPool pool, Balance[] balances)
+        public async Task PayoutAsync(IMiningPool pool, Balance[] balances, CancellationToken ct)
         {
             // Group balances by address
             var balancesByAddress = balances
@@ -63,20 +63,14 @@ namespace Miningcore.Blockchain.Koto
 
             foreach (var address in balancesByAddress.Keys)
             {
-                if (!IsValidZAddress(address))
-                {
-                    logger.Warn($"Invalid z-address detected: {address}");
-                    continue;
-                }
-
                 var transactions = balancesByAddress[address];
                 var amount = transactions.Sum(x => x.Amount);
 
                 // Create transaction
-                var tx = await CreateZTransactionAsync(address, amount);
+                var tx = await CreateZTransactionAsync(address, amount, ct);
                 if (tx != null)
                 {
-                    await ExecutePayoutAsync(tx);
+                    await ExecutePayoutAsync(tx, ct);
                 }
                 else
                 {
@@ -91,7 +85,7 @@ namespace Miningcore.Blockchain.Koto
             return address.StartsWith("koto") && address.Length == 68;
         }
 
-        private async Task<string> CreateZTransactionAsync(string address, decimal amount)
+        private async Task<string> CreateZTransactionAsync(string address, decimal amount, CancellationToken ct)
         {
             // Create the transaction using z-address
             var recipients = new JArray
@@ -111,17 +105,17 @@ namespace Miningcore.Blockchain.Koto
                 0.0001m // fee
             };
 
-            var result = await rpcClient.ExecuteAsync<string>("z_sendmany", args);
+            var result = await rpcClient.ExecuteAsync<string>(logger, "z_sendmany", ct, args);
             return result;
         }
 
-        private async Task ExecutePayoutAsync(string transaction)
+        private async Task ExecutePayoutAsync(string transaction, CancellationToken ct)
         {
             // Execute the payout transaction
             // Implementation depends on the Koto daemon API
             logger.Info($"Executing payout transaction: {transaction}");
 
-            var txid = await rpcClient.ExecuteAsync<string>("z_getoperationresult", new JArray { transaction });
+            var txid = await rpcClient.ExecuteAsync<string>(logger, "z_getoperationresult", ct, new JArray { transaction }, ct);
 
             if (txid != null)
             {
