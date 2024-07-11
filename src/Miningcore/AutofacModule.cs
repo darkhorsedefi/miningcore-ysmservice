@@ -14,6 +14,7 @@ using Miningcore.Blockchain.Handshake;
 using Miningcore.Blockchain.Kaspa;
 using Miningcore.Blockchain.Nexa;
 using Miningcore.Blockchain.Progpow;
+using Miningcore.Blockchain.Koto;
 using Miningcore.Configuration;
 using Miningcore.Crypto;
 using Miningcore.Crypto.Hashing.Equihash;
@@ -224,6 +225,8 @@ public class AutofacModule : Module
         // Progpow
 
         builder.RegisterType<ProgpowJobManager>();
+
+        builder.RegisterType<KotoJobManager>();
 
         base.Load(builder);
     }
