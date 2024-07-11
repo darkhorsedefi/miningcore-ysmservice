@@ -229,6 +229,47 @@ namespace Miningcore.Blockchain.Koto
                 }
             }
         }
+    protected record SubmitResult(bool Accepted, string CoinbaseTx);
 
+    protected async Task<SubmitResult> SubmitBlockAsync(Share share, string blockHex, CancellationToken ct)
+    {
+        var submitBlockRequest = hasSubmitBlockMethod
+            ? new RpcRequest(BitcoinCommands.SubmitBlock, new[] { blockHex })
+            : new RpcRequest(BitcoinCommands.GetBlockTemplate, new { mode = "submit", data = blockHex });
+
+        var batch = new []
+        {
+            submitBlockRequest,
+            new RpcRequest(BitcoinCommands.GetBlock, new[] { share.BlockHash })
+        };
+
+        var results = await rpc.ExecuteBatchAsync(logger, ct, batch);
+
+        // did submission succeed?
+        var submitResult = results[0];
+        var submitError = submitResult.Error?.Message ??
+            submitResult.Error?.Code.ToString(CultureInfo.InvariantCulture) ??
+            submitResult.Response?.ToString();
+
+        if(!string.IsNullOrEmpty(submitError))
+        {
+            logger.Warn(() => $"Block {share.BlockHeight} submission failed with: {submitError}");
+            messageBus.SendMessage(new AdminNotification("Block submission failed", $"Pool {poolConfig.Id} {(!string.IsNullOrEmpty(share.Source) ? $"[{share.Source.ToUpper()}] " : string.Empty)}failed to submit block {share.BlockHeight}: {submitError}"));
+            return new SubmitResult(false, null);
+        }
+
+        // was it accepted?
+        var acceptResult = results[1];
+        var block = acceptResult.Response?.ToObject<DaemonResponses.Block>();
+        var accepted = acceptResult.Error == null && block?.Hash == share.BlockHash;
+
+        if(!accepted)
+        {
+            logger.Warn(() => $"Block {share.BlockHeight} submission failed for pool {poolConfig.Id} because block was not found after submission");
+            messageBus.SendMessage(new AdminNotification($"[{poolConfig.Id}]-[{(!string.IsNullOrEmpty(share.Source) ? $"[{share.Source.ToUpper()}] " : string.Empty)}] Block submission failed", $"[{poolConfig.Id}]-[{(!string.IsNullOrEmpty(share.Source) ? $"[{share.Source.ToUpper()}] " : string.Empty)}] Block {share.BlockHeight} submission failed for pool {poolConfig.Id} because block was not found after submission"));
+        }
+
+        return new SubmitResult(accepted, block?.Transactions.FirstOrDefault());
+    }
     }
 }
