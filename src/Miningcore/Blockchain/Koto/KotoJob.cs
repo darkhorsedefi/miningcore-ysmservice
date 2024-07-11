@@ -157,33 +157,33 @@ public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig
 
     private byte[] GenerateOutputTransactions(dynamic rpcData, dynamic util)
     {
-        long reward = rpcData.coinbasevalue;
+        long reward = BlockTemplate.CoinbaseValue;
 
         if (reward == 0)
         {
             reward = util.GetKotoBlockSubsidy(rpcData.height);
-            reward -= rpcData.coinbasetxn.fee; // rpcData.coinbasetxn.fee := <total fee of transactions> * -1
+            reward -= BlockTemplate.CoinbaseTxn.fee; // rpcData.coinbasetxn.fee := <total fee of transactions> * -1
 
-            int nScript = Convert.ToInt32(rpcData.coinbasetxn.data.Substring(82, 2), 16);
+            int nScript = Convert.ToInt32(BlockTemplate.CoinbaseTxn.data.Substring(82, 2), 16);
 
             if (nScript == 253)
             {
-                nScript = Convert.ToInt32(util.ReverseHex(rpcData.coinbasetxn.data.Substring(84, 4)), 16);
+                nScript = Convert.ToInt32(util.ReverseHex(BlockTemplate.CoinbaseTxn.data.Substring(84, 4)), 16);
                 nScript += 2;
             }
             else if (nScript == 254)
             {
-                nScript = Convert.ToInt32(util.ReverseHex(rpcData.coinbasetxn.data.Substring(84, 8)), 16);
+                nScript = Convert.ToInt32(util.ReverseHex(BlockTemplate.CoinbaseTxn.data.Substring(84, 8)), 16);
                 nScript += 4;
             }
             else if (nScript == 255)
             {
-                nScript = Convert.ToInt32(util.ReverseHex(rpcData.coinbasetxn.data.Substring(84, 16)), 16);
+                nScript = Convert.ToInt32(util.ReverseHex(BlockTemplate.CoinbaseTxn.data.Substring(84, 16)), 16);
                 nScript += 8;
             }
 
             int posReward = 94 + nScript * 2;
-            reward = Convert.ToInt64(util.ReverseHex(rpcData.coinbasetxn.data.Substring(posReward, 16)), 16);
+            reward = Convert.ToInt64(util.ReverseHex(BlockTemplate.CoinbaseTxn.data.Substring(posReward, 16)), 16);
 
             // Console.WriteLine("reward from coinbasetxn, height => " + reward);
         }
