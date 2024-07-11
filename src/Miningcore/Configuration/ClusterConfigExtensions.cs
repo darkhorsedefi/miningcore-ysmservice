@@ -26,7 +26,17 @@ public abstract partial class CoinTemplate
     [JsonIgnore]
     public string Source { get; set; }
 }
+public partial class KotoCoinTemplate
+{
+    #region Overrides of CoinTemplate
 
+    public override string GetAlgorithmName()
+    {
+        return "yescrypt";
+    }
+
+    #endregion
+}
 public partial class AlephiumCoinTemplate
 {
     #region Overrides of CoinTemplate
