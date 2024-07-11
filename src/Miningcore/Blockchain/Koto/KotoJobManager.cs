@@ -92,9 +92,9 @@ namespace Miningcore.Blockchain.Koto
                 job.CoinbaseTransaction,
                 job.Transactions,
                 job.MerkleRoot,
+                job.BlockTemplate.Version.ToStringHex8(),
                 job.Bits,
-                job.Time,
-                job.Nonce,
+                job.BlockTemplate.CurTime.ToStringHex8(),
                 isNew
             };
         }
@@ -116,7 +116,7 @@ namespace Miningcore.Blockchain.Koto
 
         return responseData;
     }
-        protected async Task<DaemonResponse<KotoBlockTemplate>> GetBlockTemplateAsync(CancellationToken ct)
+        protected async Task<RpcResponse<KotoBlockTemplate>> GetBlockTemplateAsync(CancellationToken ct)
         {
             var response = await daemonClient.GetBlockTemplateAsync(ct);
 
@@ -370,9 +370,9 @@ namespace Miningcore.Blockchain.Koto
 
         return (false, forceUpdate);
     }
-    private DaemonResponse<DaemonResponses.KotoBlockTemplate> GetBlockTemplateFromJson(string json)
+    private RpcResponse<DaemonResponses.KotoBlockTemplate> GetBlockTemplateFromJson(string json)
     {
-        return JsonConvert.DeserializeObject<DaemonResponse<DaemonResponses.KotoBlockTemplate>>(json);
+        return JsonConvert.DeserializeObject<RpcResponse<DaemonResponses.KotoBlockTemplate>>(json);
     }
     }
 }

@@ -33,22 +33,20 @@ namespace Miningcore.Blockchain.Koto
         protected Network network;
         private readonly ConcurrentDictionary<string, bool> submits = new(StringComparer.OrdinalIgnoreCase);
 
-        public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig) : base(id)
-        {
-            JobId = id;
-            BlockTemplate = blockTemplate;
-            coin = poolConfig.Template.As<KotoCoinTemplate>();
-            networkParams = coin.GetNetwork(network.ChainName);
-            Difficulty = (double) new BigRational(networkParams.Diff1BValue, BlockTemplate.Target.HexToReverseByteArray().AsSpan().ToBigInteger());
-            PoolConfig = poolConfig;
-            PreviousBlockHash = blockTemplate.PrevBlockHash;
-            CoinbaseTransaction = CreateCoinbaseTransaction();
-            Transactions = blockTemplate.Transactions;
-            MerkleRoot = CalculateMerkleRoot();
-            Bits = blockTemplate.Bits;
-            Time = blockTemplate.Time;
-            Nonce = blockTemplate.Nonce;
-        }
+public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig) : base(id)
+{
+    JobId = id;
+    BlockTemplate = blockTemplate;
+    coin = poolConfig.Template.As<KotoCoinTemplate>();
+    networkParams = coin.GetNetwork(network.ChainName);
+    Difficulty = (double)new BigRational(networkParams.Diff1BValue, BlockTemplate.Target.HexToReverseByteArray().AsSpan().ToBigInteger());
+    PoolConfig = poolConfig;
+    PreviousBlockHash = blockTemplate.PreviousBlockHash;
+    CoinbaseTransaction = CreateCoinbaseTransaction();
+    Transactions = blockTemplate.Transactions;
+    MerkleRoot = CalculateMerkleRoot();
+    Bits = blockTemplate.Bits;
+}
 
         private string CreateCoinbaseTransaction()
         {
@@ -329,6 +327,8 @@ namespace Miningcore.Blockchain.Koto
             Array.Copy(versionBytes, 0, header, position, versionBytes.Length);
 
             Array.Reverse(header);
+            Nonce = nonce;
+            Time = nTime;
             return header;
         }
 

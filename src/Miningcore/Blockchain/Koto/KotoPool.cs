@@ -30,7 +30,8 @@ namespace Miningcore.Blockchain.Koto
         private readonly IMessageBus messageBus;
         private object currentJobParams;
         private double hashrateDivisor;
-        public KotoPool(IComponentContext ctx, JsonSerializerSettings serializerSettings, IConnectionFactory cf, IStatsRepository statsRepo, IMapper mapper, IMasterClock clock, IMessageBus messageBus) : base(ctx, serializerSettings, cf, statsRepo, mapper, clock, messageBus)
+        public KotoPool(IComponentContext ctx, JsonSerializerSettings serializerSettings, IConnectionFactory cf, IStatsRepository statsRepo, IMapper mapper, IMasterClock clock, IMessageBus messageBus, RecyclableMemoryStreamManager rmsm, NicehashService nicehashService) 
+            : base(ctx, serializerSettings, cf, statsRepo, mapper, clock, messageBus, rmsm, nicehashService)
         {
              this.messageBus = messageBus;
         }

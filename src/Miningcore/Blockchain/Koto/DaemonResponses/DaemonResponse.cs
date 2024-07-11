@@ -2,7 +2,7 @@ using Newtonsoft.Json;
 
 namespace Miningcore.Blockchain.Koto.DaemonResponses
 {
-    public class DaemonResponse<T>
+    public class DaemonResponse<T> : RpcResponse<T>
     {
         [JsonProperty("result")]
         public T Result { get; set; }
