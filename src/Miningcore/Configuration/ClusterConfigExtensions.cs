@@ -48,6 +48,8 @@ public partial class KotoCoinTemplate
 
         throw new NotSupportedException("unsupported network type");
     }
+    public partial class KotoNetworkParams
+    {
         public KotoNetworkParams()
         {
             diff1Value = new Lazy<Org.BouncyCastle.Math.BigInteger>(() =>
@@ -75,6 +77,7 @@ public partial class KotoCoinTemplate
 
         [JsonIgnore]
         public BigInteger Diff1BValue => diff1BValue.Value;
+    }
     #endregion
 }
 public partial class AlephiumCoinTemplate
