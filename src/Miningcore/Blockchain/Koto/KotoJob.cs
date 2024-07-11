@@ -13,7 +13,7 @@ using NBitcoin.DataEncoders;
 
 namespace Miningcore.Blockchain.Koto
 {
-    public class KotoJob : JobBase
+    public class KotoJob
     {
         public KotoBlockTemplate BlockTemplate { get; private set; }
         public PoolConfig PoolConfig { get; private set; }

@@ -8,6 +8,7 @@ using Miningcore.Extensions;
 using Miningcore.Persistence;
 using Miningcore.Persistence.Model;
 using Miningcore.Persistence.Repositories;
+using Miningcore.Payments;
 using Miningcore.Util;
 using NLog;
 using Newtonsoft.Json;

@@ -94,7 +94,7 @@ namespace Miningcore.Blockchain.Koto
             };
         }
 
-        protected override async Task<DaemonResponse<Block>> GetBlockAsync(CancellationToken ct)
+        protected override async Task<DaemonResponse<KotoBlockTemplate>> GetBlockAsync(CancellationToken ct)
         {
             var response = await daemonClient.GetBlockTemplateAsync();
 
