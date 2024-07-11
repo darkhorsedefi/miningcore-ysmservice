@@ -153,11 +153,46 @@ public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig
             return (txVersion & 0x7fffffff) >= 2 ? new byte[] { 0 } : new byte[0];
         }
 
-        private byte[] GenerateOutputTransactions()
+
+    private byte[] GenerateOutputTransactions(dynamic rpcData, dynamic util)
+    {
+        long reward = rpcData.coinbasevalue;
+
+        if (reward == 0)
         {
-            // TODO: Implement output transactions generation logic
-            return new byte[0];
+            reward = util.GetKotoBlockSubsidy(rpcData.height);
+            reward -= rpcData.coinbasetxn.fee; // rpcData.coinbasetxn.fee := <total fee of transactions> * -1
+
+            int nScript = Convert.ToInt32(rpcData.coinbasetxn.data.Substring(82, 2), 16);
+
+            if (nScript == 253)
+            {
+                nScript = Convert.ToInt32(util.ReverseHex(rpcData.coinbasetxn.data.Substring(84, 4)), 16);
+                nScript += 2;
+            }
+            else if (nScript == 254)
+            {
+                nScript = Convert.ToInt32(util.ReverseHex(rpcData.coinbasetxn.data.Substring(84, 8)), 16);
+                nScript += 4;
+            }
+            else if (nScript == 255)
+            {
+                nScript = Convert.ToInt32(util.ReverseHex(rpcData.coinbasetxn.data.Substring(84, 16)), 16);
+                nScript += 8;
+            }
+
+            int posReward = 94 + nScript * 2;
+            reward = Convert.ToInt64(util.ReverseHex(rpcData.coinbasetxn.data.Substring(posReward, 16)), 16);
+
+            // Console.WriteLine("reward from coinbasetxn, height => " + reward);
         }
+
+        // TODO: Implement the rest of the output transactions generation logic
+        // Placeholder return statement
+        return new byte[0];
+    }
+
+
 
         private byte[] SerializeNumber(long value)
         {

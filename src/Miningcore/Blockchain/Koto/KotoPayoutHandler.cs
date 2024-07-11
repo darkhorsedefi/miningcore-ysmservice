@@ -100,7 +100,7 @@ namespace Miningcore.Blockchain.Koto
                 0.0001m // fee
             };
 
-            var result = await rpcClient.ExecuteAsync<string>(logger, "z_sendmany", ct, args);
+            var result = await rpcClient.ExecuteAsync<string>(logger, "z_sendmany", ct, args).Response;
             return result;
         }
 
@@ -110,7 +110,7 @@ namespace Miningcore.Blockchain.Koto
             // Implementation depends on the Koto daemon API
             logger.Info($"Executing payout transaction: {transaction}");
 
-            var txid = await rpcClient.ExecuteAsync<string>(logger, "z_getoperationresult", ct, new JArray { transaction }, ct);
+            var txid = await rpcClient.ExecuteAsync<string>(logger, "z_getoperationresult", ct, new JArray { transaction });
 
             if (txid != null)
             {
