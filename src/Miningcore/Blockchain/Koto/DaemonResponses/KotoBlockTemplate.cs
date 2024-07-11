@@ -48,8 +48,6 @@ namespace Miningcore.Blockchain.Koto.DaemonResponses
 
         [JsonProperty("height")]
         public ulong Height { get; set; }
-
-        public Transaction[] Transactions { get; set; }
     }
 
     public class CoinbaseTransaction
@@ -65,12 +63,12 @@ namespace Miningcore.Blockchain.Koto.DaemonResponses
     {
         [JsonProperty("data")]
         public string Data { get; set; }
-
+        [JsonProperty("txid")]
         public string TxId { get; set; }
-
+        [JsonProperty("hash")]
         public string Hash { get; set; }
 
-
+        [JsonProperty("fee")]
         public decimal Fee { get; set; }
 
     }
