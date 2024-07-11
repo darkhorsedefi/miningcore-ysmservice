@@ -8,9 +8,11 @@ using System.Text;
 using Miningcore.Blockchain.Koto.DaemonResponses;
 using Miningcore.Blockchain.Koto.Configuration;
 using Miningcore.Blockchain;
+using Miningcore.Extensions;
 using Miningcore.Configuration;
 using Miningcore.Contracts;
 using Miningcore.Stratum;
+using Miningcore.Util;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 
