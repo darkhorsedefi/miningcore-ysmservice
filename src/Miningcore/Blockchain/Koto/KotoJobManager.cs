@@ -7,6 +7,7 @@ using Autofac;
 using Miningcore.Blockchain.Koto.Configuration;
 using Miningcore.Blockchain.Koto.DaemonResponses;
 using Miningcore.Blockchain.Bitcoin.DaemonResponses;
+using Miningcore.Blockchain.Bitcoin;
 using Miningcore.Configuration;
 using Miningcore.Contracts;
 using Miningcore.Crypto;

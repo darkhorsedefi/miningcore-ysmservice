@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Miningcore.Blockchain.Koto.Configuration;
+using Miningcore.Blockchain.Bitcoin;
 using Miningcore.Configuration;
 using Miningcore.Extensions;
 using Miningcore.Persistence;
@@ -18,7 +19,7 @@ using Newtonsoft.Json.Linq;
 namespace Miningcore.Blockchain.Koto
 {
     [CoinFamily(CoinFamily.Koto)]
-    public class KotoPayoutHandler : PayoutHandlerBase, IPayoutHandler
+    public class KotoPayoutHandler : BitcoinPayoutHandler
     {
         public KotoPayoutHandler(IConnectionFactory cf, IBlockRepository blocks, IShareRepository shares, IBalanceRepository balances, IPaymentRepository payments, ClusterConfig clusterConfig, ILogger logger) :
             base(cf, blocks, shares, balances, payments, clusterConfig, logger)
