@@ -47,7 +47,7 @@ namespace Miningcore.Blockchain.Koto.DaemonResponses
         public string Bits { get; set; }
 
         [JsonProperty("height")]
-        public int Height { get; set; }
+        public ulong Height { get; set; }
     }
 
     public class CoinbaseTransaction

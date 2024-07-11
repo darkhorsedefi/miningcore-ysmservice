@@ -264,8 +264,8 @@ namespace Miningcore.Blockchain.Koto
                 BlockHeight = BlockTemplate.Height,
                 BlockReward = BlockTemplate.CoinbaseValue,
                 Difficulty = worker.Difficulty,
-                ShareDiff = shareDiff,
-                BlockDiff = blockDiffAdjusted,
+                Difficulty = shareDiff,
+                NetworkDifficulty = blockDiffAdjusted,
                 BlockHash = blockHash,
                 Worker = worker,
                 IsBlockCandidate = blockHash != null
