@@ -41,7 +41,7 @@ namespace Miningcore.Blockchain.Koto.DaemonResponses
         public int SizeLimit { get; set; }
 
         [JsonProperty("curtime")]
-        public long CurrentTime { get; set; }
+        public long CurTime { get; set; }
 
         [JsonProperty("bits")]
         public string Bits { get; set; }

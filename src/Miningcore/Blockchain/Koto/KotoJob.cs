@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -250,7 +251,7 @@ namespace Miningcore.Blockchain.Koto
             var headerBigNum = bigInteger;
 
             var shareDiff = (double)NBitcoin.BouncyCastle.Math.BigInteger.ValueOf(0x00000000FFFF0000).ToDouble() / headerBigNum.ToDouble();
-            var blockDiffAdjusted = BlockTemplate.Difficulty * shareDiff;
+            var blockDiffAdjusted = Difficulty;
 
             string blockHash = null;
             string blockHex = null;
@@ -258,7 +259,7 @@ namespace Miningcore.Blockchain.Koto
             if (BlockTemplate.Target.CompareTo(headerBigNum) >= 0)
             {
                 blockHex = SerializeBlock(headerBuffer, coinbaseBuffer);
-                blockHash = Sha256Hash(headerBuffer);
+                blockHash = Sha256Hash(headerBuffer).ToString();
             }
             else
             {   
