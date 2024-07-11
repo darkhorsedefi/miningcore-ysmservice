@@ -28,8 +28,6 @@ namespace Miningcore.Blockchain.Koto
         public double Difficulty { get; set; }
         protected EquihashCoinTemplate coin;
         protected Network network;
-        protected Money rewardToPool;
-        protected byte[] coinbaseInitial;
         private readonly ConcurrentDictionary<string, bool> submits = new(StringComparer.OrdinalIgnoreCase);
 
         public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig) : base(id)
@@ -53,73 +51,8 @@ namespace Miningcore.Blockchain.Koto
             var extraNoncePlaceholder = new byte[4]; // Placeholder for extraNonce
 
             var p1 = SerializeCoinbasePart1(extraNoncePlaceholder);
-            //var p2 = SerializeCoinbasePart2();
-            //coinbaseInitial = p1;
-                    txOut = CreateOutputTransaction();
+            var p2 = SerializeCoinbasePart2();
 
-        using(var stream = new MemoryStream())
-        {   
-            var bs = new BitcoinStream(stream, true);
-
-            if(isOverwinterActive)
-            {
-                uint mask = (isOverwinterActive ? 1u : 0u );
-                uint shiftedMask = mask << 31;
-                uint versionWithOverwinter = txVersion | shiftedMask;
-
-                // version
-                bs.ReadWrite(ref versionWithOverwinter);
-            }
-            else
-            {
-                // version
-                bs.ReadWrite(ref txVersion);
-            }
-
-            if(isOverwinterActive || isSaplingActive)
-            {
-                bs.ReadWrite(ref txVersionGroupId);
-            }
-
-            // serialize (simulated) input transaction
-            bs.ReadWriteAsVarInt(ref txInputCount);
-            bs.ReadWrite(sha256Empty);
-            bs.ReadWrite(ref coinbaseIndex);
-            bs.ReadWrite(ref script);
-            bs.ReadWrite(ref coinbaseSequence);
-
-            // serialize output transaction
-            var txOutBytes = SerializeOutputTransaction(txOut);
-            bs.ReadWrite(txOutBytes);
-
-            // misc
-            bs.ReadWrite(ref txLockTime);
-
-            if(isOverwinterActive || isSaplingActive)
-            {
-                txExpiryHeight = (uint) BlockTemplate.Height;
-                bs.ReadWrite(ref txExpiryHeight);
-            }
-
-            if(isSaplingActive)
-            {
-                bs.ReadWrite(ref txBalance);
-                bs.ReadWriteAsVarInt(ref txVShieldedSpend);
-                bs.ReadWriteAsVarInt(ref txVShieldedOutput);
-            }
-
-            if(isOverwinterActive || isSaplingActive)
-            {
-                bs.ReadWriteAsVarInt(ref txJoinSplits);
-            }
-
-            // done
-            coinbaseInitial = stream.ToArray();
-
-            coinbaseInitialHash = new byte[32];
-            sha256D.Digest(coinbaseInitial, coinbaseInitialHash);
-            p2 = coinbaseInitialHash;
-        }
             return p1;//Combine(p1, extraNoncePlaceholder, p2);
         }
 
@@ -155,7 +88,7 @@ namespace Miningcore.Blockchain.Koto
             return p1;
         }
 
-/*        private byte[] SerializeCoinbasePart2()
+        private byte[] SerializeCoinbasePart2()
         {
             var txInSequence = BitConverter.GetBytes(uint.MaxValue);
             var txLockTime = BitConverter.GetBytes(0);
@@ -182,7 +115,7 @@ namespace Miningcore.Blockchain.Koto
             );
 
             return p2;
-        }*/
+        }
 
         private byte[] GetVersionGroupId(int txVersion)
         {
@@ -218,84 +151,11 @@ namespace Miningcore.Blockchain.Koto
             return (txVersion & 0x7fffffff) >= 2 ? new byte[] { 0 } : new byte[0];
         }
 
-    protected virtual byte[] CreateOutputTransaction()
-    {
-        var txNetwork = Network.GetNetwork(networkParams.CoinbaseTxNetwork);
-        var tx = Transaction.Create(txNetwork);
-
-        // set versions
-        tx.Version = txVersion;
-
-        // calculate outputs
-        if(networkParams.PayFundingStream)
+        private byte[] GenerateOutputTransactions()
         {
-            rewardToPool = new Money(Math.Round(blockReward * (1m - (networkParams.PercentFoundersReward) / 100m)) + rewardFees, MoneyUnit.Satoshi);
-            tx.Outputs.Add(rewardToPool, poolAddressDestination);
-
-            foreach(FundingStream fundingstream in BlockTemplate.Subsidy.FundingStreams)
-            {
-                var amount = new Money(Math.Round(fundingstream.ValueZat / 1m), MoneyUnit.Satoshi);
-                var destination = FoundersAddressToScriptDestination(fundingstream.Address);
-                tx.Outputs.Add(amount, destination);
-            }
+            // TODO: Implement output transactions generation logic
+            return new byte[0];
         }
-        else if(networkParams.vOuts)
-        {
-            rewardToPool = new Money(Math.Round(blockReward * (1m - (networkParams.vPercentFoundersReward) / 100m)) + rewardFees, MoneyUnit.Satoshi);
-            tx.Outputs.Add(rewardToPool, poolAddressDestination);
-            var destination = FoundersAddressToScriptDestination(networkParams.vTreasuryRewardAddress);
-            var amount = new Money(Math.Round(blockReward * (networkParams.vPercentTreasuryReward / 100m)), MoneyUnit.Satoshi);
-            tx.Outputs.Add(amount, destination);
-            destination = FoundersAddressToScriptDestination(networkParams.vSecureNodesRewardAddress);
-            amount = new Money(Math.Round(blockReward * (networkParams.percentSecureNodesReward / 100m)), MoneyUnit.Satoshi);
-            tx.Outputs.Add(amount, destination);
-            destination = FoundersAddressToScriptDestination(networkParams.vSuperNodesRewardAddress);
-            amount = new Money(Math.Round(blockReward * (networkParams.percentSuperNodesReward / 100m)), MoneyUnit.Satoshi);
-            tx.Outputs.Add(amount, destination);
-        }
-        else if(networkParams.PayFoundersReward &&
-                (networkParams.LastFoundersRewardBlockHeight >= BlockTemplate.Height ||
-                    networkParams.TreasuryRewardStartBlockHeight > 0))
-        {
-            // founders or treasury reward?
-            if(networkParams.TreasuryRewardStartBlockHeight > 0 &&
-               BlockTemplate.Height >= networkParams.TreasuryRewardStartBlockHeight)
-            {
-                // pool reward (t-addr)
-                rewardToPool = new Money(Math.Round(blockReward * (1m - (networkParams.PercentTreasuryReward) / 100m)) + rewardFees, MoneyUnit.Satoshi);
-                tx.Outputs.Add(rewardToPool, poolAddressDestination);
-
-                // treasury reward (t-addr)
-                var destination = FoundersAddressToScriptDestination(GetTreasuryRewardAddress());
-                var amount = new Money(Math.Round(blockReward * (networkParams.PercentTreasuryReward / 100m)), MoneyUnit.Satoshi);
-                tx.Outputs.Add(amount, destination);
-            }
-
-            else
-            {
-                // pool reward (t-addr)
-                rewardToPool = new Money(Math.Round(blockReward * (1m - (networkParams.PercentFoundersReward) / 100m)) + rewardFees, MoneyUnit.Satoshi);
-                tx.Outputs.Add(rewardToPool, poolAddressDestination);
-
-                // founders reward (t-addr)
-                var destination = FoundersAddressToScriptDestination(GetFoundersRewardAddress());
-                var amount = new Money(Math.Round(blockReward * (networkParams.PercentFoundersReward / 100m)), MoneyUnit.Satoshi);
-                tx.Outputs.Add(amount, destination);
-            }
-        }
-
-        else
-        {
-            // no founders reward
-            // pool reward (t-addr)
-            rewardToPool = new Money(blockReward + rewardFees, MoneyUnit.Satoshi);
-            tx.Outputs.Add(rewardToPool, poolAddressDestination);
-        }
-
-        tx.Inputs.Add(TxIn.CreateCoinbase((int) BlockTemplate.Height));
-
-        return tx;
-    }
 
         private byte[] SerializeNumber(long value)
         {
@@ -342,38 +202,86 @@ namespace Miningcore.Blockchain.Koto
         }
 
     public virtual (Share Share, string BlockHex) ProcessShare(StratumConnection worker, string extraNonce2, string nTime, string solution)
-    {
-        Contract.RequiresNonNull(worker);
-        Contract.Requires<ArgumentException>(!string.IsNullOrEmpty(extraNonce2));
-        Contract.Requires<ArgumentException>(!string.IsNullOrEmpty(nTime));
-        Contract.Requires<ArgumentException>(!string.IsNullOrEmpty(solution));
+        {
+            var shareError = (string error) =>
+            {
+                return (new Share { Error = error }, null);
+            };
+            var context = worker.ContextAs<KotoWorkerContext>();
+            var extraNonce1 = context.ExtraNonce1;
+            var nonce = context.ExtraNonce1 + extraNonce2;
+            var submitTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
-        var context = worker.ContextAs<BitcoinWorkerContext>();
+            if (extraNonce2.Length / 2 != worker.ExtraNonce2Size)
+                return shareError("incorrect size of extranonce2");
 
-        // validate nTime
-        if(nTime.Length != 8)
-            throw new StratumException(StratumError.Other, "incorrect size of ntime");
+            if (nTime.Length != 8)
+                return shareError("incorrect size of ntime");
 
-        var nTimeInt = uint.Parse(nTime.HexToReverseByteArray().ToHexString(), NumberStyles.HexNumber);
-        if(nTimeInt < BlockTemplate.CurTime || nTimeInt > ((DateTimeOffset) clock.Now).ToUnixTimeSeconds() + 7200)
-            throw new StratumException(StratumError.Other, "ntime out of range");
+            var nTimeInt = Convert.ToInt64(nTime, 16);
+            if (nTimeInt < BlockTemplate.CurTime || nTimeInt > submitTime + 7200)
+                return shareError("ntime out of range");
 
-        var nonce = context.ExtraNonce1 + extraNonce2;
+            if (nonce.Length != 8)
+                return shareError("incorrect size of nonce");
 
-        // validate nonce
-        if(nonce.Length != 64)
-            throw new StratumException(StratumError.Other, "incorrect size of extraNonce2");
+            if (!RegisterSubmit(extraNonce1, extraNonce2, nTime, nonce))
+                return shareError("duplicate share");
 
-        // validate solution
-        if(solution.Length != (networkParams.SolutionSize + networkParams.SolutionPreambleSize) * 2)
-            throw new StratumException(StratumError.Other, "incorrect size of solution");
+            var extraNonce1Buffer = Encoders.Hex.DecodeData(extraNonce1);
+            var extraNonce2Buffer = Encoders.Hex.DecodeData(extraNonce2);
 
-        // dupe check
-        if(!RegisterSubmit(nonce, solution))
-            throw new StratumException(StratumError.DuplicateShare, "duplicate share");
+            var coinbaseBuffer = SerializeCoinbase(extraNonce1Buffer, extraNonce2Buffer);
+            var coinbaseHash = Sha256Hash(coinbaseBuffer);
 
-        return ProcessShareInternal(worker, nonce, nTimeInt, solution);
-    }
+            var merkleRoot = ComputeMerkleRoot(new List<string> { coinbaseHash });
+            var merkleRootReversed = ReverseBytes(Encoders.Hex.DecodeData(merkleRoot));
+
+            var headerBuffer = SerializeHeader(merkleRootReversed, nTime, nonce);
+            var headerHash = Sha256Hash(headerBuffer);
+            var headerBigNum = new NBitcoin.BouncyCastle.Math.BigInteger(1, headerHash);
+
+            var shareDiff = (double)NBitcoin.BouncyCastle.Math.BigInteger.ValueOf(0x00000000FFFF0000).ToDouble() / headerBigNum.ToDouble();
+            var blockDiffAdjusted = BlockTemplate.Difficulty * shareDiff;
+
+            string blockHash = null;
+            string blockHex = null;
+
+            if (BlockTemplate.Target.CompareTo(headerBigNum) >= 0)
+            {
+                blockHex = SerializeBlock(headerBuffer, coinbaseBuffer);
+                blockHash = Sha256Hash(headerBuffer);
+            }
+            else
+            {
+                if (shareDiff / worker.Difficulty < 0.99)
+                {
+                    if (worker.PreviousDifficulty.HasValue && shareDiff >= worker.PreviousDifficulty)
+                    {
+                        worker.Difficulty = worker.PreviousDifficulty.Value;
+                    }
+                    else
+                    {
+                        return shareError("low difficulty share of " + shareDiff);
+                    }
+                }
+            }
+
+            var share = new Share
+            {
+                BlockHeight = BlockTemplate.Height,
+                BlockReward = BlockTemplate.CoinbaseValue,
+                Difficulty = worker.Difficulty,
+                ShareDiff = shareDiff,
+                BlockDiff = blockDiffAdjusted,
+                BlockHash = blockHash,
+                Worker = worker,
+                IsBlockCandidate = blockHash != null
+            };
+
+            return (share, blockHex);
+        }
+
 
         private byte[] SerializeCoinbase(byte[] extraNonce1, byte[] extraNonce2)
         {
@@ -499,79 +407,7 @@ namespace Miningcore.Blockchain.Koto
             var length = VarIntBuffer((ulong)strBytes.Length);
             return Combine(length, strBytes);
         }
-            protected virtual (Share Share, string BlockHex) ProcessShareInternal(StratumConnection worker, string nonce,
-        uint nTime, string solution)
-    {
-        var context = worker.ContextAs<BitcoinWorkerContext>();
-        var solutionBytes = (Span<byte>) solution.HexToByteArray();
 
-        // serialize block-header
-        var headerBytes = SerializeHeader(nTime, nonce);
-
-        // verify solution
-        if(!solver.Verify(headerBytes, solutionBytes[networkParams.SolutionPreambleSize..]))
-            throw new StratumException(StratumError.Other, "invalid solution");
-
-        // concat header and solution
-        Span<byte> headerSolutionBytes = stackalloc byte[headerBytes.Length + solutionBytes.Length];
-        headerBytes.CopyTo(headerSolutionBytes);
-        solutionBytes.CopyTo(headerSolutionBytes[headerBytes.Length..]);
-
-        // hash block-header
-        Span<byte> headerHash = stackalloc byte[32];
-        headerHasher.Digest(headerSolutionBytes, headerHash, (ulong) nTime);
-        var headerValue = new uint256(headerHash);
-
-        // calc share-diff
-        var shareDiff = (double) new BigRational(networkParams.Diff1BValue, headerHash.ToBigInteger());
-        var stratumDifficulty = context.Difficulty;
-        var ratio = shareDiff / stratumDifficulty;
-
-        // check if the share meets the much harder block difficulty (block candidate)
-        var isBlockCandidate = headerValue <= blockTargetValue;
-
-        // test if share meets at least workers current difficulty
-        if(!isBlockCandidate && ratio < 0.99)
-        {
-            // check if share matched the previous difficulty from before a vardiff retarget
-            if(context.VarDiff?.LastUpdate != null && context.PreviousDifficulty.HasValue)
-            {
-                ratio = shareDiff / context.PreviousDifficulty.Value;
-
-                if(ratio < 0.99)
-                    throw new StratumException(StratumError.LowDifficultyShare, $"low difficulty share ({shareDiff})");
-
-                // use previous difficulty
-                stratumDifficulty = context.PreviousDifficulty.Value;
-            }
-
-            else
-                throw new StratumException(StratumError.LowDifficultyShare, $"low difficulty share ({shareDiff})");
-        }
-
-        var result = new Share
-        {
-            BlockHeight = BlockTemplate.Height,
-            NetworkDifficulty = Difficulty,
-            Difficulty = stratumDifficulty,
-        };
-
-        if(isBlockCandidate)
-        {
-            var headerHashReversed = headerHash.ToNewReverseArray();
-
-            result.IsBlockCandidate = true;
-            result.BlockReward = rewardToPool.ToDecimal(MoneyUnit.BTC);
-            result.BlockHash = headerHashReversed.ToHexString();
-
-            var blockBytes = SerializeBlock(headerBytes, coinbaseInitial, solutionBytes);
-            var blockHex = blockBytes.ToHexString();
-
-            return (result, blockHex);
-        }
-
-        return (result, null);
-    }
 
     }
 }
