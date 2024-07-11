@@ -23,7 +23,7 @@ namespace Miningcore.Blockchain.Koto
     {
         private KotoJobManager manager;
         private KotoExtraNonceProvider extraNonceProvider;
-
+        private KotoCoinTemplate coin;
         public KotoPool(IComponentContext ctx,
             JsonSerializerSettings serializerSettings,
             IConnectionFactory cf,
@@ -36,6 +36,7 @@ namespace Miningcore.Blockchain.Koto
 
         protected override async Task SetupJobManager(CancellationToken ct)
         {
+            coin = poolConfig.Template.As<KotoCoinTemplate>();
             manager = ctx.Resolve<KotoJobManager>();
             extraNonceProvider = ctx.Resolve<KotoExtraNonceProvider>();
             manager.Configure(poolConfig, clusterConfig);
@@ -52,11 +53,11 @@ namespace Miningcore.Blockchain.Koto
             switch (method)
             {
                 case BitcoinStratumMethods.Subscribe:
-                    await OnSubscribeAsync(ct, connection, requestId, request.Value.Params);
+                    await OnSubscribeAsync(connection, tsRequest);
                     break;
 
                 case BitcoinStratumMethods.Authorize:
-                    await OnAuthorizeAsync(ct, connection, requestId, request.Value.Params);
+                    await OnAuthorizeAsync(connection, tsRequest, ct);
                     break;
 
                 case BitcoinStratumMethods.SubmitShare:
@@ -90,38 +91,112 @@ namespace Miningcore.Blockchain.Koto
             return result;
         }
 
-        private async Task OnSubscribeAsync(CancellationToken ct, StratumConnection client, object requestId, JToken[] parameters)
+    protected virtual async Task OnSubscribeAsync(StratumConnection connection, Timestamped<JsonRpcRequest> tsRequest)
+    {
+        var request = tsRequest.Value;
+
+        if(request.Id == null)
+            throw new StratumException(StratumError.MinusOne, "missing request id");
+
+        var context = connection.ContextAs<KotoWorkerContext>();
+        var requestParams = request.ParamsAs<string[]>();
+
+        var data = new object[]
         {
-            var context = client.ContextAs<KotoWorkerContext>();
-
-            var extraNonce1 = extraNonceProvider.Next();
-            context.ExtraNonce1 = extraNonce1;
-            context.ExtraNonce2Size = extraNonceProvider.Size;
-
-            var response = new object[]
+            new object[]
             {
-                new object[]
-                {
-                    new object[] { BitcoinStratumMethods.MiningNotify, extraNonce1, context.ExtraNonce2Size }
-                },
-                context.SubscriberId
-            };
-
-            await client.RespondAsync(response, requestId);
+                new object[] { BitcoinStratumMethods.SetDifficulty, connection.ConnectionId },
+                new object[] { BitcoinStratumMethods.MiningNotify, connection.ConnectionId }
+            }
         }
+        .Concat(manager.GetSubscriberData(connection))
+        .ToArray();
 
-        private async Task OnAuthorizeAsync(CancellationToken ct, StratumConnection client, object requestId, JToken[] parameters)
+        await connection.RespondAsync(data, request.Id);
+
+        // setup worker context
+        context.IsSubscribed = true;
+        context.UserAgent = requestParams.FirstOrDefault()?.Trim();
+
+        // Nicehash support
+        var nicehashDiff = await GetNicehashStaticMinDiff(context, coin.Name, coin.GetAlgorithmName());
+
+        if(nicehashDiff.HasValue)
         {
-            var workerName = parameters[0].ToString();
-            var password = parameters[1]?.ToString();
+            logger.Info(() => $"[{connection.ConnectionId}] Nicehash detected. Using API supplied difficulty of {nicehashDiff.Value}");
 
-            var context = client.ContextAs<KotoWorkerContext>();
-            context.IsAuthorized = true;
-            context.MinerName = workerName;
-            context.MinerPassword = password;
-
-            await client.RespondAsync(true, requestId);
+            context.VarDiff = null; // disable vardiff
+            context.SetDifficulty(nicehashDiff.Value);
         }
+
+        // send intial update
+        await connection.NotifyAsync(BitcoinStratumMethods.SetDifficulty, new object[] { context.Difficulty });
+        await connection.NotifyAsync(BitcoinStratumMethods.MiningNotify, currentJobParams);
+    }
+
+    protected virtual async Task OnAuthorizeAsync(StratumConnection connection, Timestamped<JsonRpcRequest> tsRequest, CancellationToken ct)
+    {
+        var request = tsRequest.Value;
+
+        if(request.Id == null)
+            throw new StratumException(StratumError.MinusOne, "missing request id");
+
+        var context = connection.ContextAs<BitcoinWorkerContext>();
+        var requestParams = request.ParamsAs<string[]>();
+        var workerValue = requestParams?.Length > 0 ? requestParams[0] : null;
+        var password = requestParams?.Length > 1 ? requestParams[1] : null;
+        var passParts = password?.Split(PasswordControlVarsSeparator);
+
+        // extract worker/miner
+        var split = workerValue?.Split('.');
+        var minerName = split?.FirstOrDefault()?.Trim();
+        var workerName = split?.Skip(1).FirstOrDefault()?.Trim() ?? string.Empty;
+
+        // assumes that minerName is an address
+        context.IsAuthorized = await manager.ValidateAddressAsync(minerName, ct);
+        context.Miner = minerName;
+        context.Worker = workerName;
+
+        if(context.IsAuthorized)
+        {
+            // respond
+            await connection.RespondAsync(context.IsAuthorized, request.Id);
+
+            // log association
+            logger.Info(() => $"[{connection.ConnectionId}] Authorized worker {workerValue}");
+
+            // extract control vars from password
+            var staticDiff = GetStaticDiffFromPassparts(passParts);
+
+            // Static diff
+            if(staticDiff.HasValue &&
+               (context.VarDiff != null && staticDiff.Value >= context.VarDiff.Config.MinDiff ||
+                   context.VarDiff == null && staticDiff.Value > context.Difficulty))
+            {
+                context.VarDiff = null; // disable vardiff
+                context.SetDifficulty(staticDiff.Value);
+
+                logger.Info(() => $"[{connection.ConnectionId}] Setting static difficulty of {staticDiff.Value}");
+
+                await connection.NotifyAsync(BitcoinStratumMethods.SetDifficulty, new object[] { context.Difficulty });
+            }
+        }
+
+        else
+        {
+            await connection.RespondErrorAsync(StratumError.UnauthorizedWorker, "Authorization failed", request.Id, context.IsAuthorized);
+
+            if(clusterConfig?.Banning?.BanOnLoginFailure is null or true)
+            {
+                // issue short-time ban if unauthorized to prevent DDos on daemon (validateaddress RPC)
+                logger.Info(() => $"[{connection.ConnectionId}] Banning unauthorized worker {minerName} for {loginFailureBanTimeout.TotalSeconds} sec");
+
+                banManager.Ban(connection.RemoteEndpoint.Address, loginFailureBanTimeout);
+
+                Disconnect(connection);
+            }
+        }
+    }
 
     protected virtual async Task OnSubmitAsync(StratumConnection connection, Timestamped<JsonRpcRequest> tsRequest, CancellationToken ct)
     {
