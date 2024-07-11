@@ -34,6 +34,9 @@ namespace Miningcore.Blockchain.Koto
         protected KotoCoinTemplate coin;
         protected Network network;
         public byte[][] GenerationTransaction { get; set; }
+        protected byte[] merkleRoot;
+        protected byte[] merkleRootReversed;
+        protected string merkleRootReversedHex;
         private KotoCoinTemplate.KotoNetworkParams networkParams;
         private readonly ConcurrentDictionary<string, bool> submits = new(StringComparer.OrdinalIgnoreCase);
 
@@ -55,13 +58,14 @@ public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig
 
     public string CalculateMerkleRoot()
     {
-        var txHashes = new List<uint256> { new(GenerationTransaction[0].ToString()) };
+        var txHashes = new List<uint256> { new(GenerationTransaction[0]) };
         txHashes.AddRange(BlockTemplate.Transactions.Select(tx => new uint256(tx.Hash.HexToReverseByteArray())));
 
         // build merkle root
         merkleRoot = MerkleNode.GetRoot(txHashes).Hash.ToBytes().ReverseInPlace();
         merkleRootReversed = merkleRoot.ReverseInPlace();
         merkleRootReversedHex = merkleRootReversed.ToHexString();
+        return merkleRoot;
     }
 
     private string CreateCoinbaseTransaction()
