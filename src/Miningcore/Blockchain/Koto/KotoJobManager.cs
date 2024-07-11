@@ -38,7 +38,7 @@ namespace Miningcore.Blockchain.Koto
         {
     
             this.extraNonceProvider = extraNonceProvider as KotoExtraNonceProvider;
-            ConfigureDaemons();
+            //ConfigureDaemons();
         }
 
         protected override void ConfigureDaemons()
