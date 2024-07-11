@@ -256,12 +256,13 @@ namespace Miningcore.Blockchain.Koto
                 blockHash = Sha256Hash(headerBuffer);
             }
             else
-            {
-                if (shareDiff / worker.Difficulty < 0.99)
+            {   
+                var context = worker.ContextAs<KotoWorkerContext>();
+                if (shareDiff / context.Difficulty < 0.99)
                 {
-                    if (worker.PreviousDifficulty.HasValue && shareDiff >= worker.PreviousDifficulty)
+                    if (context.PreviousDifficulty.HasValue && shareDiff >= context.PreviousDifficulty)
                     {
-                        worker.Difficulty = worker.PreviousDifficulty.Value;
+                        context.Difficulty = context.PreviousDifficulty.Value;
                     }
                     else
                     {
@@ -275,8 +276,8 @@ namespace Miningcore.Blockchain.Koto
                 BlockHeight = BlockTemplate.Height,
                 BlockReward = BlockTemplate.CoinbaseValue,
                 Difficulty = worker.Difficulty,
-                ShareDiff = shareDiff,
-                BlockDiff = blockDiffAdjusted,
+                Difficulty = shareDiff,
+                NetworkDifficulty = blockDiffAdjusted,
                 BlockHash = blockHash,
                 Worker = worker,
                 IsBlockCandidate = blockHash != null
