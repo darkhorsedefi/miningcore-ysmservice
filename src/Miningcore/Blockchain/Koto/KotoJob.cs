@@ -273,13 +273,13 @@ namespace Miningcore.Blockchain.Koto
 
             var share = new Share
             {
-                BlockHeight = BlockTemplate.Height,
+                BlockHeight = (long) BlockTemplate.Height,
                 BlockReward = BlockTemplate.CoinbaseValue,
                 Difficulty = worker.Difficulty,
                 Difficulty = shareDiff,
                 NetworkDifficulty = blockDiffAdjusted,
                 BlockHash = blockHash,
-                Worker = worker,
+                Worker = context.Worker,
                 IsBlockCandidate = blockHash != null
             };
 
