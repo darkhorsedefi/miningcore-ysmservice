@@ -13,6 +13,7 @@ using Miningcore.Crypto;
 using Miningcore.Mining;
 using Miningcore.Rpc;
 using Miningcore.Stratum;
+using Miningcore.Time;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NBitcoin;

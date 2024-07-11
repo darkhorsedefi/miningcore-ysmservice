@@ -10,6 +10,7 @@ using Miningcore.Persistence.Model;
 using Miningcore.Persistence.Repositories;
 using Miningcore.Payments;
 using Miningcore.Util;
+using Miningcore.Mining;
 using NLog;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
