@@ -43,7 +43,7 @@ namespace Miningcore.Blockchain.Koto
             rpc = rpcClient;
         }
 
-        protected override async Task<(bool IsNew, string Blob)> BuildJobAsync(CancellationToken ct)
+        protected async Task<(bool IsNew, string Blob)> BuildJobAsync(CancellationToken ct)
         {
             var response = await daemonClient.GetBlockTemplateAsync();
 
