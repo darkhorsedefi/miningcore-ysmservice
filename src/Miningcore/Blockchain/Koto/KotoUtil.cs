@@ -5,6 +5,30 @@ using System.Text;
 
 public static class KotoUtil
 {
+    public static string CalculateMerkleRoot(string[] merkleBranches, string coinbaseHash)
+    {
+        byte[] coinbaseHashBytes = HexToBytes(coinbaseHash);
+        byte[] hash = coinbaseHashBytes;
+
+        foreach (var branch in merkleBranches)
+        {
+            byte[] branchBytes = HexToBytes(branch);
+            byte[] concatenated;
+
+            if (BitConverter.IsLittleEndian)
+            {
+                concatenated = ReverseBuffer(hash).Concat(ReverseBuffer(branchBytes)).ToArray();
+            }
+            else
+            {
+                concatenated = hash.Concat(branchBytes).ToArray();
+            }
+
+            hash = Sha256d(concatenated);
+        }
+
+        return BytesToHex(ReverseBuffer(hash));
+    }
     // バージョンバイトを取得するメソッド
     public static byte[] GetVersionByte(string addr)
     {

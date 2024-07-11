@@ -33,6 +33,7 @@ namespace Miningcore.Blockchain.Koto
         public string JobId { get; set; }
         protected KotoCoinTemplate coin;
         protected Network network;
+        public byte[][] GenerationTransaction { get; set; }
         private KotoCoinTemplate.KotoNetworkParams networkParams;
         private readonly ConcurrentDictionary<string, bool> submits = new(StringComparer.OrdinalIgnoreCase);
 
@@ -45,22 +46,56 @@ public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig
     Difficulty = (double)new BigRational(networkParams.Diff1BValue, BlockTemplate.Target.HexToReverseByteArray().AsSpan().ToBigInteger());
     PoolConfig = poolConfig;
     PreviousBlockHash = blockTemplate.PreviousBlockHash;
-    CoinbaseTransaction = CreateCoinbaseTransaction();
+    SetGenerationTransaction()
+    CoinbaseTransaction = GenerationTransaction[0].ToString();
     Transactions = blockTemplate.Transactions.Select(dr => dr.ToString()).ToArray();
     MerkleRoot = CalculateMerkleRoot();
     Bits = blockTemplate.Bits;
 }
 
-        private string CreateCoinbaseTransaction()
+    public string CalculateMerkleRoot()
+    {
+        var txHashes = new List<uint256> { new(GenerationTransaction[0].ToString()) };
+        txHashes.AddRange(BlockTemplate.Transactions.Select(tx => new uint256(tx.Hash.HexToReverseByteArray())));
+
+        // build merkle root
+        merkleRoot = MerkleNode.GetRoot(txHashes).Hash.ToBytes().ReverseInPlace();
+        merkleRootReversed = merkleRoot.ReverseInPlace();
+        merkleRootReversedHex = merkleRootReversed.ToHexString();
+    }
+
+    private string CreateCoinbaseTransaction()
+    {
+        var extraNoncePlaceholder = new byte[4]; // Placeholder for extraNonce
+
+        var p1 = SerializeCoinbasePart1(extraNoncePlaceholder);
+        var p2 = SerializeCoinbasePart2();
+
+        // Combine parts and convert to hex string
+        var coinbaseTransaction = Combine(p1, extraNoncePlaceholder, p2);
+        return BitConverter.ToString(coinbaseTransaction).Replace("-", "").ToLower();
+    }
+
+    // GenerationTransactionにセットするメソッド
+    public void SetGenerationTransaction()
+    {
+        var coinbaseTransactionHex = CreateCoinbaseTransaction();
+        var coinbaseTransactionBytes = KotoUtil.HexToBytes(coinbaseTransactionHex);
+
+        GenerationTransaction = new byte[][]
         {
-            var extraNoncePlaceholder = new byte[4]; // Placeholder for extraNonce
-
-            var p1 = SerializeCoinbasePart1(extraNoncePlaceholder);
-            var p2 = SerializeCoinbasePart2();
-
-            return p1.ToString();//Combine(p1, extraNoncePlaceholder, p2);
-        }
-
+            coinbaseTransactionBytes.Take(coinbaseTransactionBytes.Length / 2).ToArray(),
+            coinbaseTransactionBytes.Skip(coinbaseTransactionBytes.Length / 2).ToArray()
+        };
+    }
+    public byte[] SerializeCoinbase(byte[] extraNonce1, byte[] extraNonce2)
+    {
+        return GenerationTransaction[0]
+            .Concat(extraNonce1)
+            .Concat(extraNonce2)
+            .Concat(GenerationTransaction[1])
+            .ToArray();
+    }
         private byte[] SerializeCoinbasePart1(byte[] extraNoncePlaceholder)
         {
             var txVersion = 1;
@@ -163,7 +198,7 @@ public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig
 
         if (reward == 0)
         {
-            reward = KotoUtil.GetKotoBlockSubsidy(BlockTemplate.Height);
+            reward = KotoUtil.GetKotoBlockSubsidy((long)BlockTemplate.Height);
             reward -= (long)BlockTemplate.CoinbaseTxn.fee; // rpcData.coinbasetxn.fee := <total fee of transactions> * -1
 
             int nScript = Convert.ToInt32(BlockTemplate.CoinbaseTxn.Data.Substring(82, 2), 16);
