@@ -170,5 +170,9 @@ namespace Miningcore.Blockchain.Koto
 
             await client.RespondAsync(response, requestId, false);
         }
+        protected override WorkerContextBase CreateWorkerContext()
+        {
+            return new KotoWorkerContext();
+        }
     }
 }
