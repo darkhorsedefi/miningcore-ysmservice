@@ -201,84 +201,39 @@ namespace Miningcore.Blockchain.Koto
             return txHashes[0];
         }
 
-        public (Share Share, string BlockHex) ProcessShare(StratumConnection worker, string extraNonce1, string extraNonce2, string nTime, string nonce)
-        {
-            var shareError = (string error) =>
-            {
-                return (new Share { Error = error }, null);
-            };
+    public virtual (Share Share, string BlockHex) ProcessShare(StratumConnection worker, string extraNonce2, string nTime, string solution)
+    {
+        Contract.RequiresNonNull(worker);
+        Contract.Requires<ArgumentException>(!string.IsNullOrEmpty(extraNonce2));
+        Contract.Requires<ArgumentException>(!string.IsNullOrEmpty(nTime));
+        Contract.Requires<ArgumentException>(!string.IsNullOrEmpty(solution));
 
-            var submitTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        var context = worker.ContextAs<BitcoinWorkerContext>();
 
-            if (extraNonce2.Length / 2 != worker.ExtraNonce2Size)
-                return shareError("incorrect size of extranonce2");
+        // validate nTime
+        if(nTime.Length != 8)
+            throw new StratumException(StratumError.Other, "incorrect size of ntime");
 
-            if (nTime.Length != 8)
-                return shareError("incorrect size of ntime");
+        var nTimeInt = uint.Parse(nTime.HexToReverseByteArray().ToHexString(), NumberStyles.HexNumber);
+        if(nTimeInt < BlockTemplate.CurTime || nTimeInt > ((DateTimeOffset) clock.Now).ToUnixTimeSeconds() + 7200)
+            throw new StratumException(StratumError.Other, "ntime out of range");
 
-            var nTimeInt = Convert.ToInt64(nTime, 16);
-            if (nTimeInt < BlockTemplate.CurTime || nTimeInt > submitTime + 7200)
-                return shareError("ntime out of range");
+        var nonce = context.ExtraNonce1 + extraNonce2;
 
-            if (nonce.Length != 8)
-                return shareError("incorrect size of nonce");
+        // validate nonce
+        if(nonce.Length != 64)
+            throw new StratumException(StratumError.Other, "incorrect size of extraNonce2");
 
-            if (!RegisterSubmit(extraNonce1, extraNonce2, nTime, nonce))
-                return shareError("duplicate share");
+        // validate solution
+        if(solution.Length != (networkParams.SolutionSize + networkParams.SolutionPreambleSize) * 2)
+            throw new StratumException(StratumError.Other, "incorrect size of solution");
 
-            var extraNonce1Buffer = Encoders.Hex.DecodeData(extraNonce1);
-            var extraNonce2Buffer = Encoders.Hex.DecodeData(extraNonce2);
+        // dupe check
+        if(!RegisterSubmit(nonce, solution))
+            throw new StratumException(StratumError.DuplicateShare, "duplicate share");
 
-            var coinbaseBuffer = SerializeCoinbase(extraNonce1Buffer, extraNonce2Buffer);
-            var coinbaseHash = Sha256Hash(coinbaseBuffer);
-
-            var merkleRoot = ComputeMerkleRoot(new List<string> { coinbaseHash });
-            var merkleRootReversed = ReverseBytes(Encoders.Hex.DecodeData(merkleRoot));
-
-            var headerBuffer = SerializeHeader(merkleRootReversed, nTime, nonce);
-            var headerHash = Sha256Hash(headerBuffer);
-            var headerBigNum = new NBitcoin.BouncyCastle.Math.BigInteger(1, headerHash);
-
-            var shareDiff = (double)NBitcoin.BouncyCastle.Math.BigInteger.ValueOf(0x00000000FFFF0000).ToDouble() / headerBigNum.ToDouble();
-            var blockDiffAdjusted = BlockTemplate.Difficulty * shareDiff;
-
-            string blockHash = null;
-            string blockHex = null;
-
-            if (BlockTemplate.Target.CompareTo(headerBigNum) >= 0)
-            {
-                blockHex = SerializeBlock(headerBuffer, coinbaseBuffer);
-                blockHash = Sha256Hash(headerBuffer);
-            }
-            else
-            {
-                if (shareDiff / worker.Difficulty < 0.99)
-                {
-                    if (worker.PreviousDifficulty.HasValue && shareDiff >= worker.PreviousDifficulty)
-                    {
-                        worker.Difficulty = worker.PreviousDifficulty.Value;
-                    }
-                    else
-                    {
-                        return shareError("low difficulty share of " + shareDiff);
-                    }
-                }
-            }
-
-            var share = new Share
-            {
-                BlockHeight = BlockTemplate.Height,
-                BlockReward = BlockTemplate.CoinbaseValue,
-                Difficulty = worker.Difficulty,
-                Difficulty = shareDiff,
-                NetworkDifficulty = blockDiffAdjusted,
-                BlockHash = blockHash,
-                Worker = worker,
-                IsBlockCandidate = blockHash != null
-            };
-
-            return (share, blockHex);
-        }
+        return ProcessShareInternal(worker, nonce, nTimeInt, solution);
+    }
 
         private byte[] SerializeCoinbase(byte[] extraNonce1, byte[] extraNonce2)
         {
@@ -404,5 +359,79 @@ namespace Miningcore.Blockchain.Koto
             var length = VarIntBuffer((ulong)strBytes.Length);
             return Combine(length, strBytes);
         }
+            protected virtual (Share Share, string BlockHex) ProcessShareInternal(StratumConnection worker, string nonce,
+        uint nTime, string solution)
+    {
+        var context = worker.ContextAs<BitcoinWorkerContext>();
+        var solutionBytes = (Span<byte>) solution.HexToByteArray();
+
+        // serialize block-header
+        var headerBytes = SerializeHeader(nTime, nonce);
+
+        // verify solution
+        if(!solver.Verify(headerBytes, solutionBytes[networkParams.SolutionPreambleSize..]))
+            throw new StratumException(StratumError.Other, "invalid solution");
+
+        // concat header and solution
+        Span<byte> headerSolutionBytes = stackalloc byte[headerBytes.Length + solutionBytes.Length];
+        headerBytes.CopyTo(headerSolutionBytes);
+        solutionBytes.CopyTo(headerSolutionBytes[headerBytes.Length..]);
+
+        // hash block-header
+        Span<byte> headerHash = stackalloc byte[32];
+        headerHasher.Digest(headerSolutionBytes, headerHash, (ulong) nTime);
+        var headerValue = new uint256(headerHash);
+
+        // calc share-diff
+        var shareDiff = (double) new BigRational(networkParams.Diff1BValue, headerHash.ToBigInteger());
+        var stratumDifficulty = context.Difficulty;
+        var ratio = shareDiff / stratumDifficulty;
+
+        // check if the share meets the much harder block difficulty (block candidate)
+        var isBlockCandidate = headerValue <= blockTargetValue;
+
+        // test if share meets at least workers current difficulty
+        if(!isBlockCandidate && ratio < 0.99)
+        {
+            // check if share matched the previous difficulty from before a vardiff retarget
+            if(context.VarDiff?.LastUpdate != null && context.PreviousDifficulty.HasValue)
+            {
+                ratio = shareDiff / context.PreviousDifficulty.Value;
+
+                if(ratio < 0.99)
+                    throw new StratumException(StratumError.LowDifficultyShare, $"low difficulty share ({shareDiff})");
+
+                // use previous difficulty
+                stratumDifficulty = context.PreviousDifficulty.Value;
+            }
+
+            else
+                throw new StratumException(StratumError.LowDifficultyShare, $"low difficulty share ({shareDiff})");
+        }
+
+        var result = new Share
+        {
+            BlockHeight = BlockTemplate.Height,
+            NetworkDifficulty = Difficulty,
+            Difficulty = stratumDifficulty,
+        };
+
+        if(isBlockCandidate)
+        {
+            var headerHashReversed = headerHash.ToNewReverseArray();
+
+            result.IsBlockCandidate = true;
+            result.BlockReward = rewardToPool.ToDecimal(MoneyUnit.BTC);
+            result.BlockHash = headerHashReversed.ToHexString();
+
+            var blockBytes = SerializeBlock(headerBytes, coinbaseInitial, solutionBytes);
+            var blockHex = blockBytes.ToHexString();
+
+            return (result, blockHex);
+        }
+
+        return (result, null);
+    }
+
     }
 }

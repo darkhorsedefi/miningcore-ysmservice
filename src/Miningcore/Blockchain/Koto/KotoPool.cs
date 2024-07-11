@@ -59,7 +59,7 @@ namespace Miningcore.Blockchain.Koto
                     break;
 
                 case BitcoinStratumMethods.SubmitShare:
-                    await OnSubmitAsync(ct, connection, requestId, request.Value.Params);
+                    await OnSubmitAsync(connection, tsRequest, ct);
                     break;
 
                 case BitcoinStratumMethods.GetTransactions:
@@ -122,22 +122,85 @@ namespace Miningcore.Blockchain.Koto
             await client.RespondAsync(true, requestId);
         }
 
-        private async Task OnSubmitAsync(CancellationToken ct, StratumConnection client, object requestId, JToken[] parameters)
+    protected virtual async Task OnSubmitAsync(StratumConnection connection, Timestamped<JsonRpcRequest> tsRequest, CancellationToken ct)
+    {
+        var request = tsRequest.Value;
+        var context = connection.ContextAs<BitcoinWorkerContext>();
+
+        try
         {
-            var context = client.ContextAs<BitcoinWorkerContext>();
-            var workerName = context.MinerName;
-            var extraNonce2 = parameters[1].ToString();
-            var nTime = parameters[2].ToString();
-            var nonce = parameters[3].ToString();
+            if(request.Id == null)
+                throw new StratumException(StratumError.MinusOne, "missing request id");
 
-            // Submit share logic
-            var share = await manager.SubmitShareAsync(client, workerName, extraNonce2, nTime, nonce, ct);
+            // check age of submission (aged submissions are usually caused by high server load)
+            var requestAge = clock.Now - tsRequest.Timestamp.UtcDateTime;
 
-            if (share)
-                await client.RespondAsync(true, requestId);
-            else
-                await client.RespondAsync(false, requestId);
+            if(requestAge > maxShareAge)
+            {
+                logger.Warn(() => $"[{connection.ConnectionId}] Dropping stale share submission request (server overloaded?)");
+                return;
+            }
+
+            // check worker state
+            context.LastActivity = clock.Now;
+
+            // validate worker
+            if(!context.IsAuthorized)
+                throw new StratumException(StratumError.UnauthorizedWorker, "unauthorized worker");
+            else if(!context.IsSubscribed)
+                throw new StratumException(StratumError.NotSubscribed, "not subscribed");
+
+            var requestParams = request.ParamsAs<string[]>();
+
+            // submit
+            var share = await manager.SubmitShareAsync(connection, requestParams, ct);
+            
+            // Nicehash's stupid validator insists on "error" property present
+            // in successful responses which is a violation of the JSON-RPC spec
+            // [We miss you Oliver <3 We miss you so much <3 Respect the goddamn standards Nicehash :(]
+            var response = new JsonRpcResponse<object>(true, request.Id);
+
+            if(context.IsNicehash)
+            {
+                response.Extra = new Dictionary<string, object>();
+                response.Extra["error"] = null;
+            }
+            
+            await connection.RespondAsync(response);
+
+            // publish
+            messageBus.SendMessage(share);
+
+            // telemetry
+            PublishTelemetry(TelemetryCategory.Share, clock.Now - tsRequest.Timestamp.UtcDateTime, true);
+
+            logger.Info(() => $"[{connection.ConnectionId}] Share accepted: D={Math.Round(share.Difficulty, 3)}");
+
+            // update pool stats
+            if(share.IsBlockCandidate)
+                poolStats.LastPoolBlockTime = clock.Now;
+
+            // update client stats
+            context.Stats.ValidShares++;
+
+            await UpdateVarDiffAsync(connection, false, ct);
         }
+
+        catch(StratumException ex)
+        {
+            // telemetry
+            PublishTelemetry(TelemetryCategory.Share, clock.Now - tsRequest.Timestamp.UtcDateTime, false);
+
+            // update client stats
+            context.Stats.InvalidShares++;
+            logger.Info(() => $"[{connection.ConnectionId}] Share rejected: {ex.Message} [{context.UserAgent}]");
+
+            // banning
+            ConsiderBan(connection, context, poolConfig.Banning);
+
+            throw;
+        }
+    }
 
         private async Task OnGetTransactionsAsync(CancellationToken ct, StratumConnection client, object requestId, JToken[] parameters)
         {

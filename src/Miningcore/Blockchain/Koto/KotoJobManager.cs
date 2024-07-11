@@ -232,45 +232,84 @@ namespace Miningcore.Blockchain.Koto
         }
     protected record SubmitResult(bool Accepted, string CoinbaseTx);
 
-    protected async Task<SubmitResult> SubmitBlockAsync(Share share, string blockHex, CancellationToken ct)
+    public async ValueTask<Share> SubmitShareAsync(StratumConnection worker,
+        object submission, CancellationToken ct)
     {
-        var submitBlockRequest = hasSubmitBlockMethod
-            ? new RpcRequest(BitcoinCommands.SubmitBlock, new[] { blockHex })
-            : new RpcRequest(BitcoinCommands.GetBlockTemplate, new { mode = "submit", data = blockHex });
+        Contract.RequiresNonNull(worker);
+        Contract.RequiresNonNull(submission);
 
-        var batch = new []
+        if(submission is not object[] submitParams)
+            throw new StratumException(StratumError.Other, "invalid params");
+
+        var context = worker.ContextAs<BitcoinWorkerContext>();
+
+        // extract params
+        var workerValue = (submitParams[0] as string)?.Trim();
+        var jobId = submitParams[1] as string;
+        var nTime = submitParams[2] as string;
+        var extraNonce2 = submitParams[3] as string;
+        var solution = submitParams[4] as string;
+
+        if(string.IsNullOrEmpty(workerValue))
+            throw new StratumException(StratumError.Other, "missing or invalid workername");
+
+        if(string.IsNullOrEmpty(solution))
+            throw new StratumException(StratumError.Other, "missing or invalid solution");
+
+        EquihashJob job;
+
+        lock(jobLock)
         {
-            submitBlockRequest,
-            new RpcRequest(BitcoinCommands.GetBlock, new[] { share.BlockHash })
-        };
-
-        var results = await rpc.ExecuteBatchAsync(logger, ct, batch);
-
-        // did submission succeed?
-        var submitResult = results[0];
-        var submitError = submitResult.Error?.Message ??
-            submitResult.Error?.Code.ToString(CultureInfo.InvariantCulture) ??
-            submitResult.Response?.ToString();
-
-        if(!string.IsNullOrEmpty(submitError))
-        {
-            logger.Warn(() => $"Block {share.BlockHeight} submission failed with: {submitError}");
-            messageBus.SendMessage(new AdminNotification("Block submission failed", $"Pool {poolConfig.Id} {(!string.IsNullOrEmpty(share.Source) ? $"[{share.Source.ToUpper()}] " : string.Empty)}failed to submit block {share.BlockHeight}: {submitError}"));
-            return new SubmitResult(false, null);
+            job = validJobs.FirstOrDefault(x => x.JobId == jobId);
         }
 
-        // was it accepted?
-        var acceptResult = results[1];
-        var block = acceptResult.Response?.ToObject<DaemonResponses.Block>();
-        var accepted = acceptResult.Error == null && block?.Hash == share.BlockHash;
+        if(job == null)
+            throw new StratumException(StratumError.JobNotFound, "job not found");
 
-        if(!accepted)
+        // validate & process
+        var (share, blockHex) = job.ProcessShare(worker, extraNonce2, nTime, solution);
+
+        // if block candidate, submit & check if accepted by network
+        if(share.IsBlockCandidate)
         {
-            logger.Warn(() => $"Block {share.BlockHeight} submission failed for pool {poolConfig.Id} because block was not found after submission");
-            messageBus.SendMessage(new AdminNotification($"[{poolConfig.Id}]-[{(!string.IsNullOrEmpty(share.Source) ? $"[{share.Source.ToUpper()}] " : string.Empty)}] Block submission failed", $"[{poolConfig.Id}]-[{(!string.IsNullOrEmpty(share.Source) ? $"[{share.Source.ToUpper()}] " : string.Empty)}] Block {share.BlockHeight} submission failed for pool {poolConfig.Id} because block was not found after submission"));
+            logger.Info(() => $"Submitting block {share.BlockHeight} [{share.BlockHash}]");
+            
+            SubmitResult acceptResponse;
+            
+            acceptResponse = await SubmitBlockAsync(share, blockHex, ct);
+            // is it still a block candidate?
+            share.IsBlockCandidate = acceptResponse.Accepted;
+
+            if(share.IsBlockCandidate)
+            {
+                logger.Info(() => $"Daemon accepted block {share.BlockHeight} [{share.BlockHash}] submitted by {context.Miner}");
+
+                OnBlockFound();
+
+                // persist the coinbase transaction-hash to allow the payment processor
+                // to verify later on that the pool has received the reward for the block
+                share.TransactionConfirmationData = acceptResponse.CoinbaseTx;
+            }
+
+            else
+            {
+                // clear fields that no longer apply
+                share.TransactionConfirmationData = null;
+            }
         }
 
-        return new SubmitResult(accepted, block?.Transactions.FirstOrDefault());
+        // enrich share with common data
+        share.PoolId = poolConfig.Id;
+        share.IpAddress = worker.RemoteEndpoint.Address.ToString();
+        share.Miner = context.Miner;
+        share.Worker = context.Worker;
+        share.UserAgent = context.UserAgent;
+        share.Source = clusterConfig.ClusterName;
+        share.NetworkDifficulty = job.Difficulty;
+        share.Difficulty = share.Difficulty;
+        share.Created = clock.Now;
+
+        return share;
     }
         protected override async Task<(bool IsNew, bool Force)> UpdateJob(CancellationToken ct, bool forceUpdate, string via = null, string json = null)
     {
