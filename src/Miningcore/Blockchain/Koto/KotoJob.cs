@@ -12,7 +12,6 @@ using Miningcore.Contracts;
 using Miningcore.Stratum;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using NBitcoin.BouncyCastle.Math;
 
 namespace Miningcore.Blockchain.Koto
 {
@@ -243,7 +242,12 @@ namespace Miningcore.Blockchain.Koto
 
             var headerBuffer = SerializeHeader(merkleRootReversed, nTime, nonce);
             var headerHash = Sha256Hash(headerBuffer).ToString();
-            var headerBigNum = new NBitcoin.BouncyCastle.Math.BigInteger(1, headerHash);
+            BigInteger bigInteger = new BigInteger(headerHash);
+            if (bigInteger.Sign < 0)
+            {
+            bigInteger = BigInteger.Negate(bigInteger);
+            }
+            var headerBigNum = bigInteger;
 
             var shareDiff = (double)NBitcoin.BouncyCastle.Math.BigInteger.ValueOf(0x00000000FFFF0000).ToDouble() / headerBigNum.ToDouble();
             var blockDiffAdjusted = BlockTemplate.Difficulty * shareDiff;
