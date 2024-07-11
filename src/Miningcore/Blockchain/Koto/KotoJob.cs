@@ -216,7 +216,7 @@ namespace Miningcore.Blockchain.Koto
             var nonce = context.ExtraNonce1 + extraNonce2;
             var submitTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
-            if (extraNonce2.Length / 2 != worker.ExtraNonce2Size)
+            if (extraNonce2.Length / 2 != context.ExtraNonce2Size)
                 return shareError("incorrect size of extranonce2");
 
             if (nTime.Length != 8)
@@ -236,14 +236,14 @@ namespace Miningcore.Blockchain.Koto
             var extraNonce2Buffer = Encoders.Hex.DecodeData(extraNonce2);
 
             var coinbaseBuffer = SerializeCoinbase(extraNonce1Buffer, extraNonce2Buffer);
-            var coinbaseHash = Sha256Hash(coinbaseBuffer).ToString();
+            var coinbaseHash = Sha256Hash(coinbaseBuffer.ToString());
 
             var merkleRoot = ComputeMerkleRoot(new List<string> { coinbaseHash });
             var merkleRootReversed = ReverseBytes(Encoders.Hex.DecodeData(merkleRoot));
 
             var headerBuffer = SerializeHeader(merkleRootReversed, nTime, nonce);
-            var headerHash = Sha256Hash(headerBuffer).ToString();
-            BigInteger bigInteger = new BigInteger(headerHash);
+            var headerHash = Sha256Hash(headerBuffer.ToString());
+            BigInteger bigInteger = new BigInteger(headerHash.HexToReverseByteArray());
             if (bigInteger.Sign < 0)
             {
             bigInteger = BigInteger.Negate(bigInteger);
@@ -255,7 +255,6 @@ namespace Miningcore.Blockchain.Koto
 
             string blockHash = null;
             string blockHex = null;
-            var context = worker.ContextAs<KotoWorkerContext>();
             if (BlockTemplate.Target.CompareTo(headerBigNum) >= 0)
             {
                 blockHex = SerializeBlock(headerBuffer, coinbaseBuffer);
