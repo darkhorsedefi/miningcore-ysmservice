@@ -10,6 +10,9 @@ namespace Miningcore.Blockchain.Koto.DaemonResponses
         [JsonProperty("coinbasetxn")]
         public CoinbaseTransaction CoinbaseTxn { get; set; }
 
+        [JsonProperty("finalsaplingroothash")]
+        public string FinalSaplingRootHash { get; set; }
+
         [JsonProperty("transactions")]
         public Transaction[] Transactions { get; set; }
 

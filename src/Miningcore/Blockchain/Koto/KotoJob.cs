@@ -298,7 +298,7 @@ namespace Miningcore.Blockchain.Koto
             var nonceBytes = Encoders.Hex.DecodeData(nonce);
             var nTimeBytes = Encoders.Hex.DecodeData(nTime);
             var bitsBytes = Encoders.Hex.DecodeData(BlockTemplate.Bits);
-            var prevHashBytes = Encoders.Hex.DecodeData(BlockTemplate.PrevBlockHash);
+            var prevHashBytes = Encoders.Hex.DecodeData(BlockTemplate.PreviousBlockHash);
             var versionBytes = BitConverter.GetBytes(BlockTemplate.Version);
 
             Array.Copy(nonceBytes, 0, header, position, nonceBytes.Length);
