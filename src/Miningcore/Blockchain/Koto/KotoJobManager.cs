@@ -285,7 +285,7 @@ namespace Miningcore.Blockchain.Koto
 
             var isNew = job == null ||
                 (blockTemplate != null &&
-                    (job.BlockTemplate?.PrevBlockhash != blockTemplate.PrevBlockhash ||
+                    (job.BlockTemplate?.PreviousBlockHash != blockTemplate.PreviousBlockHash ||
                         blockTemplate.Height > job.BlockTemplate?.Height));
 
             if(isNew)

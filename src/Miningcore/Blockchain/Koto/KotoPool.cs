@@ -92,7 +92,7 @@ namespace Miningcore.Blockchain.Koto
 
         private async Task OnSubscribeAsync(CancellationToken ct, StratumConnection client, object requestId, JToken[] parameters)
         {
-            var context = client.ContextAs<BitcoinWorkerContext>();
+            var context = client.ContextAs<KotoWorkerContext>();
 
             var extraNonce1 = extraNonceProvider.Next();
             context.ExtraNonce1 = extraNonce1;
@@ -107,7 +107,7 @@ namespace Miningcore.Blockchain.Koto
                 context.SubscriberId
             };
 
-            await client.RespondAsync(response, requestId, false);
+            await client.RespondAsync(response, requestId);
         }
 
         private async Task OnAuthorizeAsync(CancellationToken ct, StratumConnection client, object requestId, JToken[] parameters)
@@ -115,7 +115,7 @@ namespace Miningcore.Blockchain.Koto
             var workerName = parameters[0].ToString();
             var password = parameters[1]?.ToString();
 
-            var context = client.ContextAs<BitcoinWorkerContext>();
+            var context = client.ContextAs<KotoWorkerContext>();
             context.IsAuthorized = true;
             context.MinerName = workerName;
             context.MinerPassword = password;
