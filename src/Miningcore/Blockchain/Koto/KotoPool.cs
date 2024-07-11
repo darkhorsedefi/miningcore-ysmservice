@@ -24,14 +24,11 @@ namespace Miningcore.Blockchain.Koto
         private KotoJobManager manager;
         private KotoExtraNonceProvider extraNonceProvider;
         private KotoCoinTemplate coin;
-        public KotoPool(IComponentContext ctx,
-            JsonSerializerSettings serializerSettings,
-            IConnectionFactory cf,
-            IMasterClock clock,
-            NotificationService notificationService,
-            IStatsRepository statsRepo) :
-            base(ctx, serializerSettings, cf, clock, notificationService, statsRepo)
+        private readonly IMessageBus messageBus;
+        private object currentJobParams;
+        public KotoPool(IComponentContext ctx, JsonSerializerSettings serializerSettings, IConnectionFactory cf, IStatsRepository statsRepo, IMapper mapper, IMasterClock clock, IMessageBus messageBus) : base(ctx, serializerSettings, cf, statsRepo, mapper, clock)
         {
+             this.messageBus = messageBus;
         }
 
         protected override async Task SetupJobManager(CancellationToken ct)

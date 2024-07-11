@@ -37,7 +37,7 @@ namespace Miningcore.Blockchain.Koto
         }
 
 
-        public async Task PayoutAsync(IMiningPool pool, Balance[] balances, CancellationToken ct)
+        public override async Task PayoutAsync(IMiningPool pool, Balance[] balances, CancellationToken ct)
         {
             // Group balances by address
             var balancesByAddress = balances
