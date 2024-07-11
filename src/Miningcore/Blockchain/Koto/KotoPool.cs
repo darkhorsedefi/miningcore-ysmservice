@@ -9,6 +9,7 @@ using Miningcore.Notifications;
 using Miningcore.Persistence;
 using Miningcore.Stratum;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NLog;
 
 namespace Miningcore.Blockchain.Koto
@@ -73,6 +74,15 @@ namespace Miningcore.Blockchain.Koto
                     logger.Warn(() => $"[{LogCategory}] Unsupported RPC request: {method}");
                     break;
             }
+        }
+
+        public override double HashrateFromShares(double shares, double interval)
+        {
+            var multiplier = BitcoinConstants.Pow2x32;
+            var result = shares * multiplier / interval / 1000000 * 2;
+        
+            result /= hashrateDivisor;
+            return result;
         }
 
         private async Task OnSubscribeAsync(CancellationToken ct, StratumConnection client, object requestId, JToken[] parameters)
