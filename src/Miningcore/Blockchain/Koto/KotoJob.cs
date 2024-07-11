@@ -249,15 +249,16 @@ namespace Miningcore.Blockchain.Koto
             bigInteger = BigInteger.Negate(bigInteger);
             }
             var headerBigNum = bigInteger;
-
-            var shareDiff = (double)NBitcoin.BouncyCastle.Math.BigInteger.ValueOf(0x00000000FFFF0000).ToDouble() / headerBigNum.ToDouble();
+            BigInteger constantValue = new BigInteger(0x00000000FFFF0000);
+            BigInteger headerBigInteger = new BigInteger(headerBigNum.ToByteArrayUnsigned());
+            double shareDiff = (double)constantValue / (double)headerBigInteger;
             var blockDiffAdjusted = Difficulty;
 
             string blockHash = null;
             string blockHex = null;
             if (BlockTemplate.Target.CompareTo(headerBigNum) >= 0)
             {
-                blockHex = SerializeBlock(headerBuffer, coinbaseBuffer);
+                blockHex = SerializeBlock(headerBuffer.ToString(), coinbaseBuffer.ToString());
                 blockHash = Sha256Hash(headerBuffer).ToString();
             }
             else
