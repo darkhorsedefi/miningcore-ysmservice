@@ -132,5 +132,6 @@ namespace Miningcore.Blockchain.Koto
                 logger.Warn($"Payout transaction failed: {transaction}");
             }
         }
+        protected override string LogCategory => "Koto Payout Handler";
     }
 }
