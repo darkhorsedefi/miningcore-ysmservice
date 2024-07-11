@@ -100,7 +100,7 @@ namespace Miningcore.Blockchain.Koto
                 0.0001m // fee
             };
 
-            var result = await rpcClient.ExecuteAsync<string>(logger, "z_sendmany", ct, args).Response;
+            var result = (await rpcClient.ExecuteAsync<string>(logger, "z_sendmany", ct, args)).Response;
             return result;
         }
 

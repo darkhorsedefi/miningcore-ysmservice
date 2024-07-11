@@ -48,6 +48,33 @@ public partial class KotoCoinTemplate
 
         throw new NotSupportedException("unsupported network type");
     }
+        public KotoNetworkParams()
+        {
+            diff1Value = new Lazy<Org.BouncyCastle.Math.BigInteger>(() =>
+            {
+                if(string.IsNullOrEmpty(Diff1))
+                    throw new InvalidOperationException("Diff1 has not yet been initialized");
+
+                return new Org.BouncyCastle.Math.BigInteger(Diff1, 16);
+            });
+
+            diff1BValue = new Lazy<BigInteger>(() =>
+            {
+                if(string.IsNullOrEmpty(Diff1))
+                    throw new InvalidOperationException("Diff1 has not yet been initialized");
+
+                return BigInteger.Parse(Diff1, NumberStyles.HexNumber);
+            });
+        }
+
+        private readonly Lazy<Org.BouncyCastle.Math.BigInteger> diff1Value;
+        private readonly Lazy<BigInteger> diff1BValue;
+
+        [JsonIgnore]
+        public Org.BouncyCastle.Math.BigInteger Diff1Value => diff1Value.Value;
+
+        [JsonIgnore]
+        public BigInteger Diff1BValue => diff1BValue.Value;
     #endregion
 }
 public partial class AlephiumCoinTemplate

@@ -97,7 +97,7 @@ public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig
         {
             var txInSequence = BitConverter.GetBytes(uint.MaxValue);
             var txLockTime = BitConverter.GetBytes(0);
-            var outputTransactions = GenerateOutputTransactions();
+            var outputTransactions = GenerateOutputTransactions(new KotoUtil());
             var txComment = new byte[0]; // For coins that support/require transaction comments
 
             var nExpiryHeight = GetExpiryHeight(BlockTemplate.Version);
@@ -157,13 +157,13 @@ public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig
         }
 
 
-    private byte[] GenerateOutputTransactions(dynamic rpcData, dynamic util)
+    private byte[] GenerateOutputTransactions(dynamic util)
     {
         long reward = BlockTemplate.CoinbaseValue;
 
         if (reward == 0)
         {
-            reward = util.GetKotoBlockSubsidy(rpcData.height);
+            reward = util.GetKotoBlockSubsidy(BlockTemplate.Height);
             reward -= BlockTemplate.CoinbaseTxn.fee; // rpcData.coinbasetxn.fee := <total fee of transactions> * -1
 
             int nScript = Convert.ToInt32(BlockTemplate.CoinbaseTxn.Data.Substring(82, 2), 16);
