@@ -213,7 +213,7 @@ namespace Miningcore.Blockchain.Koto
 
         private async Task OnGetJobAsync(CancellationToken ct, StratumConnection client, object requestId, JToken[] parameters)
         {
-            var context = client.ContextAs<BitcoinWorkerContext>();
+            var context = client.ContextAs<KotoWorkerContext>();
             var jobParams = manager.GetJobParamsForStratum(context.IsAuthorized);
 
             await client.RespondAsync(jobParams, requestId);
@@ -221,7 +221,7 @@ namespace Miningcore.Blockchain.Koto
 
         private async Task OnMiningSubscribeAsync(CancellationToken ct, StratumConnection client, object requestId, JToken[] parameters)
         {
-            var context = client.ContextAs<BitcoinWorkerContext>();
+            var context = client.ContextAs<KotoWorkerContext>();
 
             var extraNonce1 = extraNonceProvider.Next();
             context.ExtraNonce1 = extraNonce1;
@@ -232,7 +232,7 @@ namespace Miningcore.Blockchain.Koto
                 new object[] { BitcoinStratumMethods.MiningNotify, extraNonce1, context.ExtraNonce2Size }
             };
 
-            await client.RespondAsync(response, requestId, false);
+            await client.RespondAsync(response, requestId);
         }
         protected override WorkerContextBase CreateWorkerContext()
         {

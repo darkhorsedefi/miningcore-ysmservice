@@ -31,9 +31,9 @@ namespace Miningcore.Blockchain.Koto
         private KotoDaemonClient daemonClient;
         //private Network network;
         //private RpcClient rpc;
-
-        public KotoJobManager(IComponentContext ctx, IMasterClock clock, IExtraNonceProvider extraNonceProvider, ILogger logger) 
-            : base(ctx, clock, extraNonceProvider, logger)
+        protected KotoCoinTemplate coin;
+        public KotoJobManager(IComponentContext ctx, IMasterClock clock, IMessageBus messageBus, IExtraNonceProvider extraNonceProvider, ILogger logger) 
+            : base(ctx, clock, messageBus, extraNonceProvider, logger)
         {
             this.extraNonceProvider = extraNonceProvider as KotoExtraNonceProvider;
             ConfigureDaemons();
@@ -117,7 +117,7 @@ namespace Miningcore.Blockchain.Koto
             var context = worker.ContextAs<KotoWorkerContext>();
 
             context.ExtraNonce1 = extraNonceProvider.Next();
-            context.ExtraNonce2Size = ((KotoExtraNonceProvider)extraNonceProvider).size;
+            context.ExtraNonce2Size = ((KotoExtraNonceProvider)extraNonceProvider).Size;
         }
 
         public string[] GetTransactionsForStratum()
