@@ -117,7 +117,7 @@ namespace Miningcore.Blockchain.Koto
             var context = worker.ContextAs<KotoWorkerContext>();
 
             context.ExtraNonce1 = extraNonceProvider.Next();
-            context.ExtraNonce2Size = extraNonceProvider.size;
+            context.ExtraNonce2Size = ((KotoExtraNonceProvider)extraNonceProvider).size;
         }
 
         public string[] GetTransactionsForStratum()

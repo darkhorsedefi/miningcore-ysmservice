@@ -213,21 +213,18 @@ namespace Miningcore.Blockchain.Koto
             var submitTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
             if (extraNonce2.Length / 2 != context.ExtraNonce2Size)
-                return shareError("incorrect size of extranonce2");
-
+                throw new StratumException(StratumError.Other, "incorrect size of extraNonce2");
             if (nTime.Length != 8)
-                return shareError("incorrect size of ntime");
-
+                throw new StratumException(StratumError.Other, "incorrect size of ntime");
             var nTimeInt = Convert.ToInt64(nTime, 16);
             if (nTimeInt < BlockTemplate.CurTime || nTimeInt > submitTime + 7200)
-                return shareError("ntime out of range");
+                throw new StratumException(StratumError.Other, "ntime out of range");
 
             if (nonce.Length != 8)
-                return shareError("incorrect size of nonce");
+                throw new StratumException(StratumError.Other, "incorrect size of nonce");
 
             if (!RegisterSubmit(extraNonce1, extraNonce2, nTime, nonce))
-                return shareError("duplicate share");
-
+                throw new StratumException(StratumError.DuplicateShare, "duplicate share");
             var extraNonce1Buffer = Encoders.Hex.DecodeData(extraNonce1);
             var extraNonce2Buffer = Encoders.Hex.DecodeData(extraNonce2);
 
@@ -254,7 +251,7 @@ namespace Miningcore.Blockchain.Koto
             string blockHex = null;
             if (BlockTemplate.Target.CompareTo(headerBigNum) >= 0)
             {
-                blockHex = SerializeBlock(headerBuffer.ToString(), coinbaseBuffer.ToString());
+                blockHex = SerializeBlock(headerBuffer, coinbaseBuffer);
                 blockHash = Sha256Hash(headerBuffer.ToString());
             }
             else
@@ -267,7 +264,7 @@ namespace Miningcore.Blockchain.Koto
                     }
                     else
                     {
-                        return shareError("low difficulty share of " + shareDiff);
+                        throw new StratumException(StratumError.LowDifficultyShare, $"low difficulty share ({shareDiff})");
                     }
                 }
             }
