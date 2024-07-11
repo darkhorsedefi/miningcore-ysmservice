@@ -33,12 +33,8 @@ namespace Miningcore.Blockchain.Koto
         //private RpcClient rpc;
         protected KotoCoinTemplate coin;
         IExtraNonceProvider extraNonceProvider;
-        public KotoJobManager(
-        IComponentContext ctx,
-        IMasterClock clock,
-        IMessageBus messageBus,
-        IExtraNonceProvider extraNonceProvider) {
-            base(ctx, clock, messageBus, extraNonceProvider);
+        public KotoJobManager(IComponentContext ctx, IMasterClock clock, IMessageBus messageBus, IExtraNonceProvider extraNonceProvider) 
+            : base(ctx, clock, messageBus, extraNonceProvider)
     
             this.extraNonceProvider = extraNonceProvider as KotoExtraNonceProvider;
             ConfigureDaemons();
@@ -62,7 +58,7 @@ namespace Miningcore.Blockchain.Koto
                 return (false, null);
             }
 
-            var blockTemplate = response.Result;
+            var blockTemplate = response.Response;
             var jobId = NextJobId();
             var job = new KotoJob(jobId, blockTemplate, poolConfig);
 
@@ -84,7 +80,7 @@ namespace Miningcore.Blockchain.Koto
             base.Configure(pc, cc);
         }
 
-        protected override object GetJobParamsForStratum(bool isNew)
+        public override object GetJobParamsForStratum(bool isNew)
         {
             var job = currentJob;
             if (job == null)

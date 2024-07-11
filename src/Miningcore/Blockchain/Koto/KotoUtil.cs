@@ -194,7 +194,7 @@ public static class KotoUtil
         {
             return new byte[] { 253 }.Concat(BitConverter.GetBytes((ushort)s.Length)).Concat(Encoding.UTF8.GetBytes(s)).ToArray();
         }
-        else if (s.Length < 0x100000000)
+        else if ((long)s.Length < (long)0x100000000)
         {
             return new byte[] { 254 }.Concat(BitConverter.GetBytes((uint)s.Length)).Concat(Encoding.UTF8.GetBytes(s)).ToArray();
         }
