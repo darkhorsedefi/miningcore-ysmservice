@@ -100,7 +100,7 @@ namespace Miningcore.Blockchain.Koto
                 job.MerkleRoot,
                 ((uint)job.BlockTemplate.Version).ToStringHex8(),
                 job.Bits,
-                job.BlockTemplate.CurTime.ToStringHex8(),
+                ((uint)job.BlockTemplate.CurTime).ToStringHex8(),
                 isNew
             };
         }

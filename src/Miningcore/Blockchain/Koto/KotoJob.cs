@@ -65,7 +65,7 @@ public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig
         merkleRoot = MerkleNode.GetRoot(txHashes).Hash.ToBytes().ReverseInPlace();
         merkleRootReversed = merkleRoot.ReverseInPlace();
         merkleRootReversedHex = merkleRootReversed.ToHexString();
-        return merkleRoot;
+        return merkleRoot.ToString();
     }
 
     private string CreateCoinbaseTransaction()
@@ -318,7 +318,12 @@ public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig
             }
             var headerBigNum = bigInteger;
             BigInteger constantValue = new BigInteger(0x00000000FFFF0000);
-            BigInteger headerBigInteger = new BigInteger(headerBigNum.ToByteArrayUnsigned());
+            var bytes = headerBigNum.ToByteArray();
+            if (bytes[bytes.Length - 1] == 0 && bytes.Length > 1)
+            {
+                Array.Resize(ref bytes, bytes.Length - 1);
+            }
+            BigInteger headerBigInteger = new BigInteger(bytes);
             double shareDiff = (double)constantValue / (double)headerBigInteger;
             var blockDiffAdjusted = Difficulty;
 
@@ -402,7 +407,9 @@ public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig
 
         private byte[] SerializeBlock(byte[] header, byte[] coinbase)
         {
-            var transactions = BlockTemplate.Transactions.Select(Encoders.Hex.DecodeData).ToList();
+            var transactions = BlockTemplate.Transactions
+            .Select(transaction => Encoders.Hex.DecodeData(transaction))
+            .ToList();
             var transactionCount = (ulong)(transactions.Count + 1);
 
             var block = new List<byte>(header);
