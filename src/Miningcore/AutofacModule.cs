@@ -2,6 +2,7 @@ using System.Reflection;
 using Autofac;
 using Miningcore.Api;
 using Miningcore.Banning;
+using Miningcore.Blockchain;
 using Miningcore.Blockchain.Alephium;
 using Miningcore.Blockchain.Beam;
 using Miningcore.Blockchain.Bitcoin;
