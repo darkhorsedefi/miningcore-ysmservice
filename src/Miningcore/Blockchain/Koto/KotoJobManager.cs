@@ -21,14 +21,14 @@ using NLog;
 
 namespace Miningcore.Blockchain.Koto
 {
-    public class KotoJobManager : JobManagerBase<KotoJob>
+    public class KotoJobManager : BitcoinJobManagerBase<KotoJob>
     {
         private KotoExtraNonceProvider extraNonceProvider;
         private KotoDaemonClient daemonClient;
         private Network network;
         private RpcClient rpc;
 
-        public KotoJobManager(IComponentContext ctx, IMasterClock clock, IExtraNonceProvider extraNonceProvider, ILogger<KotoJobManager> logger) 
+        public KotoJobManager(IComponentContext ctx, IMasterClock clock, IExtraNonceProvider extraNonceProvider, ILogger logger) 
             : base(ctx, clock, extraNonceProvider, logger)
         {
             this.extraNonceProvider = extraNonceProvider as KotoExtraNonceProvider;
@@ -372,6 +372,95 @@ namespace Miningcore.Blockchain.Koto
 
         SetupCrypto();
         SetupJobUpdates(ct);
+    }
+        protected override async Task<(bool IsNew, bool Force)> UpdateJob(CancellationToken ct, bool forceUpdate, string via = null, string json = null)
+    {
+        try
+        {
+            if(forceUpdate)
+                lastJobRebroadcast = clock.Now;
+
+            var response = string.IsNullOrEmpty(json) ?
+                await GetBlockTemplateAsync(ct) :
+                GetBlockTemplateFromJson(json);
+
+            // may happen if daemon is currently not connected to peers
+            if(response.Error != null)
+            {
+                logger.Warn(() => $"Unable to update job. Daemon responded with: {response.Error.Message} Code {response.Error.Code}");
+                return (false, forceUpdate);
+            }
+
+            var blockTemplate = response.Response;
+            var job = currentJob;
+
+            var isNew = job == null ||
+                (blockTemplate != null &&
+                    (job.BlockTemplate?.PreviousBlockhash != blockTemplate.PreviousBlockhash ||
+                        blockTemplate.Height > job.BlockTemplate?.Height));
+
+            if(isNew)
+                messageBus.NotifyChainHeight(poolConfig.Id, blockTemplate.Height, poolConfig.Template);
+
+            if(isNew || forceUpdate)
+            {
+                jobId = NextJobId();
+                job = new KotoJob(jobId, blockTemplate, poolConfig);
+
+                //job.Init(blockTemplate, NextJobId(),
+                //    poolConfig, extraPoolConfig, clusterConfig, clock, poolAddressDestination, network, isPoS,
+                //    ShareMultiplier, coin.CoinbaseHasherValue, coin.HeaderHasherValue,
+                //    !isPoS ? coin.BlockHasherValue : coin.PoSBlockHasherValue ?? coin.BlockHasherValue);
+
+                lock(jobLock)
+                {
+                    validJobs.Insert(0, job);
+
+                    // trim active jobs
+                    while(validJobs.Count > maxActiveJobs)
+                        validJobs.RemoveAt(validJobs.Count - 1);
+                }
+
+                if(isNew)
+                {
+                    if(via != null)
+                        logger.Info(() => $"Detected new block {blockTemplate.Height} [{via}]");
+                    else
+                        logger.Info(() => $"Detected new block {blockTemplate.Height}");
+
+                    // update stats
+                    BlockchainStats.LastNetworkBlockTime = clock.Now;
+                    BlockchainStats.BlockHeight = blockTemplate.Height;
+                    BlockchainStats.NetworkDifficulty = job.Difficulty;
+                    BlockchainStats.NextNetworkTarget = blockTemplate.Target;
+                    BlockchainStats.NextNetworkBits = blockTemplate.Bits;
+                }
+
+                else
+                {
+                    if(via != null)
+                        logger.Debug(() => $"Template update {blockTemplate?.Height} [{via}]");
+                    else
+                        logger.Debug(() => $"Template update {blockTemplate?.Height}");
+                }
+
+                currentJob = job;
+            }
+
+            return (isNew, forceUpdate);
+        }
+
+        catch(OperationCanceledException)
+        {
+            // ignored
+        }
+
+        catch(Exception ex)
+        {
+            logger.Error(ex, () => $"Error during {nameof(UpdateJob)}");
+        }
+
+        return (false, forceUpdate);
     }
     }
 }

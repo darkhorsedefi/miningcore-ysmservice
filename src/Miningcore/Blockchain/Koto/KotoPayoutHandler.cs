@@ -20,7 +20,7 @@ namespace Miningcore.Blockchain.Koto
     [CoinFamily(CoinFamily.Koto)]
     public class KotoPayoutHandler : PayoutHandlerBase, IPayoutHandler
     {
-        public KotoPayoutHandler(IConnectionFactory cf, IBlockRepository blocks, IShareRepository shares, IBalanceRepository balances, IPaymentRepository payments, ClusterConfig clusterConfig, ILogger<KotoPayoutHandler> logger) :
+        public KotoPayoutHandler(IConnectionFactory cf, IBlockRepository blocks, IShareRepository shares, IBalanceRepository balances, IPaymentRepository payments, ClusterConfig clusterConfig, ILogger logger) :
             base(cf, blocks, shares, balances, payments, clusterConfig, logger)
         {
         }
