@@ -24,10 +24,10 @@ namespace Miningcore.Blockchain.Koto
 {
     public class KotoJobManager : BitcoinJobManagerBase<KotoJob>
     {
-        private KotoExtraNonceProvider extraNonceProvider;
+        //private KotoExtraNonceProvider extraNonceProvider;
         private KotoDaemonClient daemonClient;
-        private Network network;
-        private RpcClient rpc;
+        //private Network network;
+        //private RpcClient rpc;
 
         public KotoJobManager(IComponentContext ctx, IMasterClock clock, IExtraNonceProvider extraNonceProvider, ILogger logger) 
             : base(ctx, clock, extraNonceProvider, logger)
@@ -180,57 +180,8 @@ namespace Miningcore.Blockchain.Koto
                 await ShowDaemonSyncProgressAsync(ct);
             } while(await timer.WaitForNextTickAsync(ct));
         }
-        protected virtual async Task ShowDaemonSyncProgressAsync(CancellationToken ct)
-        {
-            if(hasLegacyDaemon)
-            {
-                await ShowDaemonSyncProgressLegacyAsync(ct);
-                return;
-            }
-
-            var info = await rpc.ExecuteAsync<BlockchainInfo>(logger, BitcoinCommands.GetBlockchainInfo, ct);
-
-            if(info != null)
-            {
-                var blockCount = info.Response?.Blocks;
-
-                if(blockCount.HasValue)
-                {
-                    // get list of peers and their highest block height to compare to ours
-                    var peerInfo = await rpc.ExecuteAsync<PeerInfo[]>(logger, BitcoinCommands.GetPeerInfo, ct);
-                    var peers = peerInfo.Response;
-
-                    var totalBlocks = Math.Max(info.Response.Headers, peers.Any() ? peers.Max(y => y.StartingHeight) : 0);
-
-                    var percent = totalBlocks > 0 ? (double) blockCount / totalBlocks * 100 : 0;
-                    logger.Info(() => $"Daemon has downloaded {percent:0.00}% of blockchain from {peers.Length} peers");
-                }
-            }
-        }
-        protected async Task ShowDaemonSyncProgressLegacyAsync(CancellationToken ct)
-        {
-            var info = await rpc.ExecuteAsync<DaemonInfo>(logger, BitcoinCommands.GetInfo, ct);
-
-            if(info != null)
-            {
-                var blockCount = info.Response?.Blocks;
-
-                if(blockCount.HasValue)
-                {
-                    // get list of peers and their highest block height to compare to ours
-                    var peerInfo = await rpc.ExecuteAsync<PeerInfo[]>(logger, BitcoinCommands.GetPeerInfo, ct);
-                    var peers = peerInfo.Response;
-
-                    if(peers != null && peers.Length > 0)
-                    {
-                        var totalBlocks = peers.Max(x => x.StartingHeight);
-                        var percent = totalBlocks > 0 ? (double) blockCount / totalBlocks * 100 : 0;
-                        logger.Info(() => $"Daemon has downloaded {percent:0.00}% of blockchain from {peers.Length} peers");
-                    }
-                }
-            }
-        }
-    protected record SubmitResult(bool Accepted, string CoinbaseTx);
+        
+    //protected record SubmitResult(bool Accepted, string CoinbaseTx);
 
     public async ValueTask<Share> SubmitShareAsync(StratumConnection worker,
         object submission, CancellationToken ct)

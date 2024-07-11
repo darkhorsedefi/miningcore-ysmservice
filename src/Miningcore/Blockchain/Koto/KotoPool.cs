@@ -44,6 +44,7 @@ namespace Miningcore.Blockchain.Koto
 
         protected override async Task OnRequestAsync(StratumConnection connection, Timestamped<JsonRpcRequest> tsRequest, CancellationToken ct)
         {
+            var request = tsRequest;
             var context = connection.ContextAs<BitcoinWorkerContext>();
             var requestId = request.Value.Id;
             var method = request.Value.Method;
