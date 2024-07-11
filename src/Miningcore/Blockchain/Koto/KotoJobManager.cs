@@ -32,6 +32,7 @@ namespace Miningcore.Blockchain.Koto
         //private Network network;
         //private RpcClient rpc;
         protected KotoCoinTemplate coin;
+        IExtraNonceProvider extraNonceProvider;
         public KotoJobManager(
         IComponentContext ctx,
         IMasterClock clock,
@@ -96,7 +97,7 @@ namespace Miningcore.Blockchain.Koto
                 job.CoinbaseTransaction,
                 job.Transactions,
                 job.MerkleRoot,
-                job.BlockTemplate.Version.ToStringHex8(),
+                ((uint)job.BlockTemplate.Version).ToStringHex8(),
                 job.Bits,
                 job.BlockTemplate.CurTime.ToStringHex8(),
                 isNew

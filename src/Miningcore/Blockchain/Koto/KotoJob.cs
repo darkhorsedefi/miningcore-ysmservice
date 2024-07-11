@@ -164,26 +164,26 @@ public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig
             reward = util.GetKotoBlockSubsidy(rpcData.height);
             reward -= BlockTemplate.CoinbaseTxn.fee; // rpcData.coinbasetxn.fee := <total fee of transactions> * -1
 
-            int nScript = Convert.ToInt32(BlockTemplate.CoinbaseTxn.data.Substring(82, 2), 16);
+            int nScript = Convert.ToInt32(BlockTemplate.CoinbaseTxn.Data.Substring(82, 2), 16);
 
             if (nScript == 253)
             {
-                nScript = Convert.ToInt32(util.ReverseHex(BlockTemplate.CoinbaseTxn.data.Substring(84, 4)), 16);
+                nScript = Convert.ToInt32(util.ReverseHex(BlockTemplate.CoinbaseTxn.Data.Substring(84, 4)), 16);
                 nScript += 2;
             }
             else if (nScript == 254)
             {
-                nScript = Convert.ToInt32(util.ReverseHex(BlockTemplate.CoinbaseTxn.data.Substring(84, 8)), 16);
+                nScript = Convert.ToInt32(util.ReverseHex(BlockTemplate.CoinbaseTxn.Data.Substring(84, 8)), 16);
                 nScript += 4;
             }
             else if (nScript == 255)
             {
-                nScript = Convert.ToInt32(util.ReverseHex(BlockTemplate.CoinbaseTxn.data.Substring(84, 16)), 16);
+                nScript = Convert.ToInt32(util.ReverseHex(BlockTemplate.CoinbaseTxn.Data.Substring(84, 16)), 16);
                 nScript += 8;
             }
 
             int posReward = 94 + nScript * 2;
-            reward = Convert.ToInt64(util.ReverseHex(BlockTemplate.CoinbaseTxn.data.Substring(posReward, 16)), 16);
+            reward = Convert.ToInt64(util.ReverseHex(BlockTemplate.CoinbaseTxn.Data.Substring(posReward, 16)), 16);
 
             // Console.WriteLine("reward from coinbasetxn, height => " + reward);
         }
@@ -285,7 +285,7 @@ public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig
             string blockHex = null;
             if (BlockTemplate.Target.CompareTo(headerBigNum) >= 0)
             {
-                blockHex = SerializeBlock(headerBuffer, coinbaseBuffer);
+                blockHex = SerializeBlock(headerBuffer, coinbaseBuffer).ToString();
                 blockHash = Sha256Hash(headerBuffer.ToString());
             }
             else
