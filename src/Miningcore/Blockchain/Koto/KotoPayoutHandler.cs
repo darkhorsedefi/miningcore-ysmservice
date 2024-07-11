@@ -1,3 +1,5 @@
+using Autofac;
+using AutoMapper;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +9,8 @@ using Miningcore.Blockchain.Koto.DaemonResponses;
 using Miningcore.Blockchain.Bitcoin;
 using Miningcore.Configuration;
 using Miningcore.Extensions;
+using Miningcore.Time;
+using Miningcore.Messaging;
 using Miningcore.Persistence;
 using Miningcore.Persistence.Model;
 using Miningcore.Persistence.Repositories;

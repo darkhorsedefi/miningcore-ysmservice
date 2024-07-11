@@ -317,6 +317,6 @@ namespace Miningcore.Blockchain.Koto
         {
             return new KotoWorkerContext();
         }
-        protected override string LogCategory => "Koto Pool";
+        protected string LogCategory => "Koto Pool";
     }
 }
