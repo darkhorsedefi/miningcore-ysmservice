@@ -80,8 +80,12 @@ namespace Miningcore.Blockchain.Koto
             coin = pc.Template.As<KotoCoinTemplate>();
             base.Configure(pc, cc);
         }
+        public object gjpfs(bool isNew)
+        {
+            return GetJobParamsForStratum(isNew);
+        }
 
-        public override object GetJobParamsForStratum(bool isNew)
+        protected override object GetJobParamsForStratum(bool isNew)
         {
             var job = currentJob;
             if (job == null)

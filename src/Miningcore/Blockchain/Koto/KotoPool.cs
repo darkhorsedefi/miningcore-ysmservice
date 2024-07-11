@@ -288,7 +288,7 @@ namespace Miningcore.Blockchain.Koto
         private async Task OnGetJobAsync(CancellationToken ct, StratumConnection client, object requestId, JToken[] parameters)
         {
             var context = client.ContextAs<KotoWorkerContext>();
-            var jobParams = manager.GetJobParamsForStratum(context.IsAuthorized);
+            var jobParams = manager.gjpfs(context.IsAuthorized);
 
             await client.RespondAsync(jobParams, requestId);
         }
