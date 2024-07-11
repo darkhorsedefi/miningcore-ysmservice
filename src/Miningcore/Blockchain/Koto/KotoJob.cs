@@ -408,7 +408,7 @@ public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig
         private byte[] SerializeBlock(byte[] header, byte[] coinbase)
         {
             var transactions = BlockTemplate.Transactions
-            .Select(transaction => Encoders.Hex.DecodeData(transaction))
+            .Select(transaction => Encoders.Hex.DecodeData(transaction.Data))
             .ToList();
             var transactionCount = (ulong)(transactions.Count + 1);
 
