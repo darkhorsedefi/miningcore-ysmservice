@@ -6,6 +6,7 @@ using Miningcore.Blockchain.Bitcoin;
 using Miningcore.Blockchain.Koto.Configuration;
 using Miningcore.Persistence.Repositories;
 using Miningcore.JsonRpc;
+using Miningcore.Messaging;
 using Miningcore.Configuration;
 using Miningcore.Mining;
 using Miningcore.Notifications;
@@ -15,6 +16,7 @@ using Miningcore.Time;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
+using AutoMapper;
 
 namespace Miningcore.Blockchain.Koto
 {

@@ -353,9 +353,9 @@ namespace Miningcore.Blockchain.Koto
 
         return (false, forceUpdate);
     }
-    private DaemonResponse<DaemonResponses.BlockTemplate> GetBlockTemplateFromJson(string json)
+    private DaemonResponse<DaemonResponses.KotoBlockTemplate> GetBlockTemplateFromJson(string json)
     {
-        return JsonConvert.DeserializeObject<DaemonResponse<DaemonResponses.BlockTemplate>>(json);
+        return JsonConvert.DeserializeObject<DaemonResponse<DaemonResponses.KotoBlockTemplate>>(json);
     }
     }
 }
