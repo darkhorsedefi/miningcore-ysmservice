@@ -322,7 +322,7 @@ namespace Miningcore.Blockchain.Koto
 
             if(isNew || forceUpdate)
             {
-                job = new KotoJob(NextJobId(), blockTemplate, poolConfig);
+                job = new KotoJob(NextJobId(), blockTemplate, poolConfig, network);
 
                 //job.Init(blockTemplate, NextJobId(),
                 //    poolConfig, extraPoolConfig, clusterConfig, clock, poolAddressDestination, network, isPoS,
