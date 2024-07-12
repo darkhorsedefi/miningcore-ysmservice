@@ -42,7 +42,7 @@ namespace Miningcore.Blockchain.Koto
         {
             coin = poolConfig.Template.As<KotoCoinTemplate>();
 manager = ctx.Resolve<KotoJobManager>(new TypedParameter(typeof(IExtraNonceProvider), new KotoExtraNonceProvider(poolConfig.Id, clusterConfig.InstanceId)));
-            extraNonceProvider = ctx.Resolve<KotoExtraNonceProvider>();
+            extraNonceProvider = manager.enp;
             manager.Configure(poolConfig, clusterConfig);
             
             await manager.StartAsync(ct);
