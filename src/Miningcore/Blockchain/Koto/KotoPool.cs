@@ -51,7 +51,7 @@ manager = ctx.Resolve<KotoJobManager>(new TypedParameter(typeof(IExtraNonceProvi
         protected override async Task OnRequestAsync(StratumConnection connection, Timestamped<JsonRpcRequest> tsRequest, CancellationToken ct)
         {
             var request = tsRequest;
-            var context = connection.ContextAs<BitcoinWorkerContext>();
+            var context = connection.ContextAs<KotoWorkerContext>();
             var requestId = request.Value.Id;
             var method = request.Value.Method;
 
