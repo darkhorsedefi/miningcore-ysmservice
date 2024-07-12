@@ -64,7 +64,7 @@ namespace Miningcore.Blockchain.Koto
 
             var blockTemplate = response.Response;
             var jobId = NextJobId();
-            var job = new KotoJob(jobId, blockTemplate, poolConfig);
+            var job = new KotoJob(jobId, blockTemplate, poolConfig, network);
 
             lock (jobLock)
             {
