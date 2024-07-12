@@ -37,7 +37,7 @@ namespace Miningcore.Blockchain.Koto
             : base(ctx, clock, messageBus, extraNonceProvider)
         {
     
-            this.extraNonceProvider = extraNonceProvider as KotoExtraNonceProvider;
+            this.extraNonceProvider = extraNonceProvider;
             //ConfigureDaemons();
         }
 
