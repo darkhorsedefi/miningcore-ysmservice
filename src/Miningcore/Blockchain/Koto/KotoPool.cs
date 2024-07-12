@@ -72,6 +72,10 @@ manager = ctx.Resolve<KotoJobManager>(new TypedParameter(typeof(IExtraNonceProvi
                 case BitcoinStratumMethods.GetTransactions:
                     await OnGetTransactionsAsync(ct, connection, requestId, request);
                     break;
+                    
+                case BitcoinStratumMethods.ExtraNonceSubscribe:
+                    await connection.RespondAsync(true, request.Id);
+                    break;
 
         //        case BitcoinStratumMethods.GetJob:
         //            await OnGetJobAsync(ct, connection, requestId, request.Value.Params);
