@@ -340,23 +340,24 @@ manager = ctx.Resolve<KotoJobManager>(new TypedParameter(typeof(IExtraNonceProvi
             return new KotoWorkerContext();
         }
         protected string LogCategory => "Koto Pool";
-    }
-    protected virtual async Task OnNewJobAsync(object jobParams)
-    {
-        currentJobParams = jobParams;
-
-        logger.Info(() => $"Broadcasting job {((object[]) jobParams)[0]}");
-
-        await Guard(() => ForEachMinerAsync(async (connection, ct) =>
+        protected virtual async Task OnNewJobAsync(object jobParams)
         {
-            var context = connection.ContextAs<BitcoinWorkerContext>();
+            currentJobParams = jobParams;
 
-            // varDiff: if the client has a pending difficulty change, apply it now
-            if(context.ApplyPendingDifficulty())
-                await connection.NotifyAsync(BitcoinStratumMethods.SetDifficulty, new object[] { context.Difficulty });
+            logger.Info(() => $"Broadcasting job {((object[]) jobParams)[0]}");
 
-            // send job
-            await connection.NotifyAsync(BitcoinStratumMethods.MiningNotify, currentJobParams);
-        }));
+            await Guard(() => ForEachMinerAsync(async (connection, ct) =>
+            {
+                var context = connection.ContextAs<BitcoinWorkerContext>();
+
+                // varDiff: if the client has a pending difficulty change, apply it now
+                if(context.ApplyPendingDifficulty())
+                    await connection.NotifyAsync(BitcoinStratumMethods.SetDifficulty, new object[] { context.Difficulty });
+
+                // send job
+                await connection.NotifyAsync(BitcoinStratumMethods.MiningNotify, currentJobParams);
+            }));
+        }
     }
+
 }
