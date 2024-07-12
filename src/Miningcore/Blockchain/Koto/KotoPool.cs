@@ -141,7 +141,7 @@ manager = ctx.Resolve<KotoJobManager>(new TypedParameter(typeof(IExtraNonceProvi
         if(request.Id == null)
             throw new StratumException(StratumError.MinusOne, "missing request id");
 
-        var context = connection.ContextAs<BitcoinWorkerContext>();
+        var context = connection.ContextAs<KotoWorkerContext>();
         var requestParams = request.ParamsAs<string[]>();
         var workerValue = requestParams?.Length > 0 ? requestParams[0] : null;
         var password = requestParams?.Length > 1 ? requestParams[1] : null;
@@ -201,7 +201,7 @@ manager = ctx.Resolve<KotoJobManager>(new TypedParameter(typeof(IExtraNonceProvi
     protected virtual async Task OnSubmitAsync(StratumConnection connection, Timestamped<JsonRpcRequest> tsRequest, CancellationToken ct)
     {
         var request = tsRequest.Value;
-        var context = connection.ContextAs<BitcoinWorkerContext>();
+        var context = connection.ContextAs<KotoWorkerContext>();
 
         try
         {
@@ -280,7 +280,7 @@ manager = ctx.Resolve<KotoJobManager>(new TypedParameter(typeof(IExtraNonceProvi
 
         private async Task OnGetTransactionsAsync(CancellationToken ct, StratumConnection client, object requestId, Timestamped<JsonRpcRequest> tsRequest)
         {
-            var context = client.ContextAs<BitcoinWorkerContext>();
+            var context = client.ContextAs<KotoWorkerContext>();
 
             var transactions = manager.GetTransactionsForStratum();
             await client.RespondAsync(transactions, requestId);
