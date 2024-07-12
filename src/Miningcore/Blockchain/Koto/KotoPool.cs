@@ -6,6 +6,7 @@ using Miningcore.Blockchain.Bitcoin;
 using Miningcore.Blockchain.Koto.Configuration;
 using Miningcore.Persistence.Repositories;
 using Miningcore.JsonRpc;
+using Miningcore.Extensions;
 using Miningcore.Messaging;
 using Miningcore.Notifications.Messages;
 using Miningcore.Configuration;
@@ -339,5 +340,23 @@ manager = ctx.Resolve<KotoJobManager>(new TypedParameter(typeof(IExtraNonceProvi
             return new KotoWorkerContext();
         }
         protected string LogCategory => "Koto Pool";
+    }
+    protected virtual async Task OnNewJobAsync(object jobParams)
+    {
+        currentJobParams = jobParams;
+
+        logger.Info(() => $"Broadcasting job {((object[]) jobParams)[0]}");
+
+        await Guard(() => ForEachMinerAsync(async (connection, ct) =>
+        {
+            var context = connection.ContextAs<BitcoinWorkerContext>();
+
+            // varDiff: if the client has a pending difficulty change, apply it now
+            if(context.ApplyPendingDifficulty())
+                await connection.NotifyAsync(BitcoinStratumMethods.SetDifficulty, new object[] { context.Difficulty });
+
+            // send job
+            await connection.NotifyAsync(BitcoinStratumMethods.MiningNotify, currentJobParams);
+        }));
     }
 }
