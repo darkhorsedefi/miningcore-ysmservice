@@ -31,7 +31,7 @@ namespace Miningcore.Blockchain.Koto
         private KotoDaemonClient daemonClient;
         //private Network network;
         //private RpcClient rpc;
-        public IExtraNonceProvider enp;
+        public KotoExtraNonceProvider enp;
         protected KotoCoinTemplate coin;
         IExtraNonceProvider extraNonceProvider;
         public KotoJobManager(IComponentContext ctx, IMasterClock clock, IMessageBus messageBus, IExtraNonceProvider extraNonceProvider) 
@@ -39,7 +39,7 @@ namespace Miningcore.Blockchain.Koto
         {
     
             this.extraNonceProvider = extraNonceProvider;
-            this.enp = extraNonceProvider;
+            this.enp = (KotoExtraNonceProvider)extraNonceProvider;
             //ConfigureDaemons();
         }
 
