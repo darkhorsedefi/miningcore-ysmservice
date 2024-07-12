@@ -21,6 +21,7 @@ using Miningcore.Time;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NBitcoin;
+using NBitcoin.DataEncoders;
 using NLog;
 
 namespace Miningcore.Blockchain.Koto
