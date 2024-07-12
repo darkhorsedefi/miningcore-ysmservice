@@ -57,17 +57,36 @@ public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig
     Bits = blockTemplate.Bits;
 }
 
-    public string CalculateMerkleRoot()
+public string CalculateMerkleRoot()
+{
+    // Ensure GenerationTransaction[0] is 32 bytes long
+    byte[] generationTransactionHash = GenerationTransaction[0];
+    if (generationTransactionHash.Length != 32)
     {
-        var txHashes = new List<uint256> { new(GenerationTransaction[0]) };
-        txHashes.AddRange(BlockTemplate.Transactions.Select(tx => new uint256(tx.Hash.HexToReverseByteArray())));
-
-        // build merkle root
-        merkleRoot = MerkleNode.GetRoot(txHashes).Hash.ToBytes().ReverseInPlace();
-        merkleRootReversed = merkleRoot.ReverseInPlace();
-        merkleRootReversedHex = merkleRootReversed.ToHexString();
-        return merkleRoot.ToString();
+        // Pad or truncate to 32 bytes
+        byte[] paddedHash = new byte[32];
+        Array.Copy(generationTransactionHash, 0, paddedHash, 0, Math.Min(generationTransactionHash.Length, 32));
+        generationTransactionHash = paddedHash;
     }
+
+    var txHashes = new List<byte[]> { generationTransactionHash };
+    txHashes.AddRange(BlockTemplate.Transactions.Select(tx => tx.Hash.HexToReverseByteArray()));
+
+    // Create MerkleTree and calculate merkle root
+    var merkleTree = new MerkleTree(txHashes);
+    var merkleRoot = merkleTree.WithFirst(generationTransactionHash);
+
+    // Ensure the length is 32 bytes
+    if (merkleRoot.Length != 32)
+    {
+        throw new FormatException("the byte array should be 32 bytes long");
+    }
+
+    merkleRootReversed = merkleRoot.Reverse().ToArray();
+    merkleRootReversedHex = BitConverter.ToString(merkleRootReversed).Replace("-", "").ToLower();
+    return BitConverter.ToString(merkleRoot).Replace("-", "").ToLower();
+}
+
 
     private string CreateCoinbaseTransaction()
     {
