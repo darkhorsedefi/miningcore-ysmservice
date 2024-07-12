@@ -204,7 +204,7 @@ public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig
         if (reward == 0)
         {
             reward = KotoUtil.GetKotoBlockSubsidy((long)BlockTemplate.Height);
-            reward -= (long)BlockTemplate.CoinbaseTxn.Fee; // rpcData.coinbasetxn.fee := <total fee of transactions> * -1
+            reward -= (long)BlockTemplate.CoinbaseTxn.fee; // rpcData.coinbasetxn.fee := <total fee of transactions> * -1
 
             int nScript = Convert.ToInt32(BlockTemplate.CoinbaseTxn.Data.Substring(82, 2), 16);
 
