@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using System.Reactive;
+using System.Reactive.Linq;
 using Autofac;
 using Miningcore.Blockchain.Bitcoin;
 using Miningcore.Blockchain.Koto.Configuration;
