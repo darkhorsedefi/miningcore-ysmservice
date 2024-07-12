@@ -187,10 +187,30 @@ public partial class KotoCoinTemplate : CoinTemplate
 
         [JsonProperty("solver")]
         public JObject Solver { get; set; }
+        // ZCash "Overwinter"
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public uint? OverwinterActivationHeight { get; set; }
+
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public uint? OverwinterTxVersion { get; set; }
+
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public uint? OverwinterTxVersionGroupId { get; set; }
+
+        // ZCash "Sapling"
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public uint? SaplingActivationHeight { get; set; }
+
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public uint? SaplingTxVersion { get; set; }
+
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public uint? SaplingTxVersionGroupId { get; set; }
     }
     [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
     public Dictionary<string, KotoNetworkParams> Networks { get; set; }
 
+    public bool UsesZCashAddressFormat { get; set; } = true;
 }
 
 
