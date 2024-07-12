@@ -428,7 +428,7 @@ public static class KotoUtil
         if (halvings >= 64)
             return 0;
 
-        nSubsidy >>= halvings;
+        nSubsidy = BigInteger.Divide(nSubsidy, BigInteger.Pow(2, (int)halvings));
         return (long)nSubsidy;
     }
 
@@ -448,3 +448,4 @@ public static class KotoUtil
 
     // その他のユーティリティメソッド
 }
+
