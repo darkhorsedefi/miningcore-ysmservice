@@ -21,6 +21,7 @@ using Newtonsoft.Json.Linq;
 using Microsoft.IO;
 using NLog;
 using AutoMapper;
+using static Miningcore.Util.ActionUtils;
 
 namespace Miningcore.Blockchain.Koto
 {
