@@ -428,7 +428,7 @@ public static class KotoUtil
         if (halvings >= 64)
             return 0;
 
-        nSubsidy = BigInteger.Divide(nSubsidy, BigInteger.Pow(2, (int)halvings));
+        nSubsidy = System.Numerics.BigInteger.Divide(nSubsidy, System.Numerics.BigInteger.Pow(2, (int)halvings));
         return (long)nSubsidy;
     }
 
