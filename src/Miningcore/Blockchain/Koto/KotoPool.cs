@@ -46,6 +46,27 @@ manager = ctx.Resolve<KotoJobManager>(new TypedParameter(typeof(IExtraNonceProvi
             manager.Configure(poolConfig, clusterConfig);
             
             await manager.StartAsync(ct);
+        if(poolConfig.EnableInternalStratum == true)
+        {
+            disposables.Add(manager.Jobs
+                .Select(job => Observable.FromAsync(() =>
+                    Guard(()=> OnNewJobAsync(job),
+                        ex=> logger.Debug(() => $"{nameof(OnNewJobAsync)}: {ex.Message}"))))
+                .Concat()
+                .Subscribe(_ => { }, ex =>
+                {
+                    logger.Debug(ex, nameof(OnNewJobAsync));
+                }));
+
+            // start with initial blocktemplate
+            await manager.Jobs.Take(1).ToTask(ct);
+        }
+
+        else
+        {
+            // keep updating NetworkStats
+            disposables.Add(manager.Jobs.Subscribe());
+        }
         }
 
         protected override async Task OnRequestAsync(StratumConnection connection, Timestamped<JsonRpcRequest> tsRequest, CancellationToken ct)
