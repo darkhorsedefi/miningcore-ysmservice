@@ -56,7 +56,7 @@ namespace Miningcore.Blockchain.Koto.DaemonResponses
         public string Data { get; set; }
 
         [JsonProperty("fee")]
-        public ulong fee { get; set; }
+        public decimal fee { get; set; }
     }
 
     public class Transaction
