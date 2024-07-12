@@ -382,5 +382,15 @@ namespace Miningcore.Blockchain.Koto
     {
         return JsonConvert.DeserializeObject<RpcResponse<DaemonResponses.KotoBlockTemplate>>(json);
     }
+    protected override IDestination AddressToDestination(string address, BitcoinAddressType? addressType)
+    {
+        if(!coin.UsesZCashAddressFormat)
+            return base.AddressToDestination(address, addressType);
+
+        var decoded = Encoders.Base58.DecodeData(address);
+        var hash = decoded.Skip(2).Take(20).ToArray();
+        var result = new KeyId(hash);
+        return result;
+    }
     }
 }
