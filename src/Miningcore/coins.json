@@ -2,7 +2,7 @@
     "koto": {
         "name": "Koto",
         "symbol": "KOTO",
-        "family": "equihash",
+        "family": "koto",
         "website": "https://www.koto.org/",
         "market": "https://www.coingecko.com/en/coins/koto",
         "twitter": "https://twitter.com/koto_official",
