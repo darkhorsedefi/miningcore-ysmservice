@@ -40,8 +40,9 @@ namespace Miningcore.Blockchain.Koto
         private KotoCoinTemplate.KotoNetworkParams networkParams;
         private readonly ConcurrentDictionary<string, bool> submits = new(StringComparer.OrdinalIgnoreCase);
 
-public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig)
+public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig, Network network)
 {
+    this.network = network;
     JobId = id;
     BlockTemplate = blockTemplate;
     coin = poolConfig.Template.As<KotoCoinTemplate>();
