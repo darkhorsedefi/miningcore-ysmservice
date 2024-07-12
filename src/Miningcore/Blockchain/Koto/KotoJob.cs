@@ -61,13 +61,7 @@ public string CalculateMerkleRoot()
 {
     // Ensure GenerationTransaction[0] is 32 bytes long
     byte[] generationTransactionHash = GenerationTransaction[0];
-    if (generationTransactionHash.Length != 32)
-    {
-        // Pad or truncate to 32 bytes
-        byte[] paddedHash = new byte[32];
-        Array.Copy(generationTransactionHash, 0, paddedHash, 0, Math.Min(generationTransactionHash.Length, 32));
-        generationTransactionHash = paddedHash;
-    }
+
 
     var txHashes = new List<byte[]> { generationTransactionHash };
     txHashes.AddRange(BlockTemplate.Transactions.Select(tx => tx.Hash.HexToReverseByteArray()));
