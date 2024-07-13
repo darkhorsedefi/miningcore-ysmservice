@@ -403,11 +403,11 @@ namespace Miningcore.Blockchain.Koto
         if(await base.ValidateAddressAsync(address, ct))
             return true;
         
-        if(!coin.UseBitcoinPayoutHandler)
+        if(!false)
         {
             // handle z-addr
             var result = await rpc.ExecuteAsync<ValidateAddressResponse>(logger,
-                EquihashCommands.ZValidateAddress, ct, new[] { address });
+                "z_validateaddress", ct, new[] { address });
 
             return result.Response is {IsValid: true};
         }
