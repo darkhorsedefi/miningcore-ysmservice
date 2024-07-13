@@ -339,7 +339,7 @@ public string CalculateMerkleRoot(string ex1, string ex2)
             if (nTimeInt < BlockTemplate.CurTime || nTimeInt > submitTime + 7200)
                 throw new StratumException(StratumError.Other, "ntime out of range");
 
-            if (nonce.Length != 8)
+            if (nonce.Length != 8 && nonce.Length != 64)
                 throw new StratumException(StratumError.Other, "incorrect size of nonce");
 
             if (!RegisterSubmit(extraNonce1, extraNonce2, nTime, nonce))
