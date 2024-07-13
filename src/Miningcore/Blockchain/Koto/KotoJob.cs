@@ -326,7 +326,12 @@ public string CalculateMerkleRoot(string ex1, string ex2)
             var submitTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
             if (extraNonce2.Length / 2 != context.ExtraNonce2Size)
-                throw new StratumException(StratumError.Other, "incorrect size of extraNonce2");
+                //throw new StratumException(StratumError.Other, "incorrect size of extraNonce2");
+                var logMessage = $"incorrect size of extraNonce2: extraNonce2={extraNonce2}, expectedSize={context.ExtraNonce2Size}";
+                Console.WriteLine(logMessage); // ここでログに出力します
+
+                // ログ出力後に例外をスローします
+                throw new StratumException(StratumError.Other, logMessage);
             if (nTime.Length != 8)
                 throw new StratumException(StratumError.Other, "incorrect size of ntime");
             var nTimeInt = Convert.ToInt64(nTime, 16);
