@@ -325,13 +325,14 @@ public string CalculateMerkleRoot(string ex1, string ex2)
             var nonce = context.ExtraNonce1 + extraNonce2;
             var submitTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
-            if (extraNonce2.Length / 2 != 4)
+            if (extraNonce2.Length / 2 != 4){
                 //throw new StratumException(StratumError.Other, "incorrect size of extraNonce2");
                 logMessage = $"incorrect size of extraNonce2: extraNonce2={extraNonce2}, nonce2size{extraNonce2.Length}, expectedSize={4}";
                 Console.WriteLine(logMessage); // ここでログに出力します
 
                 // ログ出力後に例外をスローします
                 throw new StratumException(StratumError.Other, logMessage);
+            }
             if (nTime.Length != 8)
                 throw new StratumException(StratumError.Other, "incorrect size of ntime");
             var nTimeInt = Convert.ToInt64(nTime, 16);
