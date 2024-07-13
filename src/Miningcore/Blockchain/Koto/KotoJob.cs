@@ -26,7 +26,7 @@ namespace Miningcore.Blockchain.Koto
         public string CoinbaseTransaction { get; private set; }
         public string[] Transactions { get; private set; }
         public string MerkleRoot { get; private set; }
-        public string merkleBranch { get; private set; }
+        public string[] merkleBranch { get; private set; }
         public string Bits { get; private set; }
         public string Time { get; private set; }
         public string Nonce { get; private set; }
@@ -58,7 +58,7 @@ public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig
     Bits = blockTemplate.Bits;
 }
 
-public string getMerkleHashes()
+public string[] getMerkleHashes()
 {
     byte[] generationTransactionHash = GenerationTransaction[0];
 
@@ -67,8 +67,8 @@ public string getMerkleHashes()
     txHashes.AddRange(BlockTemplate.Transactions.Select(tx => tx.Hash.HexToReverseByteArray()));
 
     // Create MerkleTree and calculate merkle root
-    var merkleTree = new MerkleTree(txHashes);
-    return merkleTree.GetStepsAsHex();
+    var merkleTree = new Merkletree(txHashes);
+    return merkleTree.GetStepsAsHex().ToArray();
 }
 public string CalculateMerkleRoot(string ex1, string ex2)
 {
@@ -90,7 +90,7 @@ public string CalculateMerkleRoot(string ex1, string ex2)
     txHashes.AddRange(BlockTemplate.Transactions.Select(tx => tx.Hash.HexToReverseByteArray()));
 
     // Create MerkleTree and calculate merkle root
-    var merkleTree = new MerkleTree(txHashes);
+    var merkleTree = new Merkletree(txHashes);
     var merkleRoot = merkleTree.WithFirst(generationTransactionHash);
 
     // Ensure the length is 32 bytes
