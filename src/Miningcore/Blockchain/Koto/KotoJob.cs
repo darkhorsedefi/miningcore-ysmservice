@@ -68,7 +68,7 @@ public string getMerkleHashes()
 
     // Create MerkleTree and calculate merkle root
     var merkleTree = new MerkleTree(txHashes);
-    
+    return merkleTree.GetStepsAsHex()
 }
 public string CalculateMerkleRoot()
 {
