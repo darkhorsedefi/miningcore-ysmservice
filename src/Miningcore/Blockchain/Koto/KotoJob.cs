@@ -52,8 +52,8 @@ public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig
     PoolConfig = poolConfig;
     PreviousBlockHash = blockTemplate.PreviousBlockHash;
     SetGenerationTransaction();
-    CoinbaseTransaction = GenerationTransaction[0].ToString();
-    Transactions = GenerationTransaction[1].ToString();
+    CoinbaseTransaction = GenerationTransaction[0].ToStringHex8();
+    Transactions = GenerationTransaction[1].ToStringHex8();
     merkleBranch = getMerkleHashes();
     Bits = blockTemplate.Bits;
 }
@@ -342,13 +342,13 @@ public string CalculateMerkleRoot(string ex1, string ex2)
             var extraNonce2Buffer = Encoders.Hex.DecodeData(extraNonce2);
 
             var coinbaseBuffer = SerializeCoinbase(extraNonce1Buffer, extraNonce2Buffer);
-            var coinbaseHash = Sha256Hash(coinbaseBuffer.ToString());
+            var coinbaseHash = Sha256Hash(coinbaseBuffer.ToStringHex8());
 
             var merkleRoot = ComputeMerkleRoot(new List<string> { coinbaseHash });
             var merkleRootReversed = ReverseBytes(Encoders.Hex.DecodeData(merkleRoot));
 
             var headerBuffer = SerializeHeader(merkleRootReversed, nTime, nonce);
-            var headerHash = Sha256Hash(headerBuffer.ToString());
+            var headerHash = Sha256Hash(headerBuffer.ToStringHex8());
             BigInteger bigInteger = new BigInteger(headerHash.HexToReverseByteArray());
             if (bigInteger.Sign < 0)
             {
@@ -369,8 +369,8 @@ public string CalculateMerkleRoot(string ex1, string ex2)
             string blockHex = null;
             if (BlockTemplate.Target.CompareTo(headerBigNum) >= 0)
             {
-                blockHex = SerializeBlock(headerBuffer, coinbaseBuffer).ToString();
-                blockHash = Sha256Hash(headerBuffer.ToString());
+                blockHex = SerializeBlock(headerBuffer, coinbaseBuffer).ToStringHex8();
+                blockHash = Sha256Hash(headerBuffer.ToStringHex8());
             }
             else
             {   
