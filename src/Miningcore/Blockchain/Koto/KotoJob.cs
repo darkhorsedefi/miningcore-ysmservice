@@ -80,7 +80,7 @@ public string CalculateMerkleRoot(string ex1, string ex2)
             var coinbaseBuffer = SerializeCoinbase(extraNonce1Buffer, extraNonce2Buffer);
 
             // coinbaseハッシュを計算
-            var coinbaseHash = Sha256D(coinbaseBuffer);
+            var coinbaseHash = KotoUtil.Sha256d(coinbaseBuffer);
 
     // Ensure GenerationTransaction[0] is 32 bytes long
     byte[] generationTransactionHash = GenerationTransaction[0];
