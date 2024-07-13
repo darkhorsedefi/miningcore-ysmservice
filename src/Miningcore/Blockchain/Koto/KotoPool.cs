@@ -356,7 +356,7 @@ manager = ctx.Resolve<KotoJobManager>(new TypedParameter(typeof(IExtraNonceProvi
 
             await Guard(() => ForEachMinerAsync(async (connection, ct) =>
             {
-                var context = connection.ContextAs<BitcoinWorkerContext>();
+                var context = connection.ContextAs<KotoWorkerContext>();
 
                 // varDiff: if the client has a pending difficulty change, apply it now
                 if(context.ApplyPendingDifficulty())
