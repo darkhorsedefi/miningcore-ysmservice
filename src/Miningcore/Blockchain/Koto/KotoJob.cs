@@ -58,6 +58,18 @@ public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig
     Bits = blockTemplate.Bits;
 }
 
+public string getMerkleHashes()
+{
+    byte[] generationTransactionHash = GenerationTransaction[0];
+
+
+    var txHashes = new List<byte[]> { generationTransactionHash };
+    txHashes.AddRange(BlockTemplate.Transactions.Select(tx => tx.Hash.HexToReverseByteArray()));
+
+    // Create MerkleTree and calculate merkle root
+    var merkleTree = new MerkleTree(txHashes);
+    
+}
 public string CalculateMerkleRoot()
 {
     // Ensure GenerationTransaction[0] is 32 bytes long
