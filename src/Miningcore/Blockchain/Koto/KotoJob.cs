@@ -72,11 +72,21 @@ public string getMerkleHashes()
 }
 public string CalculateMerkleRoot()
 {
+           // ここでExtraNonce1とExtraNonce2をバッファに変換
+            byte[] extraNonce1Buffer = Encoding.UTF8.GetBytes("ExtraNonce1");
+            byte[] extraNonce2Buffer = Encoding.UTF8.GetBytes("ExtraNonce2");
+
+            // coinbaseトランザクションをシリアライズ
+            var coinbaseBuffer = SerializeCoinbase(extraNonce1Buffer, extraNonce2Buffer);
+
+            // coinbaseハッシュを計算
+            var coinbaseHash = Sha256D(coinbaseBuffer);
+
     // Ensure GenerationTransaction[0] is 32 bytes long
     byte[] generationTransactionHash = GenerationTransaction[0];
 
 
-    var txHashes = new List<byte[]> { generationTransactionHash };
+    var txHashes = new List<byte[]> { coinbaseHash };
     txHashes.AddRange(BlockTemplate.Transactions.Select(tx => tx.Hash.HexToReverseByteArray()));
 
     // Create MerkleTree and calculate merkle root
