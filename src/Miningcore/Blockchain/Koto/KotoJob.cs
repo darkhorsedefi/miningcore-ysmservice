@@ -54,7 +54,7 @@ public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig
     SetGenerationTransaction();
     CoinbaseTransaction = GenerationTransaction[0].ToString();
     Transactions = blockTemplate.Transactions.Select(dr => dr.ToString()).ToArray();
-    MerkleRoot = CalculateMerkleRoot();
+    merkleBranch = getMerkleHashes();
     Bits = blockTemplate.Bits;
 }
 
