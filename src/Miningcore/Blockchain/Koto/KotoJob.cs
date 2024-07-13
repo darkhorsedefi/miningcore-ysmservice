@@ -339,8 +339,8 @@ public string CalculateMerkleRoot(string ex1, string ex2)
             if (nTime.Length != 8)
                 throw new StratumException(StratumError.Other, "incorrect size of ntime");
             var nTimeInt = uint.Parse(nTime.HexToReverseByteArray().ToHexString(), NumberStyles.HexNumber);
-            if (nTimeInt < BlockTemplate.CurTime || nTimeInt > ((DateTimeOffset) clock.Now).ToUnixTimeSeconds() + 7200)
-                throw new StratumException(StratumError.Other, "ntime out of range");
+            //if (nTimeInt < BlockTemplate.CurTime || nTimeInt > ((DateTimeOffset) clock.Now).ToUnixTimeSeconds() + 7200)
+                //throw new StratumException(StratumError.Other, "ntime out of range");
 
             if (nonce.Length != 8 && nonce.Length != 64)
                 throw new StratumException(StratumError.Other, "incorrect size of nonce");
