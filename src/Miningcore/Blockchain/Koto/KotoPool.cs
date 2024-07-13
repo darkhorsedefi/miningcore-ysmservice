@@ -290,7 +290,7 @@ manager = ctx.Resolve<KotoJobManager>(new TypedParameter(typeof(IExtraNonceProvi
 
             await UpdateVarDiffAsync(connection, false, ct);
         }
-        catch(StratumException ex)
+        catch(Exception ex)
         {
             // telemetry
             PublishTelemetry(TelemetryCategory.Share, clock.Now - tsRequest.Timestamp.UtcDateTime, false);
