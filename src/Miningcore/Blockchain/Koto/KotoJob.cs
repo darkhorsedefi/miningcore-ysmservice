@@ -24,7 +24,7 @@ namespace Miningcore.Blockchain.Koto
         public PoolConfig PoolConfig { get; private set; }
         public string PreviousBlockHash { get; private set; }
         public string CoinbaseTransaction { get; private set; }
-        public string[] Transactions { get; private set; }
+        public string Transactions { get; private set; }
         public string MerkleRoot { get; private set; }
         public string[] merkleBranch { get; private set; }
         public string Bits { get; private set; }
@@ -53,7 +53,7 @@ public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig
     PreviousBlockHash = blockTemplate.PreviousBlockHash;
     SetGenerationTransaction();
     CoinbaseTransaction = GenerationTransaction[0].ToString();
-    Transactions = blockTemplate.Transactions.Select(dr => dr.ToString()).ToArray();
+    Transactions = GenerationTransaction[1].ToString();
     merkleBranch = getMerkleHashes();
     Bits = blockTemplate.Bits;
 }
