@@ -393,5 +393,26 @@ namespace Miningcore.Blockchain.Koto
         var result = new KeyId(hash);
         return result;
     }
+
+    public override async Task<bool> ValidateAddressAsync(string address, CancellationToken ct)
+    {
+        if(string.IsNullOrEmpty(address))
+            return false;
+        
+        // handle t-addr
+        if(await base.ValidateAddressAsync(address, ct))
+            return true;
+        
+        if(!coin.UseBitcoinPayoutHandler)
+        {
+            // handle z-addr
+            var result = await rpc.ExecuteAsync<ValidateAddressResponse>(logger,
+                EquihashCommands.ZValidateAddress, ct, new[] { address });
+
+            return result.Response is {IsValid: true};
+        }
+        
+        return false;
+    }
     }
 }
