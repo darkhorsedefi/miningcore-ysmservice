@@ -148,7 +148,7 @@ namespace Miningcore.Blockchain.Koto
 
         public string[] GetTransactionsForStratum()
         {
-            return currentJob.Transactions;
+            return currentJob.BlockTemplate.Transactions.Select(dr => dr.ToString()).ToArray();;
         }
         protected override async Task<bool> AreDaemonsConnectedAsync(CancellationToken ct)
         {
