@@ -26,6 +26,7 @@ namespace Miningcore.Blockchain.Koto
         public string CoinbaseTransaction { get; private set; }
         public string[] Transactions { get; private set; }
         public string MerkleRoot { get; private set; }
+        public string merkleBranch { get; private set; }
         public string Bits { get; private set; }
         public string Time { get; private set; }
         public string Nonce { get; private set; }
