@@ -215,6 +215,7 @@ namespace Miningcore.Blockchain.Koto
     public async ValueTask<Share> SubmitShareAsync(StratumConnection worker,
         object submission, CancellationToken ct)
     {
+        try {
         Contract.RequiresNonNull(worker);
         Contract.RequiresNonNull(submission);
 
@@ -290,6 +291,10 @@ namespace Miningcore.Blockchain.Koto
         share.Created = clock.Now;
 
         return share;
+        } catch (Exception ex) 
+        { 
+            throw;
+        }
     }
         protected override async Task<(bool IsNew, bool Force)> UpdateJob(CancellationToken ct, bool forceUpdate, string via = null, string json = null)
     {
