@@ -75,6 +75,7 @@ manager = ctx.Resolve<KotoJobManager>(new TypedParameter(typeof(IExtraNonceProvi
 
         protected override async Task OnRequestAsync(StratumConnection connection, Timestamped<JsonRpcRequest> tsRequest, CancellationToken ct)
         {
+            try { 
             var request = tsRequest;
             var context = connection.ContextAs<KotoWorkerContext>();
             var requestId = request.Value.Id;
@@ -110,6 +111,11 @@ manager = ctx.Resolve<KotoJobManager>(new TypedParameter(typeof(IExtraNonceProvi
                     logger.Warn(() => $"[{LogCategory}] Unsupported RPC request: {method}");
                     break;
             }
+            
+        catch(StratumException ex)
+        {
+            await connection.RespondErrorAsync(ex.Code, ex.Message, request.Id, false);
+        }
         }
 
     public override double HashrateFromShares(double shares, double interval)
