@@ -13,6 +13,7 @@ using Miningcore.Extensions;
 using Miningcore.Configuration;
 using Miningcore.Contracts;
 using Miningcore.Stratum;
+using Miningcore.Time;
 using Miningcore.Util;
 using NBitcoin;
 using NBitcoin.DataEncoders;
