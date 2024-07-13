@@ -1,5 +1,6 @@
 using System;
 using System.Numerics;
+using System.Globalization;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +21,7 @@ namespace Miningcore.Blockchain.Koto
 {
     public class KotoJob
     {
+        protected IMasterClock clock;
         public KotoBlockTemplate BlockTemplate { get; private set; }
         public PoolConfig PoolConfig { get; private set; }
         public string PreviousBlockHash { get; private set; }
@@ -41,7 +43,7 @@ namespace Miningcore.Blockchain.Koto
         private KotoCoinTemplate.KotoNetworkParams networkParams;
         private readonly ConcurrentDictionary<string, bool> submits = new(StringComparer.OrdinalIgnoreCase);
         public string logMessage;
-public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig, Network network)
+public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig, Network network, IMasterClock clock)
 {
     this.network = network;
     JobId = id;
