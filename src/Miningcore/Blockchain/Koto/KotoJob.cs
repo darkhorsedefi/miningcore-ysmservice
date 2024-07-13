@@ -327,7 +327,7 @@ public string CalculateMerkleRoot(string ex1, string ex2)
 
             if (extraNonce2.Length / 2 != context.ExtraNonce2Size)
                 //throw new StratumException(StratumError.Other, "incorrect size of extraNonce2");
-                var logMessage = $"incorrect size of extraNonce2: extraNonce2={extraNonce2}, expectedSize={context.ExtraNonce2Size}";
+                var logMessage = $"incorrect size of extraNonce2: extraNonce2={extraNonce2}, nonce2size{extraNonce2.Length}, expectedSize={context.ExtraNonce2Size}";
                 Console.WriteLine(logMessage); // ここでログに出力します
 
                 // ログ出力後に例外をスローします
