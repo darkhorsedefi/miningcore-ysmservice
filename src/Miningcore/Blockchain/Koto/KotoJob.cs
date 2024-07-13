@@ -70,11 +70,11 @@ public string getMerkleHashes()
     var merkleTree = new MerkleTree(txHashes);
     return merkleTree.GetStepsAsHex()
 }
-public string CalculateMerkleRoot()
+public string CalculateMerkleRoot(string ex1, string ex2)
 {
            // ここでExtraNonce1とExtraNonce2をバッファに変換
-            byte[] extraNonce1Buffer = Encoding.UTF8.GetBytes("ExtraNonce1");
-            byte[] extraNonce2Buffer = Encoding.UTF8.GetBytes("ExtraNonce2");
+            byte[] extraNonce1Buffer = Encoding.UTF8.GetBytes(ex1);
+            byte[] extraNonce2Buffer = Encoding.UTF8.GetBytes(ex2);
 
             // coinbaseトランザクションをシリアライズ
             var coinbaseBuffer = SerializeCoinbase(extraNonce1Buffer, extraNonce2Buffer);
