@@ -57,6 +57,11 @@ public class MerkleTree
         }
     }
 
+    public List<string> GetStepsAsHex()
+    {
+        return steps.Select(step => BitConverter.ToString(step).Replace("-", "").ToLower()).ToList();
+    }
+
     public byte[] WithFirst(byte[] first)
     {
         foreach (var step in steps)
