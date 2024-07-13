@@ -100,7 +100,7 @@ namespace Miningcore.Blockchain.Koto
                 job.PreviousBlockHash,
                 job.CoinbaseTransaction,
                 job.Transactions,
-                job.MerkleRoot,
+                job.merkleBranch,
                 ((uint)job.BlockTemplate.Version).ToStringHex8(),
                 job.Bits,
                 ((uint)job.BlockTemplate.CurTime).ToStringHex8(),
