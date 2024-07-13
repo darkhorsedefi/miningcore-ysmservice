@@ -59,6 +59,16 @@ public static class StringExtensions
     {
         return value.ToString("x8", CultureInfo.InvariantCulture);
     }
+    
+    public static string ToHexString(this byte[] bytes)
+    {
+        var sb = new StringBuilder(bytes.Length * 2);
+        foreach (var b in bytes)
+        {
+            sb.AppendFormat("{0:x2}", b);
+        }
+        return sb.ToString();
+    }
 
     public static string ToStringHexWithPrefix(this ulong value)
     {
