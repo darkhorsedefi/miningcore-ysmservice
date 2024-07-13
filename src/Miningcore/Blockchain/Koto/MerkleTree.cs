@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 
-public class MerkleTree
+public class Merkletree
 {
     private List<byte[]> data;
     private List<byte[]> steps;
 
-    public MerkleTree(List<byte[]> data)
+    public Merkletree(List<byte[]> data)
     {
         this.data = data;
         this.steps = CalculateSteps(data);
