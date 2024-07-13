@@ -221,7 +221,7 @@ namespace Miningcore.Blockchain.Koto
         if(submission is not object[] submitParams)
             throw new StratumException(StratumError.Other, "invalid params");
 
-        var context = worker.ContextAs<BitcoinWorkerContext>();
+        var context = worker.ContextAs<KotoWorkerContext>();
 
         // extract params
         var workerValue = (submitParams[0] as string)?.Trim();
