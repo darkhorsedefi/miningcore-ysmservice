@@ -114,7 +114,7 @@ manager = ctx.Resolve<KotoJobManager>(new TypedParameter(typeof(IExtraNonceProvi
             
             }catch(StratumException ex)
         {
-            await connection.RespondErrorAsync(ex.Code, ex.Message, request.Id, false);
+            await connection.RespondErrorAsync(ex.Code, ex.Message, tsRequest.Value.Id, false);
         }
         }
 
