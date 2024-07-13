@@ -8,7 +8,7 @@ namespace Miningcore.Blockchain.Koto
     public class KotoExtraNonceProvider : ExtraNonceProviderBase
     {
         private readonly int size;
-        public KotoExtraNonceProvider(string poolId, byte? clusterInstanceId) : base(poolId, 3, clusterInstanceId)
+        public KotoExtraNonceProvider(string poolId, byte? clusterInstanceId) : base(poolId, 4, clusterInstanceId)
         {
         }
 
