@@ -342,7 +342,7 @@ public string CalculateMerkleRoot(string ex1, string ex2)
             //if (nTimeInt < BlockTemplate.CurTime || nTimeInt > ((DateTimeOffset) clock.Now).ToUnixTimeSeconds() + 7200)
                 //throw new StratumException(StratumError.Other, "ntime out of range");
 
-            if(solution.Length != (networkParams.SolutionSize + networkParams.SolutionPreambleSize) * 2)
+            if(nonce.length !== 8&&solution.Length != (networkParams.SolutionSize + networkParams.SolutionPreambleSize) * 2)
                 throw new StratumException(StratumError.Other, "incorrect size of solution");
 
             if (!RegisterSubmit(extraNonce1, extraNonce2, nTime, nonce))
