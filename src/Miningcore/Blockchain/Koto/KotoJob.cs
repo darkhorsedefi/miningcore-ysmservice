@@ -364,7 +364,7 @@ public string CalculateMerkleRoot(string ex1, string ex2)
             bigInteger = BigInteger.Negate(bigInteger);
             }
             var headerBigNum = bigInteger;
-            BigInteger constantValue = new BigInteger(0x00000000FFFF0000);
+            BigInteger constantValue = new BigInteger(0x0007ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
             var bytes = headerBigNum.ToByteArray();
             if (bytes[bytes.Length - 1] == 0 && bytes.Length > 1)
             {
