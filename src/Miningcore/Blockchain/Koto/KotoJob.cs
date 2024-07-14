@@ -325,7 +325,7 @@ public string CalculateMerkleRoot(string ex1, string ex2)
         {
             var context = worker.ContextAs<KotoWorkerContext>();
             var extraNonce1 = context.ExtraNonce1;
-            var nonce = context.ExtraNonce1 + extraNonce2;
+            var nonce = solution;
             var submitTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
             if (extraNonce2.Length / 2 != 4){
@@ -342,8 +342,8 @@ public string CalculateMerkleRoot(string ex1, string ex2)
             //if (nTimeInt < BlockTemplate.CurTime || nTimeInt > ((DateTimeOffset) clock.Now).ToUnixTimeSeconds() + 7200)
                 //throw new StratumException(StratumError.Other, "ntime out of range");
 
-            if (nonce.Length != 8 && nonce.Length != 64)
-                throw new StratumException(StratumError.Other, "incorrect size of nonce");
+            if(solution.Length != (networkParams.SolutionSize + networkParams.SolutionPreambleSize) * 2)
+                throw new StratumException(StratumError.Other, "incorrect size of solution");
 
             if (!RegisterSubmit(extraNonce1, extraNonce2, nTime, nonce))
                 throw new StratumException(StratumError.DuplicateShare, "duplicate share");
