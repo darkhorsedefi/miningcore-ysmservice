@@ -183,7 +183,7 @@ public partial class KotoCoinTemplate : CoinTemplate
         public int SolutionSize { get; set; } = 1344;
 
         [JsonProperty("solutionPreambleSize")]
-        public int SolutionPreambleSize { get; set; } = 3;
+        public int SolutionPreambleSize { get; set; } = 128;
 
         [JsonProperty("solver")]
         public JObject Solver { get; set; }
