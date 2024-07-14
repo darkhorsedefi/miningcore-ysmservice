@@ -387,9 +387,13 @@ public string CalculateMerkleRoot(string ex1, string ex2)
             {   
                 if (shareDiff / context.Difficulty < 0.99)
                 {
-                    if (context.PreviousDifficulty.HasValue && shareDiff >= context.PreviousDifficulty)
+                    if (context.PreviousDifficulty.HasValue && context.VarDiff?.LastUpdate != null)
                     {
+                    if (shareDiff / context.PreviousDifficulty.Value < 0.99){
                         context.Difficulty = context.PreviousDifficulty.Value;
+                    }else{
+                       throw new StratumException(StratumError.LowDifficultyShare, $"low difficulty share ({shareDiff})");
+}
                     }
                     else
                     {
@@ -402,7 +406,7 @@ public string CalculateMerkleRoot(string ex1, string ex2)
             {
                 BlockHeight = (long) BlockTemplate.Height,
                 BlockReward = BlockTemplate.CoinbaseValue,
-                Difficulty = shareDiff,
+                Difficulty = context.Difficulty,
                 NetworkDifficulty = blockDiffAdjusted,
                 BlockHash = blockHash,
                 Worker = context.Worker,
