@@ -364,7 +364,7 @@ public string CalculateMerkleRoot(string ex1, string ex2)
             bigInteger = BigInteger.Negate(bigInteger);
             }
             var headerBigNum = bigInteger;
-            var constantValue = new BigInteger.Parse("0x0007ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", System.Globalization.NumberStyles.HexNumber);
+           // var constantValue = new BigInteger.Parse("0x0007ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", System.Globalization.NumberStyles.HexNumber);
 
             var bytes = headerBigNum.ToByteArray();
             if (bytes[bytes.Length - 1] == 0 && bytes.Length > 1)
@@ -372,7 +372,7 @@ public string CalculateMerkleRoot(string ex1, string ex2)
                 Array.Resize(ref bytes, bytes.Length - 1);
             }
             BigInteger headerBigInteger = new BigInteger(bytes);
-            double shareDiff = ((double)constantValue / (double)headerBigInteger) * 65536;
+            double shareDiff = ((double)networkParams.Diff1BValue / (double)headerBigInteger) * 65536;
             var blockDiffAdjusted = Difficulty * 65536;
 
             string blockHash = null;
