@@ -376,7 +376,9 @@ public string CalculateMerkleRoot(string ex1, string ex2)
 
             string blockHash = null;
             string blockHex = null;
-            if (BlockTemplate.Target.CompareTo(headerBigNum) >= 0)
+            BigInteger targetBigInteger = BigInteger.Parse(BlockTemplate.Target, System.Globalization.NumberStyles.HexNumber);
+        
+            if (targetBigInteger.CompareTo(headerBigNum) >= 0)
             {
                 blockHex = SerializeBlock(headerBuffer, coinbaseBuffer).ToHexString();
                 blockHash = Sha256Hash(headerBuffer.ToHexString());
