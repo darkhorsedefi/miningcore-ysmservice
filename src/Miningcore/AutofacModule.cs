@@ -183,6 +183,10 @@ public class AutofacModule : Module
             .Keyed<IPayoutScheme>(PayoutScheme.PPLNS)
             .SingleInstance();
 
+        builder.RegisterType<PPLNSBFPaymentScheme>()
+            .Keyed<IPayoutScheme>(PayoutScheme.PPLNSBF)
+            .SingleInstance();
+
         builder.RegisterType<SOLOPaymentScheme>()
             .Keyed<IPayoutScheme>(PayoutScheme.SOLO)
             .SingleInstance();
@@ -233,6 +237,7 @@ public class AutofacModule : Module
 
         //////////////////////
         // Handshake
+
         builder.RegisterType<HandshakeJobManager>();
         
         //////////////////////
@@ -242,6 +247,7 @@ public class AutofacModule : Module
 
         //////////////////////
         // Nexa
+
         builder.RegisterType<NexaJobManager>();
         
         //////////////////////
@@ -250,6 +256,21 @@ public class AutofacModule : Module
         builder.RegisterType<ProgpowJobManager>();
 builder.RegisterType<KotoExtraNonceProvider>().As<IExtraNonceProvider>().SingleInstance();
         
+
+        //////////////////////
+        // Warthog
+
+        builder.RegisterType<WarthogJobManager>();
+
+        //////////////////////
+        // Xelis
+
+        builder.RegisterType<XelisJobManager>();
+
+        //////////////////////
+        // Zano
+
+        builder.RegisterType<ZanoJobManager>();
 
         base.Load(builder);
     }
