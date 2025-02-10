@@ -1,20 +1,22 @@
+using System;
 using Miningcore.Contracts;
 using Miningcore.Native;
 
-namespace Miningcore.Crypto.Hashing.Algorithms;
-
-[Identifier("yescrypt")]
-public unsafe class Yescrypt : IHashAlgorithm
+namespace Miningcore.Crypto.Hashing.Algorithms
 {
-    public void Digest(ReadOnlySpan<byte> data, Span<byte> result, params object[] extra)
+    [Identifier("yescrypt")]
+    public unsafe class Yescrypt : IHashAlgorithm
     {
-        Contract.Requires<ArgumentException>(result.Length >= 32);
-
-        fixed (byte* input = data)
+        public void Digest(ReadOnlySpan<byte> data, Span<byte> result, params object[] extra)
         {
-            fixed (byte* output = result)
+            Contract.Requires<ArgumentException>(result.Length >= 32);
+
+            fixed(byte* input = data)
             {
-                Multihash.yescrypt(input, output, (uint) data.Length);
+                fixed(byte* output = result)
+                {
+                    Multihash.yescrypt(input, output, (uint) data.Length);
+                }
             }
         }
     }

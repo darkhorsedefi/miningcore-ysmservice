@@ -11,6 +11,7 @@ using Miningcore.Blockchain.Bitcoin;
 using Miningcore.Configuration;
 using Miningcore.Contracts;
 using Miningcore.Crypto;
+using Miningcore.Crypto.Hashing.Yescrypt;
 using Miningcore.Mining;
 using Miningcore.Rpc;
 using Miningcore.Stratum;
@@ -26,97 +27,108 @@ using NLog;
 
 namespace Miningcore.Blockchain.Koto
 {
-    public class KotoJobManager : BitcoinJobManagerBase<KotoJob>
+public class KotoJobManager : BitcoinJobManagerBase
+{
+private KotoDaemonClient daemonClient;
+public KotoExtraNonceProvider enp;
+protected KotoCoinTemplate coin;
+IExtraNonceProvider extraNonceProvider;
+private readonly IYescryptSolverFactory yescryptSolverFactory;
+private IYescryptSolver yescryptSolver;
+
+    public KotoJobManager(
+        IComponentContext ctx,
+        IMasterClock clock,
+        IMessageBus messageBus,
+        IExtraNonceProvider extraNonceProvider,
+        IYescryptSolverFactory yescryptSolverFactory) 
+        : base(ctx, clock, messageBus, extraNonceProvider)
     {
-        //private KotoExtraNonceProvider extraNonceProvider;
-        private KotoDaemonClient daemonClient;
-        //private Network network;
-        //private RpcClient rpc;
-        public KotoExtraNonceProvider enp;
-        protected KotoCoinTemplate coin;
-        IExtraNonceProvider extraNonceProvider;
-        public KotoJobManager(IComponentContext ctx, IMasterClock clock, IMessageBus messageBus, IExtraNonceProvider extraNonceProvider) 
-            : base(ctx, clock, messageBus, extraNonceProvider)
+        this.extraNonceProvider = extraNonceProvider;
+        this.enp = (KotoExtraNonceProvider)extraNonceProvider;
+        this.yescryptSolverFactory = yescryptSolverFactory;
+    }
+
+public override void Configure(PoolConfig pc, ClusterConfig cc)
+{
+coin = pc.Template.As();
+
+// Initialize yescrypt solver with parameters from configuration
+var solverConfig = coin.Solver;
+yescryptSolver = yescryptSolverFactory.CreateSolver(
+    solverConfig.Args[0].ToInt32(),
+    solverConfig.Args[1].ToInt32(),
+    solverConfig.Args[2].ToString());
+
+base.Configure(pc, cc);
+}
+
+    protected override void ConfigureDaemons()
+    {
+        var jsonSerializerSettings = ctx.Resolve<JsonSerializerSettings>();
+        var rpcClient = new RpcClient(poolConfig.Daemons.First(), jsonSerializerSettings, messageBus, poolConfig.Id);
+        daemonClient = new KotoDaemonClient(rpcClient, logger);
+        rpc = rpcClient;
+    }
+
+    protected async Task<(bool IsNew, string Blob)> BuildJobAsync(CancellationToken ct)
+{
+var response = await daemonClient.GetBlockTemplateAsync(ct);
+
+if (response.Error != null)
+{
+    logger.Warn(() => $"Unable to get block template: {response.Error.Message} (Code: {response.Error.Code})");
+    return (false, null);
+}
+
+var blockTemplate = response.Response;
+var jobId = NextJobId();
+var job = new KotoJob(jobId, blockTemplate, poolConfig, network, clock, yescryptSolver);
+
+lock (jobLock)
+{
+    validJobs.Insert(0, job);
+
+    if (validJobs.Count > maxActiveJobs)
+        validJobs.RemoveAt(validJobs.Count - 1);
+}
+
+logger.Info(() => $"[BuildJob] New job {jobId} for block {blockTemplate.Height}");
+return (true, jobId);
+}
+    public object gjpfs(bool isNew)
+    {
+        return GetJobParamsForStratum(isNew);
+    }
+
+    protected override object GetJobParamsForStratum(bool isNew)
+    {
+        var job = currentJob;
+        if (job == null)
+            return null;
+
+        return new object[]
         {
-    
-            this.extraNonceProvider = extraNonceProvider;
-            this.enp = (KotoExtraNonceProvider)extraNonceProvider;
-            //ConfigureDaemons();
-        }
+            job.JobId,
+            job.PreviousBlockHash,
+            job.CoinbaseTransaction,
+            job.Transactions,
+            job.merkleBranch,
+            ((uint)job.BlockTemplate.Version).ToStringHex8(),
+            job.Bits,
+            ((uint)job.BlockTemplate.CurTime).ToStringHex8(),
+            isNew
+        };
+    }
 
-        protected override void ConfigureDaemons()
-        {
-            var jsonSerializerSettings = ctx.Resolve<JsonSerializerSettings>();
-            var rpcClient = new RpcClient(poolConfig.Daemons.First(), jsonSerializerSettings, messageBus, poolConfig.Id);
-            daemonClient = new KotoDaemonClient(rpcClient, logger);
-            rpc = rpcClient;
-        }
-
-        protected async Task<(bool IsNew, string Blob)> BuildJobAsync(CancellationToken ct)
-        {
-            var response = await daemonClient.GetBlockTemplateAsync(ct);
-
-            if (response.Error != null)
-            {
-                logger.Warn(() => $"Unable to get block template: {response.Error.Message} (Code: {response.Error.Code})");
-                return (false, null);
-            }
-
-            var blockTemplate = response.Response;
-            var jobId = NextJobId();
-            var job = new KotoJob(jobId, blockTemplate, poolConfig, network, clock);
-
-            lock (jobLock)
-            {
-                validJobs.Insert(0, job);
-
-                if (validJobs.Count > maxActiveJobs)
-                    validJobs.RemoveAt(validJobs.Count - 1);
-            }
-
-            logger.Info(() => $"[BuildJob] New job {jobId} for block {blockTemplate.Height}");
-            return (true, jobId);
-        }
-
-        public override void Configure(PoolConfig pc, ClusterConfig cc)
-        {
-            coin = pc.Template.As<KotoCoinTemplate>();
-            base.Configure(pc, cc);
-        }
-        public object gjpfs(bool isNew)
-        {
-            return GetJobParamsForStratum(isNew);
-        }
-
-        protected override object GetJobParamsForStratum(bool isNew)
-        {
-            var job = currentJob;
-            if (job == null)
-                return null;
-
-            return new object[]
-            {
-                job.JobId,
-                job.PreviousBlockHash,
-                job.CoinbaseTransaction,
-                job.Transactions,
-                job.merkleBranch,
-                ((uint)job.BlockTemplate.Version).ToStringHex8(),
-                job.Bits,
-                ((uint)job.BlockTemplate.CurTime).ToStringHex8(),
-                isNew
-            };
-        }
     public virtual object[] GetSubscriberData(StratumConnection worker)
     {
         Contract.RequiresNonNull(worker);
 
         var context = worker.ContextAs<KotoWorkerContext>();
 
-        // assign unique ExtraNonce1 to worker (miner)
         context.ExtraNonce1 = extraNonceProvider.Next();
 
-        // setup response data
         var responseData = new object[]
         {
             context.ExtraNonce1,
@@ -125,97 +137,36 @@ namespace Miningcore.Blockchain.Koto
 
         return responseData;
     }
-        protected async Task<RpcResponse<KotoBlockTemplate>> GetBlockTemplateAsync(CancellationToken ct)
+
+    protected async Task<RpcResponse<KotoBlockTemplate>> GetBlockTemplateAsync(CancellationToken ct)
+    {
+        var response = await daemonClient.GetBlockTemplateAsync(ct);
+
+        if (response.Error != null)
         {
-            var response = await daemonClient.GetBlockTemplateAsync(ct);
-
-            if (response.Error != null)
-            {
-                logger.Warn(() => $"Unable to get block: {response.Error.Message} (Code: {response.Error.Code})");
-                return null;
-            }
-
-            return response;
+            logger.Warn(() => $"Unable to get block: {response.Error.Message} (Code: {response.Error.Code})");
+            return null;
         }
 
-        public void PrepareWorker(StratumConnection worker)
-        {
-            var context = worker.ContextAs<KotoWorkerContext>();
+        return response;
+    }
 
-            context.ExtraNonce1 = extraNonceProvider.Next();
-            context.ExtraNonce2Size = ((KotoExtraNonceProvider)extraNonceProvider).Size;
-        }
+    public void PrepareWorker(StratumConnection worker)
+    {
+        var context = worker.ContextAs<KotoWorkerContext>();
 
-        public string[] GetTransactionsForStratum()
-        {
-            return currentJob.BlockTemplate.Transactions.Select(dr => dr.ToString()).ToArray();;
-        }
-        protected override async Task<bool> AreDaemonsConnectedAsync(CancellationToken ct)
-        {
-            if(hasLegacyDaemon)
-                return await AreDaemonsConnectedLegacyAsync(ct);
+        context.ExtraNonce1 = extraNonceProvider.Next();
+        context.ExtraNonce2Size = ((KotoExtraNonceProvider)extraNonceProvider).Size;
+    }
 
-            var response = await rpc.ExecuteAsync<NetworkInfo>(logger, BitcoinCommands.GetNetworkInfo, ct);
-
-            // update stats
-            if(!string.IsNullOrEmpty(response.Response.Version))
-                BlockchainStats.NodeVersion = (string) response.Response?.Version;
-
-            return response.Error == null && response.Response?.Connections > 0;
-        }
-        protected override async Task<bool> AreDaemonsHealthyAsync(CancellationToken ct)
-        {
-            if(hasLegacyDaemon)
-                return await AreDaemonsHealthyLegacyAsync(ct);
-
-            var response = await rpc.ExecuteAsync<BlockchainInfo>(logger, BitcoinCommands.GetBlockchainInfo, ct);
-
-            if(response.Error != null)
-            {
-                logger.Error(() => $"Daemon reports: {response.Error.Message}");
-                return false;
-            }
-            return true;
-        }
-        protected override async Task EnsureDaemonsSynchedAsync(CancellationToken ct)
-        {
-            using var timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
-
-            var syncPendingNotificationShown = false;
-
-            do
-            {
-                var response = await rpc.ExecuteAsync<BlockTemplate>(logger,
-                    BitcoinCommands.GetBlockTemplate, ct, GetBlockTemplateParams());
-
-                var isSynched = response.Error == null;
-
-                if(isSynched)
-                {
-                    logger.Info(() => "All daemons synched with blockchain");
-                    break;
-                }
-                else
-                {
-                    logger.Debug(() => $"Daemon reports error: {response.Error?.Message}");
-                }
-
-                if(!syncPendingNotificationShown)
-                {
-                    logger.Info(() => "Daemon is still syncing with network. Manager will be started once synced.");
-                    syncPendingNotificationShown = true;
-                }
-
-                await ShowDaemonSyncProgressAsync(ct);
-            } while(await timer.WaitForNextTickAsync(ct));
-        }
-        
-    //protected record SubmitResult(bool Accepted, string CoinbaseTx);
+    public string[] GetTransactionsForStratum()
+    {
+        return currentJob.BlockTemplate.Transactions.Select(dr => dr.ToString()).ToArray();
+    }
 
     public async ValueTask<Share> SubmitShareAsync(StratumConnection worker,
         object submission, CancellationToken ct)
     {
-        try {
         Contract.RequiresNonNull(worker);
         Contract.RequiresNonNull(submission);
 
@@ -224,7 +175,6 @@ namespace Miningcore.Blockchain.Koto
 
         var context = worker.ContextAs<KotoWorkerContext>();
 
-        // extract params
         var workerValue = (submitParams[0] as string)?.Trim();
         var jobId = submitParams[1] as string;
         var nTime = submitParams[2] as string;
@@ -247,56 +197,56 @@ namespace Miningcore.Blockchain.Koto
         if(job == null)
             throw new StratumException(StratumError.JobNotFound, "job not found");
 
-        // validate & process
-        var (share, blockHex) = job.ProcessShare(worker, extraNonce2, nTime, solution);
-
-        // if block candidate, submit & check if accepted by network
-        if(share.IsBlockCandidate)
+        try
         {
-            logger.Info(() => $"Submitting block {share.BlockHeight} [{share.BlockHash}]");
-            
-            SubmitResult acceptResponse;
-            
-            acceptResponse = await SubmitBlockAsync(share, blockHex, ct);
-            // is it still a block candidate?
-            share.IsBlockCandidate = acceptResponse.Accepted;
+            // Verify yescrypt solution using solver
+            var isValid = yescryptSolver.Verify(solution);
+            if (!isValid)
+                throw new StratumException(StratumError.Other, "invalid solution");
 
+            // Process share as normal
+            var (share, blockHex) = job.ProcessShare(worker, extraNonce2, nTime, solution);
+
+            // Submit block if it's a candidate
             if(share.IsBlockCandidate)
             {
-                logger.Info(() => $"Daemon accepted block {share.BlockHeight} [{share.BlockHash}] submitted by {context.Miner}");
+                logger.Info(() => $"Submitting block {share.BlockHeight} [{share.BlockHash}]");
+                
+                var acceptResponse = await SubmitBlockAsync(share, blockHex, ct);
+                share.IsBlockCandidate = acceptResponse.Accepted;
 
-                OnBlockFound();
-
-                // persist the coinbase transaction-hash to allow the payment processor
-                // to verify later on that the pool has received the reward for the block
-                share.TransactionConfirmationData = acceptResponse.CoinbaseTx;
+                if(share.IsBlockCandidate)
+                {
+                    logger.Info(() => $"Daemon accepted block {share.BlockHeight} [{share.BlockHash}] submitted by {context.Miner}");
+                    OnBlockFound();
+                    share.TransactionConfirmationData = acceptResponse.CoinbaseTx;
+                }
+                else
+                {
+                    share.TransactionConfirmationData = null;
+                }
             }
 
-            else
-            {
-                // clear fields that no longer apply
-                share.TransactionConfirmationData = null;
-            }
+            // Enrich share with common data
+            share.PoolId = poolConfig.Id;
+            share.IpAddress = worker.RemoteEndpoint.Address.ToString();
+            share.Miner = context.Miner;
+            share.Worker = context.Worker;
+            share.UserAgent = context.UserAgent;
+            share.Source = clusterConfig.ClusterName;
+            share.NetworkDifficulty = job.Difficulty;
+            share.Created = clock.Now;
+
+            return share;
         }
-
-        // enrich share with common data
-        share.PoolId = poolConfig.Id;
-        share.IpAddress = worker.RemoteEndpoint.Address.ToString();
-        share.Miner = context.Miner;
-        share.Worker = context.Worker;
-        share.UserAgent = context.UserAgent;
-        share.Source = clusterConfig.ClusterName;
-        share.NetworkDifficulty = job.Difficulty;
-        share.Difficulty = share.Difficulty;
-        share.Created = clock.Now;
-
-        return share;
-        } catch (Exception ex) 
-        { 
+        catch(Exception ex)
+        {
+            logger.Error(ex);
             throw;
         }
     }
-        protected override async Task<(bool IsNew, bool Force)> UpdateJob(CancellationToken ct, bool forceUpdate, string via = null, string json = null)
+
+    protected override async Task<(bool IsNew, bool Force)> UpdateJob(CancellationToken ct, bool forceUpdate, string via = null, string json = null)
     {
         try
         {
@@ -307,7 +257,6 @@ namespace Miningcore.Blockchain.Koto
                 await GetBlockTemplateAsync(ct) :
                 GetBlockTemplateFromJson(json);
 
-            // may happen if daemon is currently not connected to peers
             if(response.Error != null)
             {
                 logger.Warn(() => $"Unable to update job. Daemon responded with: {response.Error.Message} Code {response.Error.Code}");
@@ -329,16 +278,10 @@ namespace Miningcore.Blockchain.Koto
             {
                 job = new KotoJob(NextJobId(), blockTemplate, poolConfig, network, clock);
 
-                //job.Init(blockTemplate, NextJobId(),
-                //    poolConfig, extraPoolConfig, clusterConfig, clock, poolAddressDestination, network, isPoS,
-                //    ShareMultiplier, coin.CoinbaseHasherValue, coin.HeaderHasherValue,
-                //    !isPoS ? coin.BlockHasherValue : coin.PoSBlockHasherValue ?? coin.BlockHasherValue);
-
                 lock(jobLock)
                 {
                     validJobs.Insert(0, job);
 
-                    // trim active jobs
                     while(validJobs.Count > maxActiveJobs)
                         validJobs.RemoveAt(validJobs.Count - 1);
                 }
@@ -350,14 +293,12 @@ namespace Miningcore.Blockchain.Koto
                     else
                         logger.Info(() => $"Detected new block {blockTemplate.Height}");
 
-                    // update stats
                     BlockchainStats.LastNetworkBlockTime = clock.Now;
                     BlockchainStats.BlockHeight = blockTemplate.Height;
                     BlockchainStats.NetworkDifficulty = job.Difficulty;
                     BlockchainStats.NextNetworkTarget = blockTemplate.Target;
                     BlockchainStats.NextNetworkBits = blockTemplate.Bits;
                 }
-
                 else
                 {
                     if(via != null)
@@ -371,12 +312,10 @@ namespace Miningcore.Blockchain.Koto
 
             return (isNew, forceUpdate);
         }
-
         catch(OperationCanceledException)
         {
             // ignored
         }
-
         catch(Exception ex)
         {
             logger.Error(ex, () => $"Error during {nameof(UpdateJob)}");
@@ -384,10 +323,12 @@ namespace Miningcore.Blockchain.Koto
 
         return (false, forceUpdate);
     }
+
     private RpcResponse<DaemonResponses.KotoBlockTemplate> GetBlockTemplateFromJson(string json)
     {
         return JsonConvert.DeserializeObject<RpcResponse<DaemonResponses.KotoBlockTemplate>>(json);
     }
+
     protected override IDestination AddressToDestination(string address, BitcoinAddressType? addressType)
     {
         if(!coin.UsesZCashAddressFormat)
@@ -404,13 +345,11 @@ namespace Miningcore.Blockchain.Koto
         if(string.IsNullOrEmpty(address))
             return false;
         
-        // handle t-addr
         if(await base.ValidateAddressAsync(address, ct))
             return true;
         
         if(!false)
         {
-            // handle z-addr
             var result = await rpc.ExecuteAsync<ValidateAddressResponse>(logger,
                 "z_validateaddress", ct, new[] { address });
 
@@ -419,5 +358,5 @@ namespace Miningcore.Blockchain.Koto
         
         return false;
     }
-    }
+}
 }

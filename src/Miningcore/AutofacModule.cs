@@ -16,11 +16,15 @@ using Miningcore.Blockchain.Kaspa;
 using Miningcore.Blockchain.Nexa;
 using Miningcore.Blockchain.Progpow;
 using Miningcore.Blockchain.Koto;
+using Miningcore.Blockchain.Warthog;
+using Miningcore.Blockchain.Xelis;
+using Miningcore.Blockchain.Zano;
 using Miningcore.Configuration;
 using Miningcore.Crypto;
 using Miningcore.Crypto.Hashing.Equihash;
 using Miningcore.Crypto.Hashing.Ethash;
 using Miningcore.Crypto.Hashing.Progpow;
+using Miningcore.Crypto.Hashing.Yescrypt;
 using Miningcore.Messaging;
 using Miningcore.Mining;
 using Miningcore.Notifications;
@@ -106,10 +110,28 @@ public class AutofacModule : Module
             .Named<IProgpowLight>(t => t.GetCustomAttributes<IdentifierAttribute>().First().Name)
             .PropertiesAutowired();
 
-        builder.RegisterAssemblyTypes(ThisAssembly)
-            .Where(t => t.IsAssignableTo<EquihashSolver>())
-            .PropertiesAutowired()
-            .AsSelf();
+
+    builder.RegisterAssemblyTypes(ThisAssembly)
+        .Where(t => t.IsAssignableTo<EquihashSolver>())
+        .PropertiesAutowired()
+        .AsSelf();
+
+    // Register Yescrypt components
+    builder.RegisterType<YescryptSolverFactory>()
+        .As<IYescryptSolverFactory>()
+        .SingleInstance();
+
+    builder.RegisterAssemblyTypes(ThisAssembly)
+        .Where(t => t.IsAssignableTo<YescryptSolver>())
+        .PropertiesAutowired()
+        .AsSelf();
+
+    builder.RegisterType<KotoExtraNonceProvider>()
+        .As<IExtraNonceProvider>()
+        .SingleInstance();
+
+    builder.RegisterType<KotoJobManager>()
+        .AsSelf();
 
         builder.RegisterAssemblyTypes(ThisAssembly)
             .Where(t => t.IsAssignableTo<ControllerBase>())
@@ -227,7 +249,6 @@ public class AutofacModule : Module
 
         builder.RegisterType<ProgpowJobManager>();
 builder.RegisterType<KotoExtraNonceProvider>().As<IExtraNonceProvider>().SingleInstance();
-        builder.RegisterType<KotoJobManager>();
         
 
         base.Load(builder);

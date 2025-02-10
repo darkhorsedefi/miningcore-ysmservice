@@ -12,6 +12,7 @@ using Miningcore.Blockchain;
 using Miningcore.Extensions;
 using Miningcore.Configuration;
 using Miningcore.Contracts;
+using Miningcore.Crypto.Hashing.Yescrypt;
 using Miningcore.Stratum;
 using Miningcore.Time;
 using Miningcore.Util;
@@ -20,46 +21,57 @@ using NBitcoin.DataEncoders;
 
 namespace Miningcore.Blockchain.Koto
 {
-    public class KotoJob
-    {
-        protected IMasterClock clock;
-        public KotoBlockTemplate BlockTemplate { get; private set; }
-        public PoolConfig PoolConfig { get; private set; }
-        public string PreviousBlockHash { get; private set; }
-        public string CoinbaseTransaction { get; private set; }
-        public string Transactions { get; private set; }
-        public string MerkleRoot { get; private set; }
-        public string[] merkleBranch { get; private set; }
-        public string Bits { get; private set; }
-        public string Time { get; private set; }
-        public string Nonce { get; private set; }
-        public double Difficulty { get; set; }
-        public string JobId { get; set; }
-        protected KotoCoinTemplate coin;
-        protected Network network;
-        public byte[][] GenerationTransaction { get; set; }
-        protected byte[] merkleRoot;
-        protected byte[] merkleRootReversed;
-        protected string merkleRootReversedHex;
-        private KotoCoinTemplate.KotoNetworkParams networkParams;
-        private readonly ConcurrentDictionary<string, bool> submits = new(StringComparer.OrdinalIgnoreCase);
-        public string logMessage;
-public KotoJob(string id, KotoBlockTemplate blockTemplate, PoolConfig poolConfig, Network network, IMasterClock clock)
+public class KotoJob
 {
-    this.network = network;
-    JobId = id;
-    BlockTemplate = blockTemplate;
-    coin = poolConfig.Template.As<KotoCoinTemplate>();
-    networkParams = coin.GetNetwork(network.ChainName);
-    Difficulty = (double)new BigRational(networkParams.Diff1BValue, BlockTemplate.Target.HexToReverseByteArray().AsSpan().ToBigInteger());
-    PoolConfig = poolConfig;
-    PreviousBlockHash = blockTemplate.PreviousBlockHash;
-    SetGenerationTransaction();
-    CoinbaseTransaction = GenerationTransaction[0].ToHexString();
-    Transactions = GenerationTransaction[1].ToHexString();
-    merkleBranch = getMerkleHashes();
-    Bits = blockTemplate.Bits;
-}
+protected IMasterClock clock;
+public KotoBlockTemplate BlockTemplate { get; private set; }
+public PoolConfig PoolConfig { get; private set; }
+public string PreviousBlockHash { get; private set; }
+public string CoinbaseTransaction { get; private set; }
+public string Transactions { get; private set; }
+public string MerkleRoot { get; private set; }
+public string[] merkleBranch { get; private set; }
+public string Bits { get; private set; }
+public string Time { get; private set; }
+public string Nonce { get; private set; }
+public double Difficulty { get; set; }
+public string JobId { get; set; }
+protected KotoCoinTemplate coin;
+protected Network network;
+public byte[][] GenerationTransaction { get; set; }
+protected byte[] merkleRoot;
+protected byte[] merkleRootReversed;
+protected string merkleRootReversedHex;
+private KotoCoinTemplate.KotoNetworkParams networkParams;
+private readonly ConcurrentDictionary<string, bool> submits = new(StringComparer.OrdinalIgnoreCase);
+private readonly IYescryptSolver yescryptSolver;
+
+    public KotoJob(
+        string id, 
+        KotoBlockTemplate blockTemplate, 
+        PoolConfig poolConfig, 
+        Network network, 
+        IMasterClock clock,
+        IYescryptSolver yescryptSolver)
+    {
+        this.network = network;
+        this.clock = clock;
+        this.yescryptSolver = yescryptSolver;
+
+        JobId = id;
+        BlockTemplate = blockTemplate;
+        coin = poolConfig.Template.As<KotoCoinTemplate>();
+        networkParams = coin.GetNetwork(network.ChainName);
+        Difficulty = (double)new BigRational(networkParams.Diff1BValue, BlockTemplate.Target.HexToReverseByteArray().AsSpan().ToBigInteger());
+        PoolConfig = poolConfig;
+        PreviousBlockHash = blockTemplate.PreviousBlockHash;
+        
+        SetGenerationTransaction();
+        CoinbaseTransaction = GenerationTransaction[0].ToHexString();
+        Transactions = GenerationTransaction[1].ToHexString();
+        merkleBranch = getMerkleHashes();
+        Bits = blockTemplate.Bits;
+    }
 
 public string[] getMerkleHashes()
 {
@@ -322,100 +334,85 @@ public string CalculateMerkleRoot(string ex1, string ex2)
         }
 
     public virtual (Share Share, string BlockHex) ProcessShare(StratumConnection worker, string extraNonce2, string nTime, string solution)
+    {
+        var context = worker.ContextAs<KotoWorkerContext>();
+        var extraNonce1 = context.ExtraNonce1;
+        var nonce = solution;
+
+        if (extraNonce2.Length / 2 != 4)
         {
-            var context = worker.ContextAs<KotoWorkerContext>();
-            var extraNonce1 = context.ExtraNonce1;
-            var nonce = solution;
-            var submitTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            var logMessage = $"incorrect size of extraNonce2: extraNonce2={extraNonce2}, nonce2size{extraNonce2.Length}, expectedSize={4}";
+            throw new StratumException(StratumError.Other, logMessage);
+        }
 
-            if (extraNonce2.Length / 2 != 4){
-                //throw new StratumException(StratumError.Other, "incorrect size of extraNonce2");
-                logMessage = $"incorrect size of extraNonce2: extraNonce2={extraNonce2}, nonce2size{extraNonce2.Length}, expectedSize={4}";
-                Console.WriteLine(logMessage); // ここでログに出力します
+        if (nTime.Length != 8)
+            throw new StratumException(StratumError.Other, "incorrect size of ntime");
 
-                // ログ出力後に例外をスローします
-                throw new StratumException(StratumError.Other, logMessage);
-            }
-            if (nTime.Length != 8)
-                throw new StratumException(StratumError.Other, "incorrect size of ntime");
-            var nTimeInt = uint.Parse(nTime.HexToReverseByteArray().ToHexString(), NumberStyles.HexNumber);
-            //if (nTimeInt < BlockTemplate.CurTime || nTimeInt > ((DateTimeOffset) clock.Now).ToUnixTimeSeconds() + 7200)
-                //throw new StratumException(StratumError.Other, "ntime out of range");
+        var nTimeInt = uint.Parse(nTime.HexToReverseByteArray().ToHexString(), NumberStyles.HexNumber);
 
-            if(nonce.Length != 8&&solution.Length != (networkParams.SolutionSize + networkParams.SolutionPreambleSize) * 2)
-                throw new StratumException(StratumError.Other, "incorrect size of solution");
+        if(nonce.Length != 8 && solution.Length != (networkParams.SolutionSize + networkParams.SolutionPreambleSize) * 2)
+            throw new StratumException(StratumError.Other, "incorrect size of solution");
 
-            if (!RegisterSubmit(extraNonce1, extraNonce2, nTime, nonce))
-                throw new StratumException(StratumError.DuplicateShare, "duplicate share");
-            var extraNonce1Buffer = Encoders.Hex.DecodeData(extraNonce1);
-            var extraNonce2Buffer = Encoders.Hex.DecodeData(extraNonce2);
+        // Verify solution using Yescrypt
+        if (!yescryptSolver.Verify(solution))
+            throw new StratumException(StratumError.Other, "invalid solution");
 
-            var coinbaseBuffer = SerializeCoinbase(extraNonce1Buffer, extraNonce2Buffer);
-            var coinbaseHash = Sha256Hash(coinbaseBuffer.ToHexString());
+        if (!RegisterSubmit(extraNonce1, extraNonce2, nTime, nonce))
+            throw new StratumException(StratumError.DuplicateShare, "duplicate share");
 
-            var merkleRoot = ComputeMerkleRoot(new List<string> { coinbaseHash });
-            var merkleRootReversed = ReverseBytes(Encoders.Hex.DecodeData(merkleRoot));
+        var extraNonce1Buffer = Encoders.Hex.DecodeData(extraNonce1);
+        var extraNonce2Buffer = Encoders.Hex.DecodeData(extraNonce2);
 
-            var headerBuffer = SerializeHeader(merkleRootReversed, nTime, nonce);
-            var headerHash = Sha256Hash(headerBuffer.ToHexString());
-            BigInteger bigInteger = new BigInteger(headerHash.HexToReverseByteArray());
-            if (bigInteger.Sign < 0)
-            {
-            bigInteger = BigInteger.Negate(bigInteger);
-            }
-            var headerBigNum = bigInteger;
-           // var constantValue = new BigInteger.Parse("0x0007ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", System.Globalization.NumberStyles.HexNumber);
+        var coinbaseBuffer = SerializeCoinbase(extraNonce1Buffer, extraNonce2Buffer);
+        var coinbaseHash = KotoUtil.Sha256d(coinbaseBuffer);
 
-            var bytes = headerBigNum.ToByteArray();
-            if (bytes[bytes.Length - 1] == 0 && bytes.Length > 1)
-            {
-                Array.Resize(ref bytes, bytes.Length - 1);
-            }
-            BigInteger headerBigInteger = new BigInteger(bytes);
-            double shareDiff = ((double)networkParams.Diff1BValue / (double)headerBigInteger) * 65536;
-            var blockDiffAdjusted = Difficulty * 65536;
+        var merkleRoot = ComputeMerkleRoot(new List<string> { coinbaseHash.ToHexString() });
+        var merkleRootReversed = ReverseBytes(Encoders.Hex.DecodeData(merkleRoot));
 
-            string blockHash = null;
-            string blockHex = null;
-            BigInteger targetBigInteger = BigInteger.Parse(BlockTemplate.Target, System.Globalization.NumberStyles.HexNumber);
+        var headerBuffer = SerializeHeader(merkleRootReversed, nTime, nonce);
+        var headerHash = KotoUtil.Sha256d(headerBuffer);
         
-            if (targetBigInteger.CompareTo(headerBigNum) >= 0)
+        BigInteger headerValue = headerHash.ToBigInteger();
+        double shareDiff = (double)networkParams.Diff1BValue / (double)headerValue * 65536;
+        var blockDiffAdjusted = Difficulty * 65536;
+
+        string blockHash = null;
+        string blockHex = null;
+        var target = BlockTemplate.Target.HexToReverseByteArray().ToBigInteger();
+
+        if (headerValue <= target)
+        {
+            blockHex = SerializeBlock(headerBuffer, coinbaseBuffer).ToHexString();
+            blockHash = headerHash.ToHexString();
+        }
+
+        // Check difficulty
+        if (shareDiff / context.Difficulty < 0.99)
+        {
+            if (context.PreviousDifficulty.HasValue && context.VarDiff?.LastUpdate != null)
             {
-                blockHex = SerializeBlock(headerBuffer, coinbaseBuffer).ToHexString();
-                blockHash = Sha256Hash(headerBuffer.ToHexString());
+                if (shareDiff / context.PreviousDifficulty.Value < 0.99)
+                    context.Difficulty = context.PreviousDifficulty.Value;
+                else
+                    throw new StratumException(StratumError.LowDifficultyShare, $"low difficulty share ({shareDiff})");
             }
             else
-            {   
-                if (shareDiff / context.Difficulty < 0.99)
-                {
-                    if (context.PreviousDifficulty.HasValue && context.VarDiff?.LastUpdate != null)
-                    {
-                    if (shareDiff / context.PreviousDifficulty.Value < 0.99){
-                        context.Difficulty = context.PreviousDifficulty.Value;
-                    }else{
-                       throw new StratumException(StratumError.LowDifficultyShare, $"low difficulty share ({shareDiff})");
-}
-                    }
-                    else
-                    {
-                        throw new StratumException(StratumError.LowDifficultyShare, $"low difficulty share ({shareDiff})");
-                    }
-                }
-            }
-
-            var share = new Share
-            {
-                BlockHeight = (long) BlockTemplate.Height,
-                BlockReward = BlockTemplate.CoinbaseValue,
-                Difficulty = context.Difficulty,
-                NetworkDifficulty = blockDiffAdjusted,
-                BlockHash = blockHash,
-                Worker = context.Worker,
-                IsBlockCandidate = blockHash != null
-            };
-
-            return (share, blockHex);
+                throw new StratumException(StratumError.LowDifficultyShare, $"low difficulty share ({shareDiff})");
         }
+
+        var share = new Share
+        {
+            BlockHeight = (long)BlockTemplate.Height,
+            BlockReward = BlockTemplate.CoinbaseValue,
+            Difficulty = context.Difficulty,
+            NetworkDifficulty = blockDiffAdjusted,
+            BlockHash = blockHash,
+            Worker = context.Worker,
+            IsBlockCandidate = blockHash != null
+        };
+
+        return (share, blockHex);
+    }
 
         private byte[] SerializeHeader(byte[] merkleRoot, string nTime, string nonce)
         {

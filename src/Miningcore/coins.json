@@ -5,9 +5,9 @@
         "family": "koto",
         "website": "https://www.koto.org/",
         "market": "https://www.coingecko.com/en/coins/koto",
-        "twitter": "https://twitter.com/koto_official",
-        "telegram": "https://t.me/koto_community",
-        "discord": "https://discord.com/invite/koto",
+        "twitter": "https://twitter.com/KotoOfficial",
+        "telegram": "https://t.me/KotoCommunity", 
+        "discord": "https://discord.com/invite/vJJqs4N",
         "networks": {
             "main": {
                 "diff1": "0007ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
@@ -16,18 +16,16 @@
                 "solver": {
                     "hash": "yescrypt",
                     "args": [
-                        0,
-                        0,
+                        2048,
+                        8,
                         "Yescrypt"
-                   ]
+                    ]
                 },
                 "coinbaseTxNetwork": "main",
                 "payFoundersReward": false,
                 "payFundingStream": false,
                 "percentFoundersReward": 0,
                 "foundersRewardAddresses": [],
-                "foundersRewardSubsidySlowStartInterval": 20000,
-                "foundersRewardSubsidyHalvingInterval": 840000,
                 "overwinterActivationHeight": 335600,
                 "overwinterTxVersion": 3,
                 "overwinterTxVersionGroupId": 48685232,
@@ -42,8 +40,8 @@
                 "solver": {
                     "hash": "yescrypt",
                     "args": [
-                        0,
-                        0,
+                        2048,
+                        8,
                         "Yescrypt"
                     ]
                 },
@@ -51,15 +49,14 @@
                 "payFoundersReward": false,
                 "payFundingStream": false,
                 "percentFoundersReward": 0,
-                "foundersRewardAddresses": [],
-                "foundersRewardSubsidyHalvingInterval": 150
+                "foundersRewardAddresses": []
             }
         },
         "usesZCashAddressFormat": true,
         "useBitcoinPayoutHandler": false,
-        "explorerBlockLink": "https://kotoexplorer.com/blocks/$hash$",
-        "explorerTxLink": "https://kotoexplorer.com/transactions/{0}",
-        "explorerAccountLink": "https://kotoexplorer.com/address/{0}"
+        "explorerBlockLink": "https://explorer.koto.dev/block/$height$",
+        "explorerTxLink": "https://explorer.koto.dev/tx/{0}",
+        "explorerAccountLink": "https://explorer.koto.dev/address/{0}"
     },
     "5gcash": {
         "name": "5G Cash",
@@ -4792,28 +4789,28 @@
         "explorerTxLink": "https://zcashblockexplorer.com/transactions/{0}",
         "explorerAccountLink": "https://zcashblockexplorer.com/address/{0}"
     },
-"squishy": {
-    "name": "Squishy",
-    "symbol": "SQCN",
-    "family": "equihash",
-    "website": "",
-    "market": "",
-    "twitter": "",
-    "telegram": "",
-    "discord": "",
-    "networks": {
-        "main": {
-            "diff1": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f",
-            "solutionSize": 1344,
-            "solutionPreambleSize": 3,
-            "solver": {
-                "hash": "equihash",
-                "args": [
-                    200,
-                    9,
-                    "ZcashPoW"
-                ]
-            },
+    "squishy": {
+        "name": "Squishy",
+        "symbol": "SQCN",
+        "family": "equihash",
+        "website": "",
+        "market": "",
+        "twitter": "",
+        "telegram": "",
+        "discord": "",
+        "networks": {
+            "main": {
+                "diff1": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f",
+                "solutionSize": 1344,
+                "solutionPreambleSize": 3,
+                "solver": {
+                    "hash": "equihash",
+                    "args": [
+                        200,
+                        9,
+                        "ZcashPoW"
+                    ]
+                },
             "coinbaseTxNetwork": "main",
             "payFoundersReward": false,
             "overwinterActivationHeight": 1,
@@ -4845,7 +4842,7 @@
             "saplingTxVersionGroupId": 2301567109
         },
         "regtest": {
-            "diff1": "0007ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",  // 確認が必要
+            "diff1": "0007ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
             "solutionSize": 1344,
             "solutionPreambleSize": 3,
             "solver": {

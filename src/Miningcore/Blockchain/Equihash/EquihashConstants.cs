@@ -10,6 +10,22 @@ public class EquihashConstants
         System.Numerics.BigInteger.Parse("0007ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", NumberStyles.HexNumber);
 
     // Koto-specific constants
+    // Komodo-specific constants
+    public const string KomodoSymbol = "KMD";
+    public const int KomodoMainnetRpcPort = 7771;
+    public const int KomodoTestnetRpcPort = 17771;
+
+    public static readonly string[] KomodoDaemonCommands = new[]
+    {
+        "getblocktemplate",
+        "submitblock",
+        "getblock",
+        "getblockhash",
+        "getdifficulty",
+        "getmininginfo",
+        "getnetworkinfo"
+    };
+
     public const string KotoSymbol = "KOTO";
     public const int KotoMainnetRpcPort = 8432;
     public const int KotoTestnetRpcPort = 18432;
