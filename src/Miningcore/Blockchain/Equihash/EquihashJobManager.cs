@@ -95,6 +95,9 @@ public class EquihashJobManager : BitcoinJobManagerBase<EquihashJob>
             
             case "VRSC":
                 return new VeruscoinJob();
+            case "KMD":
+            case "SQCN":
+                return new KomodoJob();
         }
 
         return new EquihashJob();
