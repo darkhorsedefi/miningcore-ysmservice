@@ -1,163 +1,200 @@
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
-using System.Reactive.Threading.Tasks;
-using MailKit.Net.Smtp;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Net.Mail;
+using System.Data;
+using Autofac;
 using Microsoft.Extensions.Hosting;
-using MimeKit;
-using Miningcore.Configuration;
-using Miningcore.Contracts;
-using Miningcore.Messaging;
-using Miningcore.Notifications.Messages;
-using Miningcore.Pushover;
+using Dapper;
+using Npgsql;
+using Newtonsoft.Json;
 using NLog;
-using static Miningcore.Util.ActionUtils;
+using Miningcore.Configuration;
+using Miningcore.Persistence;
+using Miningcore.Persistence.Model;
+using Miningcore.Messaging;
+using Contract = Miningcore.Contracts.Contract;
 
-namespace Miningcore.Notifications;
-
-public class NotificationService : BackgroundService
+namespace Miningcore.Notifications
 {
-    public NotificationService(
-        ClusterConfig clusterConfig,
-        PushoverClient pushoverClient,
-        IMessageBus messageBus)
+    public class NotificationService : IHostedService
     {
-        Contract.RequiresNonNull(clusterConfig);
-        Contract.RequiresNonNull(messageBus);
+        private readonly IConnectionFactory cf;
+        private readonly IMessageBus messageBus;
+        private readonly ClusterConfig clusterConfig;
+        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+        private CancellationTokenSource cts;
 
-        this.clusterConfig = clusterConfig;
-        emailSenderConfig = clusterConfig.Notifications.Email;
-        this.messageBus = messageBus;
-        this.pushoverClient = pushoverClient;
-
-        poolConfigs = clusterConfig.Pools.ToDictionary(x => x.Id, x => x);
-
-        adminEmail = clusterConfig.Notifications?.Admin?.EmailAddress;
-    }
-
-    private readonly ILogger logger = LogManager.GetCurrentClassLogger();
-    private readonly ClusterConfig clusterConfig;
-    private readonly Dictionary<string, PoolConfig> poolConfigs;
-    private readonly string adminEmail;
-    private readonly IMessageBus messageBus;
-    private readonly EmailSenderConfig emailSenderConfig;
-    private readonly PushoverClient pushoverClient;
-
-    public string FormatAmount(decimal amount, string poolId)
-    {
-        return $"{amount:0.#####} {poolConfigs[poolId].Template.Symbol}";
-    }
-
-    private async Task OnAdminNotificationAsync(AdminNotification notification, CancellationToken ct)
-    {
-        if(!string.IsNullOrEmpty(adminEmail))
-            await Guard(()=> SendEmailAsync(adminEmail, notification.Subject, notification.Message, ct), LogGuarded);
-
-        if(clusterConfig.Notifications?.Pushover?.Enabled == true)
-            await Guard(()=> pushoverClient.PushMessage(notification.Subject, notification.Message, PushoverMessagePriority.None, ct), LogGuarded);
-    }
-
-    private async Task OnBlockFoundNotificationAsync(BlockFoundNotification notification, CancellationToken ct)
-    {
-        const string subject = "Block Notification";
-        var message = $"Pool {notification.PoolId} found block candidate {notification.BlockHeight}";
-
-        if(clusterConfig.Notifications?.Admin?.NotifyBlockFound == true)
+        public NotificationService(
+            IConnectionFactory cf,
+            IMessageBus messageBus,
+            ClusterConfig clusterConfig)
         {
-            await Guard(() => SendEmailAsync(adminEmail, subject, message, ct), LogGuarded);
+            Contract.RequiresNonNull(cf);
+            Contract.RequiresNonNull(messageBus);
+            Contract.RequiresNonNull(clusterConfig);
 
-            if(clusterConfig.Notifications?.Pushover?.Enabled == true)
-                await Guard(() => pushoverClient.PushMessage(subject, message, PushoverMessagePriority.None, ct), LogGuarded);
+            this.cf = cf;
+            this.messageBus = messageBus;
+            this.clusterConfig = clusterConfig;
         }
-    }
 
-    private async Task OnPaymentNotificationAsync(PaymentNotification notification, CancellationToken ct)
-    {
-        if(string.IsNullOrEmpty(notification.Error))
+        private async Task SendEmailAsync(string subject, string body, string recipient)
         {
-            var coin = poolConfigs[notification.PoolId].Template;
-
-            // prepare tx links
-            var txLinks = Array.Empty<string>();
-
-            if(!string.IsNullOrEmpty(coin.ExplorerTxLink))
-                txLinks = notification.TxIds.Select(txHash => string.Format(coin.ExplorerTxLink, txHash)).ToArray();
-
-            const string subject = "Payout Success Notification";
-            var message = $"Paid {FormatAmount(notification.Amount, notification.PoolId)} from pool {notification.PoolId} to {notification.RecipientsCount} recipients in transaction(s) {(string.Join(", ", txLinks))}";
-
-            if(clusterConfig.Notifications?.Admin?.NotifyPaymentSuccess == true)
+            try
             {
-                await Guard(() => SendEmailAsync(adminEmail, subject, message, ct), LogGuarded);
+                if(string.IsNullOrEmpty(clusterConfig.Notifications?.Email?.Host))
+                    return;
 
-                if(clusterConfig.Notifications?.Pushover?.Enabled == true)
-                    await Guard(() => pushoverClient.PushMessage(subject, message, PushoverMessagePriority.None, ct), LogGuarded);
+                using(var client = new SmtpClient(
+                    clusterConfig.Notifications.Email.Host,
+                    clusterConfig.Notifications.Email.Port))
+                {
+                    if (!string.IsNullOrEmpty(clusterConfig.Notifications.Email.User))
+                        client.Credentials = new System.Net.NetworkCredential(
+                            clusterConfig.Notifications.Email.User,
+                            clusterConfig.Notifications.Email.Password);
+
+                    client.EnableSsl = clusterConfig.Notifications.Email.EnableSsl;
+
+                    using(var msg = new MailMessage(
+                        clusterConfig.Notifications.Email.FromAddress,
+                        recipient))
+                    {
+                        msg.Subject = subject;
+                        msg.Body = body;
+                        msg.IsBodyHtml = true;
+
+                        await client.SendMailAsync(msg);
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                logger.Error(ex, () => "Error sending notification email");
             }
         }
 
-        else
+        public async Task ProcessBlockFoundAsync(Block block)
         {
-            const string subject = "Payout Failure Notification";
-            var message = $"Failed to pay out {notification.Amount} {poolConfigs[notification.PoolId].Template.Symbol} from pool {notification.PoolId}: {notification.Error}";
+            logger.Info(() => $"Processing block notification for height {block.BlockHeight}");
 
-            await Guard(()=> SendEmailAsync(adminEmail, subject, message, ct), LogGuarded);
+            try
+            {
+                using(var con = await cf.OpenConnectionAsync())
+                {
+                    using(var tx = con.BeginTransaction())
+                    {
+                        var notificationData = new
+                        {
+                            poolId = block.PoolId,
+                            blockHeight = block.BlockHeight,
+                            networkDifficulty = block.NetworkDifficulty,
+                            status = block.Status,
+                            effort = block.Effort,
+                            miner = block.Miner,
+                            reward = block.Reward
+                        };
 
-            if(clusterConfig.Notifications?.Pushover?.Enabled == true)
-                await Guard(()=> pushoverClient.PushMessage(subject, message, PushoverMessagePriority.None, ct), LogGuarded);
-        }
-    }
+                        await con.ExecuteAsync(
+                            "INSERT INTO notifications(type, data, created) VALUES(@type, @data::jsonb, now())",
+                            new { type = "block", data = JsonConvert.SerializeObject(notificationData) },
+                            tx);
 
-    public async Task SendEmailAsync(string recipient, string subject, string body, CancellationToken ct)
-    {
-        logger.Info(() => $"Sending '{subject.ToLower()}' email to {recipient}");
+                        tx.Commit();
+                    }
+                }
 
-        var message = new MimeMessage();
-        message.From.Add(new MailboxAddress(emailSenderConfig.FromName, emailSenderConfig.FromAddress));
-        message.To.Add(new MailboxAddress("", recipient));
-        message.Subject = subject;
-        message.Body = new TextPart("html") { Text = body };
+                if(clusterConfig.Notifications?.Admin?.NotifyBlockFound == true)
+                {
+                    var subject = $"New Block Found - Height {block.BlockHeight}";
+                    var body = $@"
+                        <h3>New Block Found</h3>
+                        <p>Details:</p>
+                        <ul>
+                            <li>Pool: {block.PoolId}</li>
+                            <li>Height: {block.BlockHeight}</li>
+                            <li>Miner: {block.Miner}</li>
+                            <li>Reward: {block.Reward}</li>
+                            <li>Effort: {block.Effort:F2}%</li>
+                        </ul>";
 
-        using(var client = new SmtpClient())
-        {
-            await client.ConnectAsync(emailSenderConfig.Host, emailSenderConfig.Port, cancellationToken: ct);
-            await client.AuthenticateAsync(emailSenderConfig.User, emailSenderConfig.Password, ct);
-            await client.SendAsync(message, ct);
-            await client.DisconnectAsync(true, ct);
-        }
-
-        logger.Info(() => $"Sent '{subject.ToLower()}' email to {recipient}");
-    }
-
-    private void LogGuarded(Exception ex)
-    {
-        logger.Error(ex);
-    }
-
-    private IObservable<IObservable<Unit>> Subscribe<T>(Func<T, CancellationToken, Task> handler, CancellationToken ct)
-    {
-        return messageBus.Listen<T>()
-            .Select(msg => Observable.FromAsync(() =>
-                Guard(()=> handler(msg, ct), LogGuarded)));
-    }
-
-    protected override async Task ExecuteAsync(CancellationToken ct)
-    {
-        var obs = new List<IObservable<IObservable<Unit>>>();
-
-        if(clusterConfig.Notifications?.Admin?.Enabled == true)
-        {
-            obs.Add(Subscribe<AdminNotification>(OnAdminNotificationAsync, ct));
-            obs.Add(Subscribe<BlockFoundNotification>(OnBlockFoundNotificationAsync, ct));
-            obs.Add(Subscribe<PaymentNotification>(OnPaymentNotificationAsync, ct));
+                    await SendEmailAsync(subject, body, clusterConfig.Notifications.Admin.EmailAddress);
+                }
+            }
+            catch(Exception ex)
+            {
+                logger.Error(ex, () => "Error processing block notification");
+            }
         }
 
-        if(obs.Count > 0)
+        public async Task ProcessPaymentAsync(Payment payment)
         {
-            await obs
-                .Merge()
-                .ObserveOn(TaskPoolScheduler.Default)
-                .Concat()
-                .ToTask(ct);
+            logger.Info(() => $"Processing payment notification for {payment.Address}");
+
+            try
+            {
+                using(var con = await cf.OpenConnectionAsync())
+                {
+                    using(var tx = con.BeginTransaction())
+                    {
+                        var notificationData = new
+                        {
+                            poolId = payment.PoolId,
+                            address = payment.Address,
+                            amount = payment.Amount,
+                            transactionConfirmationData = payment.TransactionConfirmationData,
+                            created = payment.Created
+                        };
+
+                        await con.ExecuteAsync(
+                            "INSERT INTO notifications(type, data, created) VALUES(@type, @data::jsonb, now())",
+                            new { type = "payment", data = JsonConvert.SerializeObject(notificationData) },
+                            tx);
+
+                        tx.Commit();
+                    }
+                }
+
+                if(clusterConfig.Notifications?.Admin?.NotifyPaymentAbove.HasValue == true &&
+                   payment.Amount >= clusterConfig.Notifications.Admin.NotifyPaymentAbove.Value)
+                {
+                    var subject = $"Large Payment Notification - {payment.Amount}";
+                    var body = $@"
+                        <h3>Large Payment Processed</h3>
+                        <p>Details:</p>
+                        <ul>
+                            <li>Pool: {payment.PoolId}</li>
+                            <li>Amount: {payment.Amount}</li>
+                            <li>Address: {payment.Address}</li>
+                            <li>Transaction: {payment.TransactionConfirmationData}</li>
+                        </ul>";
+
+                    await SendEmailAsync(subject, body, clusterConfig.Notifications.Admin.EmailAddress);
+                }
+            }
+            catch(Exception ex)
+            {
+                logger.Error(ex, () => "Error processing payment notification");
+            }
         }
+
+        #region IHostedService
+
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            logger.Info(() => "Notification service started");
+            return Task.CompletedTask;
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            cts?.Cancel();
+            logger.Info(() => "Notification service stopped");
+            return Task.CompletedTask;
+        }
+
+        #endregion
     }
 }

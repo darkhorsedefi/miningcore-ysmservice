@@ -1,0 +1,95 @@
+{
+    "logging": {
+        "level": "info",
+        "enableConsoleLog": true,
+        "enableConsoleColors": true,
+        "logFile": "",
+        "apiLogFile": ""
+    },
+    "banning": {
+        "manager": "integrated",
+        "banOnJunkReceive": true,
+        "banOnInvalidShares": false
+    },
+    "notifications": {
+        "enabled": true,
+        "email": {
+            "enabled": true,
+            "host": "smtp.gmail.com",
+            "port": 587,
+            "user": "your-email@gmail.com",
+            "password": "your-app-password",
+            "fromAddress": "noreply@yourdomain.com",
+            "fromName": "Miningcore Pool",
+            "enableSsl": true
+        }
+    },
+    "persistence": {
+        "postgres": {
+            "host": "127.0.0.1",
+            "port": 5432,
+            "user": "miningcore",
+            "password": "password",
+            "database": "miningcore"
+        }
+    },
+    "paymentProcessing": {
+        "enabled": true,
+        "interval": 600,
+        "shareRecoveryFile": "recovered-shares.txt"
+    },
+    "api": {
+        "enabled": true,
+        "listenAddress": "127.0.0.1",
+        "port": 4000,
+        "enableApiKeyAuthentication": false,
+        "adminApiKey": "",
+        "metricsIpWhitelist": [],
+        "rateLimiting": {
+            "disabled": true,
+            "rules": [{
+                "window": 60,
+                "limit": 1000,
+                "ipWhitelist": []
+            }]
+        }
+    },
+    "pools": [{
+        "id": "eth1",
+        "enabled": true,
+        "coin": {
+            "type": "ETH",
+            "name": "Ethereum",
+            "symbol": "ETH",
+            "family": "ethereum",
+            "algorithm": "ethash"
+        },
+        "address": "0x...",
+        "clientConnectionTimeout": 600,
+        "jobRebroadcastTimeout": 55,
+        "blockRefreshInterval": 1000,
+        "hashrateCalculationWindow": 600,
+        "notifications": {
+            "enabled": true,
+            "minimumPaymentAmount": 0.1,
+            "hashrateDropThreshold": 25,
+            "notifyBlockFound": true,
+            "notifyPayment": true,
+            "notifyHashrateDrop": true
+        },
+        "ports": {
+            "4073": {
+                "name": "GPU Mining",
+                "listenAddress": "0.0.0.0",
+                "difficulty": 4000000000,
+                "varDiff": {
+                    "minDiff": 1000000000,
+                    "maxDiff": null,
+                    "targetTime": 15,
+                    "retargetTime": 90,
+                    "variancePercent": 30
+                }
+            }
+        }
+    }]
+}

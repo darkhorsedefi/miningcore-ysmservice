@@ -28,16 +28,137 @@ public class AdminNotificationsValidator : AbstractValidator<AdminNotifications>
     }
 }
 
-public class NotificationsConfigValidator : AbstractValidator<NotificationsConfig>
-{
-    public NotificationsConfigValidator()
+    public class NotificationsConfigValidator : AbstractValidator<NotificationsConfig>
     {
-        RuleFor(j => j.Email)
-            .NotNull()
-            .When(x => x.Enabled)
-            .WithMessage("You must configure at least one notifications provider when notifications are enabled");
+        public NotificationsConfigValidator()
+        {
+            When(x => x.Enabled, () =>
+            {
+                When(x => x.Email != null, () =>
+                {
+                    RuleFor(x => x.Email.Host)
+                        .NotEmpty()
+                        .WithMessage("SMTP host must be provided when email notifications are enabled");
+
+                    RuleFor(x => x.Email.Port)
+                        .InclusiveBetween(1, 65535)
+                        .WithMessage("SMTP port must be between 1 and 65535");
+
+                    RuleFor(x => x.Email.FromAddress)
+                        .NotEmpty()
+                        .EmailAddress()
+                        .WithMessage("A valid from email address must be provided");
+                });
+
+                When(x => x.Webhook != null && x.Webhook.Enabled, () =>
+                {
+                    RuleFor(x => x.Webhook.Urls)
+                        .NotEmpty()
+                        .WithMessage("At least one webhook URL must be provided when webhook notifications are enabled");
+
+                    RuleForEach(x => x.Webhook.Urls)
+                        .Must(x => Uri.TryCreate(x, UriKind.Absolute, out _))
+                        .WithMessage("Webhook URLs must be valid absolute URLs");
+
+                    When(x => x.Webhook.Auth != null, () =>
+                    {
+                        RuleFor(x => x.Webhook.Auth.Type)
+                            .Must(x => new[] { "bearer", "basic" }.Contains(x?.ToLower()))
+                            .WithMessage("Webhook auth type must be either 'bearer' or 'basic'");
+
+                        When(x => x.Webhook.Auth.Type?.ToLower() == "bearer", () =>
+                        {
+                            RuleFor(x => x.Webhook.Auth.Token)
+                                .NotEmpty()
+                                .WithMessage("Bearer token must be provided when using bearer authentication");
+                        });
+
+                        When(x => x.Webhook.Auth.Type?.ToLower() == "basic", () =>
+                        {
+                            RuleFor(x => x.Webhook.Auth.Username)
+                                .NotEmpty()
+                                .WithMessage("Username must be provided when using basic authentication");
+
+                            RuleFor(x => x.Webhook.Auth.Password)
+                                .NotEmpty()
+                                .WithMessage("Password must be provided when using basic authentication");
+                        });
+                    });
+                });
+
+                When(x => x.Admin != null, () =>
+                {
+                    When(x => x.Admin.EmailAddress != null, () =>
+                    {
+                        RuleFor(x => x.Admin.EmailAddress)
+                            .EmailAddress()
+                            .WithMessage("Admin email address must be valid");
+                    });
+
+                    When(x => x.Admin.NotifyPaymentAbove.HasValue, () =>
+                    {
+                        RuleFor(x => x.Admin.NotifyPaymentAbove.Value)
+                            .GreaterThan(0)
+                            .WithMessage("Payment notification threshold must be greater than 0");
+                    });
+
+                    When(x => x.Admin.NotifyHashrateDropThreshold.HasValue, () =>
+                    {
+                        RuleFor(x => x.Admin.NotifyHashrateDropThreshold.Value)
+                            .InclusiveBetween(1, 100)
+                            .WithMessage("Hashrate drop threshold must be between 1 and 100 percent");
+                    });
+                });
+            });
+        }
     }
-}
+
+    public class PoolNotificationsConfigValidator : AbstractValidator<PoolNotificationsConfig>
+    {
+        public PoolNotificationsConfigValidator()
+        {
+            When(x => x.Enabled, () =>
+            {
+                When(x => x.MinimumPaymentAmount.HasValue, () =>
+                {
+                    RuleFor(x => x.MinimumPaymentAmount.Value)
+                        .GreaterThan(0)
+                        .WithMessage("Minimum payment amount must be greater than 0");
+                });
+
+                When(x => x.HashrateDropThreshold.HasValue, () =>
+                {
+                    RuleFor(x => x.HashrateDropThreshold.Value)
+                        .InclusiveBetween(1, 100)
+                        .WithMessage("Hashrate drop threshold must be between 1 and 100 percent");
+                });
+
+                When(x => x.WebhookUrl != null, () =>
+                {
+                    RuleFor(x => x.WebhookUrl)
+                        .Must(x => Uri.TryCreate(x, UriKind.Absolute, out _))
+                        .WithMessage("Webhook URL must be a valid absolute URL");
+                });
+
+                When(x => x.WebhookNotifications != null, () =>
+                {
+                    When(x => x.WebhookNotifications.PaymentThreshold.HasValue, () =>
+                    {
+                        RuleFor(x => x.WebhookNotifications.PaymentThreshold.Value)
+                            .GreaterThan(0)
+                            .WithMessage("Payment threshold must be greater than 0");
+                    });
+
+                    When(x => x.WebhookNotifications.HashrateDropThreshold.HasValue, () =>
+                    {
+                        RuleFor(x => x.WebhookNotifications.HashrateDropThreshold.Value)
+                            .InclusiveBetween(1, 100)
+                            .WithMessage("Hashrate drop threshold must be between 1 and 100 percent");
+                    });
+                });
+            });
+        }
+    }
 
 public class NetworkEndpointConfigValidator<T> : AbstractValidator<T>
     where T : NetworkEndpointConfig

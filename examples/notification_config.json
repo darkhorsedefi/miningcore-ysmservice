@@ -1,0 +1,77 @@
+{
+    "notifications": {
+        "enabled": true,
+        "email": {
+            "host": "smtp.gmail.com",
+            "port": 587,
+            "user": "your-email@gmail.com",
+            "password": "your-app-password",
+            "fromAddress": "noreply@yourdomain.com",
+            "fromName": "Miningcore Pool",
+            "enableSsl": true
+        },
+        "admin": {
+            "emailAddress": "admin@yourdomain.com",
+            "notifyBlockFound": true,
+            "notifyPaymentAbove": 1.0,
+            "notifyHashrateDropThreshold": 50.0
+        },
+        "pushover": {
+            "enabled": false,
+            "user": "",
+            "token": ""
+        },
+        "webhook": {
+            "enabled": true,
+            "urls": [
+                "https://discord.com/api/webhooks/your-webhook-url",
+                "https://your-custom-endpoint/webhook"
+            ],
+            "auth": {
+                "type": "bearer",
+                "token": "your-auth-token"
+            },
+            "notifications": {
+                "notifyBlockFound": true,
+                "notifyPayment": true,
+                "notifyHashrateDrop": true,
+                "paymentThreshold": 0.1,
+                "hashrateDropThreshold": 25.0
+            }
+        }
+    },
+    "pools": [{
+        "id": "eth1",
+        "enabled": true,
+        "coin": {
+            "type": "ETH"
+        },
+        "notifications": {
+            "enabled": true,
+            "minimumPaymentAmount": 0.1,
+            "hashrateDropThreshold": 25.0,
+            "webhookUrl": "https://discord.com/api/webhooks/pool-specific-webhook",
+            "webhookNotifications": {
+                "notifyBlockFound": true,
+                "notifyPayment": true,
+                "notifyHashrateDrop": true,
+                "paymentThreshold": 0.1,
+                "hashrateDropThreshold": 25.0
+            }
+        },
+        "ports": {
+            "4073": {
+                "name": "GPU Mining",
+                "listenAddress": "0.0.0.0",
+                "difficulty": 4000000000,
+                "varDiff": {
+                    "minDiff": 1000000000,
+                    "maxDiff": null,
+                    "targetTime": 15,
+                    "retargetTime": 90,
+                    "variancePercent": 30
+                }
+            }
+        }
+    }]
+}
