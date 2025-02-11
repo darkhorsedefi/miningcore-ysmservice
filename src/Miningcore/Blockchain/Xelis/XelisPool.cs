@@ -123,9 +123,8 @@ public class XelisPool : PoolBase
 
         // extract worker/miner
         var split = workerValue?.Split('.');
-        var minerName = split?.FirstOrDefault()?.Trim();
         workerName = split?.Skip(1).FirstOrDefault()?.Trim() ?? workerName;
-
+        var (IsAuthorized, minerName, diff, maxdiff) = manager.ValidateLogin(workerValue, password);
         // assumes that minerName is an address
         minerName = await manager.NormalizeAddressAsync(minerName, ct);
         context.IsAuthorized = await manager.ValidateAddressAsync(minerName, ct);

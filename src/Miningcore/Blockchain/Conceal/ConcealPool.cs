@@ -8,6 +8,7 @@ using Microsoft.IO;
 using Miningcore.Blockchain.Conceal.StratumRequests;
 using Miningcore.Blockchain.Conceal.StratumResponses;
 using Miningcore.Configuration;
+using Miningcore.Extensions;
 using Miningcore.JsonRpc;
 using Miningcore.Messaging;
 using Miningcore.Mining;
@@ -56,10 +57,10 @@ public class ConcealPool : PoolBase
 
         if(string.IsNullOrEmpty(loginRequest?.Login))
             throw new StratumException(StratumError.MinusOne, "missing login");
-
+        var (IsAuthorized, minerName, diff, maxdiff) = manager.ValidateLogin(loginRequest.Login, loginRequest.Password);
         // extract worker/miner/paymentid
         var split = loginRequest.Login.Split('.');
-        context.Miner = split[0].Trim();
+        context.Miner = minerName;
         context.Worker = split.Length > 1 ? split[1].Trim() : null;
         context.UserAgent = loginRequest.UserAgent?.Trim();
 

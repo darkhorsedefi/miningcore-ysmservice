@@ -5,100 +5,108 @@ using Miningcore.Configuration;
 using Miningcore.Extensions;
 using Miningcore.Blockchain.Bitcoin;
 using Miningcore.Blockchain.Equihash.DaemonResponses;
+using Miningcore.Stratum;
+using Miningcore.Time;
+using Miningcore.Util;
 using NBitcoin;
 using NBitcoin.DataEncoders;
+using NBitcoin.Zcash;
 
 namespace Miningcore.Blockchain.Equihash.Custom.Komodo
 {
     public class KomodoJob : EquihashJob
     {
         protected override (Share Share, string BlockHex) ProcessShareInternal(StratumConnection worker,
-            string nonce, string solution, double stratumDifficulty, double stratumDifficultyBase)
+            string nonce, uint nTime, string solution)
         {
-            // Nonce validation
-            if (nonce.Length != 64)
-                throw new StratumException(StratumError.Other, "incorrect size of nonce");
+            var context = worker.ContextAs<EquihashWorkerContext>();
+            var solutionBytes = (Span<byte>) solution.HexToByteArray();
 
-            // Solution validation
-            if (solution.Length != 2694)
-                throw new StratumException(StratumError.Other, "incorrect size of solution");
+            // serialize block-header
+            var headerBytes = SerializeHeader(nTime, nonce);
 
-            // Duplicate check
-            if (!RegisterSubmit(nonce, solution))
-                throw new StratumException(StratumError.DuplicateShare, "duplicate share");
-
-            // Verify solution
-            if (!VerifyHeader(nonce, solution))
+            // verify solution
+            if(!solver.Verify(headerBytes, solutionBytes))
                 throw new StratumException(StratumError.Other, "invalid solution");
 
-            // Build block header
-            var headerBytes = SerializeHeader(nonce);
-            var solutionBytes = solution.HexToByteArray();
-            var headerSolutionBytes = headerBytes.Concat(solutionBytes).ToArray();
+            // concat header and solution
+            Span<byte> headerSolutionBytes = stackalloc byte[headerBytes.Length + solutionBytes.Length];
+            headerBytes.CopyTo(headerSolutionBytes);
+            solutionBytes.CopyTo(headerSolutionBytes[headerBytes.Length..]);
 
-            // Calculate share difficulty
-            var resultBytes = headerSolutionBytes.AsSpan();
-            var resultHash = new Span<byte>(new byte[32]);
-            Sha256D(resultBytes, resultHash);
-            var shareDiff = (double) new BigRational(coinbaseInitial.Difficulty1, resultHash.ToBigInteger());
+            // hash block-header
+            Span<byte> headerHash = stackalloc byte[32];
+            headerHasher.Digest(headerSolutionBytes, headerHash, (ulong) nTime);
+            var headerValue = new uint256(headerHash);
 
-            // Check block candidate
-            var isBlockCandidate = shareDiff >= BlockTemplate.Target;
+            // calc share-diff
+            var shareDiff = (double) new BigRational(networkParams.Diff1BValue, headerHash.ToBigInteger());
+            var stratumDifficulty = context.Difficulty;
+            var ratio = shareDiff / stratumDifficulty;
 
-            // Calculate block hash
-            var blockHash = resultHash.ToHexString();
-            var blockHex = SerializeBlock(headerBytes, solutionBytes).ToHexString();
+            // check if the share meets the much harder block difficulty (block candidate)
+            var isBlockCandidate = headerValue <= blockTargetValue;
 
-            // Create share
-            var share = new Share
+            // test if share meets at least workers current difficulty
+            if(!isBlockCandidate && ratio < 0.99)
+            {
+                // check if share matched the previous difficulty from before a vardiff retarget
+                if(context.VarDiff?.LastUpdate != null && context.PreviousDifficulty.HasValue)
+                {
+                    ratio = shareDiff / context.PreviousDifficulty.Value;
+
+                    if(ratio < 0.99)
+                        throw new StratumException(StratumError.LowDifficultyShare, $"low difficulty share ({shareDiff})");
+
+                    // use previous difficulty
+                    stratumDifficulty = context.PreviousDifficulty.Value;
+                }
+
+                else
+                    throw new StratumException(StratumError.LowDifficultyShare, $"low difficulty share ({shareDiff})");
+            }
+
+            var result = new Share
             {
                 BlockHeight = BlockTemplate.Height,
                 NetworkDifficulty = Difficulty,
                 Difficulty = stratumDifficulty,
             };
 
-            if (isBlockCandidate)
+            if(isBlockCandidate)
             {
-                share.IsBlockCandidate = true;
-                share.BlockHash = blockHash;
-                share.BlockReward = BlockTemplate.Reward;
+                var headerHashReversed = headerHash.ToNewReverseArray();
+
+                result.IsBlockCandidate = true;
+                result.BlockReward = rewardToPool.ToDecimal(MoneyUnit.BTC);
+                result.BlockHash = headerHashReversed.ToHexString();
+
+                var blockBytes = SerializeBlock(headerBytes, coinbaseInitial, solutionBytes);
+                var blockHex = blockBytes.ToHexString();
+
+                return (result, blockHex);
             }
 
-            return (share, isBlockCandidate ? blockHex : null);
+            return (result, null);
         }
 
-        private bool VerifyHeader(string nonce, string solution)
+        protected override byte[] SerializeHeader(uint nTime, string nonce)
         {
-            var headerBytes = SerializeHeader(nonce);
-            var solutionBytes = solution.HexToByteArray();
-
-            using(var hasher = new EquihashHasher(Network))
+            var blockHeader = new EquihashBlockHeader
             {
-                return hasher.Verify(headerBytes, solutionBytes);
-            }
+                Version = (int) BlockTemplate.Version,
+                Bits = new Target(BlockTemplate.Bits.HexToByteArray()),
+                HashPrevBlock = uint256.Parse(BlockTemplate.PreviousBlockhash),
+                HashMerkleRoot = new uint256(merkleRoot),
+                NTime = nTime,
+                Nonce = nonce
+            };
+
+            if(isSaplingActive && !string.IsNullOrEmpty(BlockTemplate.FinalSaplingRootHash))
+                blockHeader.HashReserved = BlockTemplate.FinalSaplingRootHash.HexToReverseByteArray();
+
+            return blockHeader.ToBytes();
         }
 
-        protected override byte[] SerializeHeader(string nonce)
-        {
-            var blockHeader = BlockTemplate.Version.ToBytes(true)
-                .Concat(BlockTemplate.PrevHash.HexToByteArray().ReverseArray())
-                .Concat(BlockTemplate.MerkleRoot.HexToByteArray().ReverseArray())
-                .Concat(BlockTemplate.FinalSaplingRoot.HexToByteArray().ReverseArray())
-                .Concat(BlockTemplate.Time.ToBytes(true))
-                .Concat(Bits.HexToByteArray().ReverseArray())
-                .Concat(BlockTemplate.Nonce.HexToByteArray().ReverseArray())
-                .Concat(BlockTemplate.Solution.HexToByteArray());
-
-            return blockHeader.ToArray();
-        }
-
-        private static void Sha256D(Span<byte> input, Span<byte> output)
-        {
-            using(var hasher = System.Security.Cryptography.SHA256.Create())
-            {
-                hasher.TryComputeHash(input, output, out _);
-                hasher.TryComputeHash(output, output, out _);
-            }
-        }
     }
 }

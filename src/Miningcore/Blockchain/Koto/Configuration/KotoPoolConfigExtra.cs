@@ -8,5 +8,7 @@ namespace Miningcore.Blockchain.Koto.Configuration
     {
         [JsonProperty("z-address")]
         public string ZAddress { get; set; }
+
+        public int? MaxActiveJobs { get; set; }
     }
 }

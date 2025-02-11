@@ -1,10 +1,19 @@
 using System.Data;
+using System.Threading.Tasks;
 using Miningcore.Persistence;
 
 namespace Miningcore.Extensions;
 
 public static class ConnectionFactoryExtensions
 {
+    /// <summary>
+    /// 同期的にデータベース接続を開く
+    /// </summary>
+    public static IDbConnection OpenConnection(this IConnectionFactory factory)
+    {
+        return factory.OpenConnectionAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+    }
+
     /// <summary>
     /// Run the specified action providing it with a fresh connection returing its result.
     /// </summary>
@@ -50,7 +59,6 @@ public static class ConnectionFactoryExtensions
                     if(autoCommit)
                         tx.Commit();
                 }
-
                 catch
                 {
                     tx.Rollback();
@@ -82,13 +90,28 @@ public static class ConnectionFactoryExtensions
 
                     return result;
                 }
-
                 catch
                 {
                     tx.Rollback();
                     throw;
                 }
             }
+        }
+    }
+
+    public static T Run<T>(this IConnectionFactory factory, Func<IDbConnection, T> func)
+    {
+        using(var con = OpenConnection(factory))
+        {
+            return func(con);
+        }
+    }
+
+    public static void Run(this IConnectionFactory factory, Action<IDbConnection> action)
+    {
+        using(var con = OpenConnection(factory))
+        {
+            action(con);
         }
     }
 }

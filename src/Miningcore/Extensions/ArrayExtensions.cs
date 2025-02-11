@@ -27,7 +27,17 @@ public static class ArrayExtensions
 
     public static BigInteger ToBigInteger(this Span<byte> value)
     {
-        return new(value, true);
+        return new(value, true, true);
+    }
+
+    public static BigInteger ToBigInteger(this byte[] value)
+    {
+        return value.AsSpan().ToBigInteger();
+    }
+
+    public static Span<byte> AsSpan(this byte[] array)
+    {
+        return new Span<byte>(array);
     }
 
     public static string ToHexString(this IEnumerable<byte> byteArray)

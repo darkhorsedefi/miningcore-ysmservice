@@ -178,6 +178,9 @@ public static unsafe class Multihash
     [DllImport("libmultihash", EntryPoint = "yescrypt_export", CallingConvention = CallingConvention.Cdecl)]
     public static extern void yescrypt(byte* input, void* output, uint inputLength);
 
+    [DllImport("libmultihash", EntryPoint = "yescrypt_verify_export", CallingConvention = CallingConvention.Cdecl)]
+    public static extern bool yescrypt_verify(byte* input, uint inputLength, uint N, uint r);
+
     [DllImport("libmultihash", EntryPoint = "yescryptR8_export", CallingConvention = CallingConvention.Cdecl)]
     public static extern void yescryptR8(byte* input, void* output, uint inputLength);
 

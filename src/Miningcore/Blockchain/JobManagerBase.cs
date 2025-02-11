@@ -5,7 +5,9 @@ using Autofac;
 using Miningcore.Configuration;
 using Miningcore.Extensions;
 using Miningcore.Messaging;
+using Miningcore.Mining;
 using Miningcore.Notifications.Messages;
+using Miningcore.Persistence;
 using Miningcore.Util;
 using NLog;
 using Contract = Miningcore.Contracts.Contract;
@@ -21,10 +23,12 @@ public abstract class JobManagerBase<TJob>
 
         this.ctx = ctx;
         this.messageBus = messageBus;
+        this.poolUserAuth = new PoolUserAuth(ctx.Resolve<IConnectionFactory>());
     }
 
     protected readonly IComponentContext ctx;
     protected readonly IMessageBus messageBus;
+    protected readonly PoolUserAuth poolUserAuth;
     protected ClusterConfig clusterConfig;
 
     protected TJob currentJob;
@@ -36,6 +40,12 @@ public abstract class JobManagerBase<TJob>
     protected readonly Subject<Unit> blockFoundSubject = new();
 
     protected abstract void ConfigureDaemons();
+
+    public virtual async Task<(bool IsValid, string Address, double? Difficulty, double? MaxDifficulty)> ValidateLogin(
+        string username, string password)
+    {
+        return await PoolUserAuth.ValidateUsername(username, password, poolConfig.Template.Symbol, poolUserAuth);
+    }
 
     protected async Task StartDaemonAsync(CancellationToken ct)
     {

@@ -38,18 +38,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IO;
 using Miningcore.Nicehash;
 using Miningcore.Pushover;
+using Miningcore.Persistence;
 
 namespace Miningcore;
 
 public class AutofacModule : Module
 {
-    /// <summary>
-    /// Override to add registrations to the container.
-    /// </summary>
-    /// <remarks>
-    /// Note that the ContainerBuilder parameter is unique to this module.
-    /// </remarks>
-    /// <param name="builder">The builder through which components can be registered.</param>
     protected override void Load(ContainerBuilder builder)
     {
         builder.RegisterInstance(new JsonSerializerSettings
@@ -62,6 +56,11 @@ public class AutofacModule : Module
                 }
             }
         });
+
+        // Repository registration
+        builder.RegisterType<VerifyUserAddressRepository>()
+            .AsSelf()
+            .SingleInstance();
 
         builder.RegisterType<MessageBus>()
             .AsImplementedInterfaces()
@@ -110,28 +109,27 @@ public class AutofacModule : Module
             .Named<IProgpowLight>(t => t.GetCustomAttributes<IdentifierAttribute>().First().Name)
             .PropertiesAutowired();
 
+        builder.RegisterAssemblyTypes(ThisAssembly)
+            .Where(t => t.IsAssignableTo<EquihashSolver>())
+            .PropertiesAutowired()
+            .AsSelf();
 
-    builder.RegisterAssemblyTypes(ThisAssembly)
-        .Where(t => t.IsAssignableTo<EquihashSolver>())
-        .PropertiesAutowired()
-        .AsSelf();
+        // Register Yescrypt components
+        builder.RegisterType<YescryptSolverFactory>()
+            .As<IYescryptSolverFactory>()
+            .SingleInstance();
 
-    // Register Yescrypt components
-    builder.RegisterType<YescryptSolverFactory>()
-        .As<IYescryptSolverFactory>()
-        .SingleInstance();
+        builder.RegisterAssemblyTypes(ThisAssembly)
+            .Where(t => t.IsAssignableTo<YescryptSolver>())
+            .PropertiesAutowired()
+            .AsSelf();
 
-    builder.RegisterAssemblyTypes(ThisAssembly)
-        .Where(t => t.IsAssignableTo<YescryptSolver>())
-        .PropertiesAutowired()
-        .AsSelf();
+        builder.RegisterType<KotoExtraNonceProvider>()
+            .As<IExtraNonceProvider>()
+            .SingleInstance();
 
-    builder.RegisterType<KotoExtraNonceProvider>()
-        .As<IExtraNonceProvider>()
-        .SingleInstance();
-
-    builder.RegisterType<KotoJobManager>()
-        .AsSelf();
+        builder.RegisterType<KotoJobManager>()
+            .AsSelf();
 
         builder.RegisterAssemblyTypes(ThisAssembly)
             .Where(t => t.IsAssignableTo<ControllerBase>())
@@ -194,82 +192,24 @@ public class AutofacModule : Module
         builder.RegisterType<PROPPaymentScheme>()
             .Keyed<IPayoutScheme>(PayoutScheme.PROP)
             .SingleInstance();
-        
+
         //////////////////////
-        // Alephium
+        // Job Managers
 
         builder.RegisterType<AlephiumJobManager>();
-        
-        //////////////////////
-        // Beam
-
         builder.RegisterType<BeamJobManager>();
-        
-        //////////////////////
-        // Bitcoin and family
-
         builder.RegisterType<BitcoinJobManager>();
-
-        //////////////////////
-        // Conceal
-
         builder.RegisterType<ConcealJobManager>();
-        
-        //////////////////////
-        // Cryptonote
-
         builder.RegisterType<CryptonoteJobManager>();
-
-        //////////////////////
-        // ZCash
-
         builder.RegisterType<EquihashJobManager>();
-
-        //////////////////////
-        // Ergo
-
         builder.RegisterType<ErgoJobManager>();
-
-        //////////////////////
-        // Ethereum
-
         builder.RegisterType<EthereumJobManager>();
-
-        //////////////////////
-        // Handshake
-
         builder.RegisterType<HandshakeJobManager>();
-        
-        //////////////////////
-        // Kaspa
-
         builder.RegisterType<KaspaJobManager>();
-
-        //////////////////////
-        // Nexa
-
         builder.RegisterType<NexaJobManager>();
-        
-        //////////////////////
-        // Progpow
-
         builder.RegisterType<ProgpowJobManager>();
-builder.RegisterType<KotoExtraNonceProvider>().As<IExtraNonceProvider>().SingleInstance();
-        
-
-        //////////////////////
-        // Warthog
-
         builder.RegisterType<WarthogJobManager>();
-
-        //////////////////////
-        // Xelis
-
         builder.RegisterType<XelisJobManager>();
-
-        //////////////////////
-        // Zano
-
         builder.RegisterType<ZanoJobManager>();
 
         base.Load(builder);

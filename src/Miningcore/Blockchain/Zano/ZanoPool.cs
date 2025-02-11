@@ -103,12 +103,12 @@ public class ZanoPool : PoolBase
         var workerValue = requestParams?.Length > 0 ? requestParams[0] : "0";
         var password = requestParams?.Length > 1 ? requestParams[1] : null;
         var passParts = password?.Split(PasswordControlVarsSeparator);
-
+        var (IsAuthorized, minerName, diff, maxdiff) = manager.ValidateLogin(workerValue, password);
         // extract worker/miner
         var workerParts = workerValue?.Split('.');
-        context.Miner = workerParts?.Length > 0 ? workerParts[0].Trim() : null;
+        context.Miner = minerName;
         context.Worker = workerParts?.Length > 1 ? workerParts[1].Trim() : "0";
-
+        
         var addressToValidate = context.Miner;
 
         // extract paymentid

@@ -17,24 +17,30 @@ using Miningcore.Rpc;
 using Miningcore.Stratum;
 using Miningcore.Messaging;
 using Miningcore.Extensions;
+using Miningcore.Native;
 using Miningcore.Notifications.Messages;
+using Miningcore.Persistence;
 using Miningcore.Time;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NBitcoin;
 using NBitcoin.DataEncoders;
+using Newtonsoft.Json;
 using NLog;
 
 namespace Miningcore.Blockchain.Koto
 {
-public class KotoJobManager : BitcoinJobManagerBase
+public class KotoJobManager : BitcoinJobManagerBase<KotoJob>
 {
-private KotoDaemonClient daemonClient;
-public KotoExtraNonceProvider enp;
-protected KotoCoinTemplate coin;
-IExtraNonceProvider extraNonceProvider;
-private readonly IYescryptSolverFactory yescryptSolverFactory;
-private IYescryptSolver yescryptSolver;
+    private KotoDaemonClient daemonClient;
+    public KotoExtraNonceProvider enp;
+    protected KotoCoinTemplate coin;
+    protected new IExtraNonceProvider extraNonceProvider;
+    private readonly IYescryptSolverFactory yescryptSolverFactory;
+    private IYescryptSolver yescryptSolver;
+    protected readonly List<KotoJob> validJobs = new List<KotoJob>();
+    protected new int maxActiveJobs;
+    private KotoPoolConfigExtra extraPoolConfig;
 
     public KotoJobManager(
         IComponentContext ctx,
@@ -51,16 +57,21 @@ private IYescryptSolver yescryptSolver;
 
 public override void Configure(PoolConfig pc, ClusterConfig cc)
 {
-coin = pc.Template.As();
+    coin = pc.Template.As<KotoCoinTemplate>();
+    extraPoolConfig = pc.Extra.SafeExtensionDataAs<KotoPoolConfigExtra>();
+    maxActiveJobs = extraPoolConfig?.MaxActiveJobs ?? 4;
+    var chainConfig = coin.GetNetwork(network.ChainName);
+    // Initialize yescrypt solver with parameters from configuration
+    var solverConfig = chainConfig.Solver;
+    var args = solverConfig["args"]?
+        .Select(token => token.Value<object>())
+        .ToArray();
+    yescryptSolver = yescryptSolverFactory.CreateSolver(
+        (int) Convert.ChangeType(args[0], typeof(int)),
+        (int) Convert.ChangeType(args[1], typeof(int)),
+        args[2].ToString());
 
-// Initialize yescrypt solver with parameters from configuration
-var solverConfig = coin.Solver;
-yescryptSolver = yescryptSolverFactory.CreateSolver(
-    solverConfig.Args[0].ToInt32(),
-    solverConfig.Args[1].ToInt32(),
-    solverConfig.Args[2].ToString());
-
-base.Configure(pc, cc);
+    base.Configure(pc, cc);
 }
 
     protected override void ConfigureDaemons()
@@ -83,7 +94,7 @@ if (response.Error != null)
 
 var blockTemplate = response.Response;
 var jobId = NextJobId();
-var job = new KotoJob(jobId, blockTemplate, poolConfig, network, clock, yescryptSolver);
+var job = new KotoJob(jobId, blockTemplate, poolConfig, base.network, base.clock, yescryptSolver);
 
 lock (jobLock)
 {
@@ -119,6 +130,11 @@ return (true, jobId);
             ((uint)job.BlockTemplate.CurTime).ToStringHex8(),
             isNew
         };
+    }
+
+    public override KotoJob GetJobForStratum()
+    {
+        return currentJob;
     }
 
     public virtual object[] GetSubscriberData(StratumConnection worker)
@@ -276,7 +292,7 @@ return (true, jobId);
 
             if(isNew || forceUpdate)
             {
-                job = new KotoJob(NextJobId(), blockTemplate, poolConfig, network, clock);
+                job = new KotoJob(NextJobId(), blockTemplate, poolConfig, base.network, base.clock, yescryptSolver);
 
                 lock(jobLock)
                 {

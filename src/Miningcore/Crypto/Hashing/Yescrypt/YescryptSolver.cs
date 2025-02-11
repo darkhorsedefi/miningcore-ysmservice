@@ -1,5 +1,6 @@
 using System;
 using Miningcore.Native;
+using Miningcore.Extensions;
 
 namespace Miningcore.Crypto.Hashing.Yescrypt
 {
@@ -28,7 +29,7 @@ private readonly string personalization;
             // Call the native verify function
             fixed(byte* input = solutionBytes)
             {
-                return Multihash.yescrypt_verify(input, (uint)solutionBytes.Length, N, r);
+                return Multihash.yescrypt_verify(input, (uint)solutionBytes.Length, (uint)N, (uint)r);
             }
         }
         catch

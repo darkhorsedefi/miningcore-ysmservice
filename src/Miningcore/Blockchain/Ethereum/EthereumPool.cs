@@ -103,8 +103,8 @@ public class EthereumPool : PoolBase
 
         // extract worker/miner
         var workerParts = workerValue?.Split('.');
-        var minerName = workerParts?.Length > 0 ? workerParts[0].Trim() : null;
         var workerName = workerParts?.Length > 1 ? workerParts[1].Trim() : "0";
+        var (IsAuthorized, minerName, diff, maxdiff) = manager.ValidateLogin(workerValue, password);
 
         context.IsAuthorized = manager.ValidateAddress(minerName);
 
@@ -317,9 +317,8 @@ public class EthereumPool : PoolBase
 
         // extract worker/miner
         var workerParts = workerValue?.Split('.');
-        var minerName = workerParts?.Length > 0 ? workerParts[0].Trim() : null;
         var workerName = workerParts?.Length > 1 ? workerParts[1].Trim() : "0";
-
+        var (IsAuthorized, minerName, diff, maxdiff) = manager.ValidateLogin(workerValue, password);
         manager.PrepareWorker(connection);
 
         context.IsAuthorized = manager.ValidateAddress(minerName);

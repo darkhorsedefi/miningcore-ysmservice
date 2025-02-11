@@ -159,10 +159,9 @@ public class EquihashPool : PoolBase
         var workerValue = requestParams?.Length > 0 ? requestParams[0] : null;
         var password = requestParams?.Length > 1 ? requestParams[1] : null;
         var passParts = password?.Split(PasswordControlVarsSeparator);
-
+        var (IsAuthorized, minerName, diff, maxdiff) = manager.ValidateLogin(workerValue, password);
         // extract worker/miner
         var split = workerValue?.Split('.');
-        var minerName = split?.FirstOrDefault()?.Trim();
         var workerName = split?.Skip(1).FirstOrDefault()?.Trim() ?? string.Empty;
 
         // assumes that workerName is an address

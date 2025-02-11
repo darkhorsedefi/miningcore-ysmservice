@@ -7,6 +7,7 @@ using Microsoft.IO;
 using Miningcore.Blockchain.Bitcoin;
 using Miningcore.Blockchain.Handshake;
 using Miningcore.Configuration;
+using Miningcore.Extensions;
 using Miningcore.JsonRpc;
 using Miningcore.Messaging;
 using Miningcore.Mining;
@@ -61,9 +62,8 @@ public class HandshakePool : PoolBase
 
         // extract worker/miner
         var split = workerValue?.Split('.');
-        var minerName = split?.FirstOrDefault()?.Trim();
         var workerName = split?.Skip(1).FirstOrDefault()?.Trim() ?? string.Empty;
-
+        var (IsAuthorized, minerName, diff, maxdiff) = manager.ValidateLogin(workerValue, password);
         // assumes that minerName is an address
         context.IsAuthorized = await manager.ValidateAddressAsync(minerName, ct);
         context.Miner = minerName;

@@ -3,6 +3,7 @@ using Autofac;
 using Miningcore.Blockchain.Bitcoin;
 using Miningcore.Blockchain.Bitcoin.DaemonResponses;
 using Miningcore.Blockchain.Equihash.Custom.BitcoinGold;
+using Miningcore.Blockchain.Equihash.Custom.Komodo;
 using Miningcore.Blockchain.Equihash.Custom.Minexcoin;
 using Miningcore.Blockchain.Equihash.Custom.Piratechain;
 using Miningcore.Blockchain.Equihash.Custom.Veruscoin;
