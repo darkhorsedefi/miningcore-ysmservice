@@ -1,7 +1,7 @@
 CREATE SCHEMA IF NOT EXISTS pool;
 
 -- 通知テーブル
-CREATE TABLE IF NOT EXISTS pool.notifications
+CREATE TABLE IF NOT EXISTS notifications
 (
     id SERIAL PRIMARY KEY,
     type VARCHAR(20) NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS pool.notifications
 );
 
 -- 通知設定テーブル
-CREATE TABLE IF NOT EXISTS pool.notification_settings
+CREATE TABLE IF NOT EXISTS notification_settings
 (
     id SERIAL PRIMARY KEY,
     user_id INT NOT NULL,
@@ -31,10 +31,10 @@ CREATE TABLE IF NOT EXISTS pool.notification_settings
 );
 
 -- 通知履歴テーブル
-CREATE TABLE IF NOT EXISTS pool.notification_history
+CREATE TABLE IF NOT EXISTS notification_history
 (
     id SERIAL PRIMARY KEY,
-    notification_id INT REFERENCES pool.notifications(id),
+    notification_id INT REFERENCES notifications(id),
     user_id INT NOT NULL,
     pool_id VARCHAR(50) NOT NULL,
     type VARCHAR(20) NOT NULL,
@@ -45,14 +45,14 @@ CREATE TABLE IF NOT EXISTS pool.notification_history
 );
 
 -- インデックス
-CREATE INDEX IF NOT EXISTS idx_notifications_type ON pool.notifications(type);
-CREATE INDEX IF NOT EXISTS idx_notifications_created ON pool.notifications(created);
-CREATE INDEX IF NOT EXISTS idx_notifications_processed ON pool.notifications(processed);
-CREATE INDEX IF NOT EXISTS idx_notification_settings_user ON pool.notification_settings(user_id);
-CREATE INDEX IF NOT EXISTS idx_notification_settings_pool ON pool.notification_settings(pool_id);
-CREATE INDEX IF NOT EXISTS idx_notification_history_user ON pool.notification_history(user_id);
-CREATE INDEX IF NOT EXISTS idx_notification_history_pool ON pool.notification_history(pool_id);
-CREATE INDEX IF NOT EXISTS idx_notification_history_created ON pool.notification_history(created_at);
+CREATE INDEX IF NOT EXISTS idx_notifications_type ON notifications(type);
+CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications(created);
+CREATE INDEX IF NOT EXISTS idx_notifications_processed ON notifications(processed);
+CREATE INDEX IF NOT EXISTS idx_notification_settings_user ON notification_settings(user_id);
+CREATE INDEX IF NOT EXISTS idx_notification_settings_pool ON notification_settings(pool_id);
+CREATE INDEX IF NOT EXISTS idx_notification_history_user ON notification_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_notification_history_pool ON notification_history(pool_id);
+CREATE INDEX IF NOT EXISTS idx_notification_history_created ON notification_history(created_at);
 
 -- updated_at更新用のトリガー
 CREATE OR REPLACE FUNCTION update_notification_settings_updated_at()
@@ -64,7 +64,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_update_notification_settings_updated_at
-    BEFORE UPDATE ON pool.notification_settings
+    BEFORE UPDATE ON notification_settings
     FOR EACH ROW
     EXECUTE FUNCTION update_notification_settings_updated_at();
 
@@ -75,12 +75,12 @@ DECLARE
     deleted_count INTEGER;
 BEGIN
     -- 古い履歴を削除
-    DELETE FROM pool.notification_history
+    DELETE FROM notification_history
     WHERE created_at < NOW() - (days || ' days')::INTERVAL;
     GET DIAGNOSTICS deleted_count = ROW_COUNT;
     
     -- 処理済みの古い通知を削除
-    DELETE FROM pool.notifications
+    DELETE FROM notifications
     WHERE processed = TRUE
     AND created < NOW() - (days || ' days')::INTERVAL;
     GET DIAGNOSTICS deleted_count = deleted_count + ROW_COUNT;
@@ -90,7 +90,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- メンテナンス用のビュー
-CREATE OR REPLACE VIEW pool.v_notification_stats AS
+CREATE OR REPLACE VIEW v_notification_stats AS
 SELECT 
     n.type,
     COUNT(*) as total_count,
@@ -98,10 +98,10 @@ SELECT
     COUNT(*) FILTER (WHERE NOT n.processed) as pending_count,
     MIN(n.created) as oldest_notification,
     MAX(n.created) as newest_notification
-FROM pool.notifications n
+FROM notifications n
 GROUP BY n.type;
 
-CREATE OR REPLACE VIEW pool.v_notification_settings_summary AS
+CREATE OR REPLACE VIEW v_notification_settings_summary AS
 SELECT 
     ns.pool_id,
     COUNT(*) as total_users,
@@ -110,5 +110,5 @@ SELECT
     COUNT(*) FILTER (WHERE ns.notify_block_found) as block_notify_count,
     COUNT(*) FILTER (WHERE ns.notify_payment) as payment_notify_count,
     COUNT(*) FILTER (WHERE ns.notify_hashrate_drop) as hashrate_notify_count
-FROM pool.notification_settings ns
+FROM notification_settings ns
 GROUP BY ns.pool_id;

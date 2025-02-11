@@ -55,10 +55,8 @@ public class KotoJobManager : BitcoinJobManagerBase<KotoJob>
         this.yescryptSolverFactory = yescryptSolverFactory;
     }
 
-public override void Configure(PoolConfig pc, ClusterConfig cc)
-{
-    coin = pc.Template.As<KotoCoinTemplate>();
-    extraPoolConfig = pc.Extra.SafeExtensionDataAs<KotoPoolConfigExtra>();
+    protected override void PostChainIdentifyConfigure()
+    {
     maxActiveJobs = extraPoolConfig?.MaxActiveJobs ?? 4;
     var chainConfig = coin.GetNetwork(network.ChainName);
     // Initialize yescrypt solver with parameters from configuration
@@ -70,6 +68,14 @@ public override void Configure(PoolConfig pc, ClusterConfig cc)
         (int) Convert.ChangeType(args[0], typeof(int)),
         (int) Convert.ChangeType(args[1], typeof(int)),
         args[2].ToString());
+
+
+        base.PostChainIdentifyConfigure();
+    }
+public override void Configure(PoolConfig pc, ClusterConfig cc)
+{
+    coin = pc.Template.As<KotoCoinTemplate>();
+    extraPoolConfig = pc.Extra.SafeExtensionDataAs<KotoPoolConfigExtra>();
 
     base.Configure(pc, cc);
 }
