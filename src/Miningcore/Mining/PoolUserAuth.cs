@@ -84,7 +84,7 @@ namespace Miningcore.Mining
                 return (true, userAddress, diff, maxDiff);
             }
 
-            return (false, null, diff, maxDiff);
+            return (false, minerName, diff, maxDiff);
         }
     }
 }
