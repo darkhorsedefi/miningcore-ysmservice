@@ -117,6 +117,15 @@ CREATE TABLE minerstats
 	created TIMESTAMPTZ NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS worker_auth (
+    username TEXT NOT NULL,
+    worker_name TEXT NOT NULL,
+    coin_type TEXT NOT NULL,
+    address TEXT NOT NULL,
+    last_access TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (username, worker_name, coin_type)
+);
+
 CREATE INDEX IDX_MINERSTATS_POOL_CREATED on minerstats(poolid, created);
 CREATE INDEX IDX_MINERSTATS_POOL_MINER_CREATED on minerstats(poolid, miner, created);
 CREATE INDEX IDX_MINERSTATS_POOL_MINER_WORKER_CREATED_HASHRATE on minerstats(poolid,miner,worker,created desc,hashrate);

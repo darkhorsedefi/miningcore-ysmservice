@@ -2599,6 +2599,35 @@
         "explorerTxLink": "https://explorer.radiantblockchain.org/tx/{0}",
         "explorerAccountLink": "https://explorer.radiantblockchain.org/address/{0}"
     },
+    "neoxa":  {
+    "name": "Neoxa",
+    "symbol": "NEOX",
+    "family": "progpow",
+    "website": "https://neoxa.net/",
+    "market": "https://coinmarketcap.com/currencies/neoxa/",
+    "twitter": "https://twitter.com/NeoxaNet",
+    "telegram": "https://t.me/NeoxaOfficial",
+    "discord": "https://discord.com/invite/neoxa",
+    "coinbaseHasher": {
+        "hash": "sha256d"
+    },
+    "headerHasher": {
+        "hash": "sha256d"
+    },
+    "blockHasher": {
+        "hash": "reverse",
+        "args": [
+            {
+                "hash": "sha256d"
+            }
+        ]
+    },
+    "shareMultiplier": 1,
+    "progpower": "kawpow",
+    "explorerBlockLink": "https://explorer.neoxa.net/block/$hash$",
+    "explorerTxLink": "https://explorer.neoxa.net/tx/{0}",
+    "explorerAccountLink": "https://explorer.neoxa.net/address/{0}"
+},
     "ravencoin": {
         "name": "Ravencoin",
         "symbol": "RVN",
