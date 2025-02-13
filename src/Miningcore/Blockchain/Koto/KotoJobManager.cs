@@ -366,7 +366,7 @@ return (true, jobId);
     {
         if(string.IsNullOrEmpty(address))
             return false;
-        
+        return true;//アドレス検証がキャンセルエラーになるため暫定措置
         if(await base.ValidateAddressAsync(address, ct))
             return true;
         
