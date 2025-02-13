@@ -8,30 +8,29 @@ public static class FormatUtil
 
     public static string FormatHashrate(double hashrate)
     {
-        var hashrateUnits = HashrateUnits;
-
         var i = 0;
 
-        while (hashrate > 1024 && i < hashrateUnits.Length - 1)
+        while (hashrate > 1024 && i < HashrateUnits.Length - 1)
         {
             hashrate /= 1024;
             i++;
         }
 
-        return Math.Round(hashrate, 2).ToString("F2") + hashrateUnits[i];
+        return Math.Round(hashrate, 2).ToString("F2") + HashrateUnits[Math.Min(i, HashrateUnits.Length - 1)];
     }
 
-    public static string FormatCapacity(double hashrate)
+    public static string FormatCapacity(double capacity)
     {
         var i = -1;
 
         do
         {
-            hashrate /= 1024;
+            capacity /= 1024;
             i++;
-        } while(hashrate > 1024 && i < CapacityUnits.Length - 1);
+        } while(capacity > 1024 && i < CapacityUnits.Length - 1);
 
-        return (int) Math.Abs(hashrate) + CapacityUnits[i];
+        i = Math.Min(i, CapacityUnits.Length - 1);
+        return (int) Math.Abs(capacity) + CapacityUnits[i];
     }
 
     public static string FormatQuantity(double value)
@@ -42,8 +41,9 @@ public static class FormatUtil
         {
             value /= 1000;
             i++;
-        } while(value > 1000);
+        } while(value > 1000 && i < QuantityUnits.Length - 1);
 
+        i = Math.Min(i, QuantityUnits.Length - 1);
         return Math.Round(value, 2) + QuantityUnits[i];
     }
 }
