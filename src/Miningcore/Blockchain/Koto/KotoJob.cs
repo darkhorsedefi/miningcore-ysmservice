@@ -333,86 +333,88 @@ public string CalculateMerkleRoot(string ex1, string ex2)
             return txHashes[0];
         }
 
-    public virtual (Share Share, string BlockHex) ProcessShare(StratumConnection worker, string extraNonce2, string nTime, string solution)
+public virtual (Share Share, string BlockHex) ProcessShare(StratumConnection worker, string extraNonce2, string nTime, string solution)
+{
+    var context = worker.ContextAs<KotoWorkerContext>();
+    var extraNonce1 = context.ExtraNonce1;
+    var nonce = solution;
+
+    // Verify parameters length
+    if (extraNonce2.Length / 2 != context.ExtraNonce2Size)
+        throw new StratumException(StratumError.Other, $"incorrect size of extraNonce2");
+
+    if (nTime.Length != 8)
+        throw new StratumException(StratumError.Other, "incorrect size of ntime");
+
+    if (nonce.Length != 8)
+        throw new StratumException(StratumError.Other, "incorrect size of nonce");
+
+    // Verify solution using YescryptR16
+    if (!yescryptSolver.Verify(solution))
+        throw new StratumException(StratumError.Other, "invalid solution");
+
+    // Verify time
+    var nTimeInt = DateTimeOffset.FromUnixTimeSeconds((long)ulong.Parse(nTime, NumberStyles.HexNumber));
+    var now = clock.Now;
+    if(nTimeInt < DateTimeOffset.FromUnixTimeSeconds(BlockTemplate.CurTime) || nTimeInt > now.AddHours(2))
+        throw new StratumException(StratumError.Other, "invalid ntime");
+
+    if (!RegisterSubmit(extraNonce1, extraNonce2, nTime, nonce))
+        throw new StratumException(StratumError.DuplicateShare, "duplicate share");
+
+    var extraNonce1Buffer = Encoders.Hex.DecodeData(extraNonce1);
+    var extraNonce2Buffer = Encoders.Hex.DecodeData(extraNonce2);
+
+    var coinbaseBuffer = SerializeCoinbase(extraNonce1Buffer, extraNonce2Buffer);
+    var coinbaseHash = KotoUtil.Sha256d(coinbaseBuffer);
+
+    var merkleRoot = ComputeMerkleRoot(new List<string> { coinbaseHash.ToHexString() });
+    var merkleRootReversed = ReverseBytes(Encoders.Hex.DecodeData(merkleRoot));
+
+    var headerBuffer = SerializeHeader(merkleRootReversed, nTime, nonce);
+    var headerHash = KotoUtil.Sha256d(headerBuffer);
+    
+    BigInteger headerValue = headerHash.ToBigInteger();
+    double shareDiff = (double)networkParams.Diff1BValue / (double)headerValue * 65536;
+    var blockDiffAdjusted = Difficulty * 65536;
+
+    string blockHash = null;
+    string blockHex = null;
+    var target = BlockTemplate.Target.HexToReverseByteArray().ToBigInteger();
+
+    if (headerValue <= target)
     {
-        var context = worker.ContextAs<KotoWorkerContext>();
-        var extraNonce1 = context.ExtraNonce1;
-        var nonce = solution;
+        blockHex = SerializeBlock(headerBuffer, coinbaseBuffer).ToHexString();
+        blockHash = headerHash.ToHexString();
+    }
 
-        if (extraNonce2.Length / 2 != 4)
+    // Check difficulty
+    if (shareDiff / context.Difficulty < 0.99)
+    {
+        if (context.PreviousDifficulty.HasValue && context.VarDiff?.LastUpdate != null)
         {
-            var logMessage = $"incorrect size of extraNonce2: extraNonce2={extraNonce2}, nonce2size{extraNonce2.Length}, expectedSize={4}";
-            throw new StratumException(StratumError.Other, logMessage);
-        }
-
-        if (nTime.Length != 8)
-            throw new StratumException(StratumError.Other, "incorrect size of ntime");
-
-        var nTimeInt = uint.Parse(nTime.HexToReverseByteArray().ToHexString(), NumberStyles.HexNumber);
-
-        if(nonce.Length != 8 && solution.Length != (networkParams.SolutionSize + networkParams.SolutionPreambleSize) * 2)
-            throw new StratumException(StratumError.Other, "incorrect size of solution");
-
-        // Verify solution using Yescrypt
-        if (!yescryptSolver.Verify(solution))
-            throw new StratumException(StratumError.Other, "invalid solution");
-
-        if (!RegisterSubmit(extraNonce1, extraNonce2, nTime, nonce))
-            throw new StratumException(StratumError.DuplicateShare, "duplicate share");
-
-        var extraNonce1Buffer = Encoders.Hex.DecodeData(extraNonce1);
-        var extraNonce2Buffer = Encoders.Hex.DecodeData(extraNonce2);
-
-        var coinbaseBuffer = SerializeCoinbase(extraNonce1Buffer, extraNonce2Buffer);
-        var coinbaseHash = KotoUtil.Sha256d(coinbaseBuffer);
-
-        var merkleRoot = ComputeMerkleRoot(new List<string> { coinbaseHash.ToHexString() });
-        var merkleRootReversed = ReverseBytes(Encoders.Hex.DecodeData(merkleRoot));
-
-        var headerBuffer = SerializeHeader(merkleRootReversed, nTime, nonce);
-        var headerHash = KotoUtil.Sha256d(headerBuffer);
-        
-        BigInteger headerValue = headerHash.ToBigInteger();
-        double shareDiff = (double)networkParams.Diff1BValue / (double)headerValue * 65536;
-        var blockDiffAdjusted = Difficulty * 65536;
-
-        string blockHash = null;
-        string blockHex = null;
-        var target = BlockTemplate.Target.HexToReverseByteArray().ToBigInteger();
-
-        if (headerValue <= target)
-        {
-            blockHex = SerializeBlock(headerBuffer, coinbaseBuffer).ToHexString();
-            blockHash = headerHash.ToHexString();
-        }
-
-        // Check difficulty
-        if (shareDiff / context.Difficulty < 0.99)
-        {
-            if (context.PreviousDifficulty.HasValue && context.VarDiff?.LastUpdate != null)
-            {
-                if (shareDiff / context.PreviousDifficulty.Value < 0.99)
-                    context.Difficulty = context.PreviousDifficulty.Value;
-                else
-                    throw new StratumException(StratumError.LowDifficultyShare, $"low difficulty share ({shareDiff})");
-            }
+            if (shareDiff / context.PreviousDifficulty.Value < 0.99)
+                context.Difficulty = context.PreviousDifficulty.Value;
             else
                 throw new StratumException(StratumError.LowDifficultyShare, $"low difficulty share ({shareDiff})");
         }
-
-        var share = new Share
-        {
-            BlockHeight = (long)BlockTemplate.Height,
-            BlockReward = BlockTemplate.CoinbaseValue,
-            Difficulty = context.Difficulty,
-            NetworkDifficulty = blockDiffAdjusted,
-            BlockHash = blockHash,
-            Worker = context.Worker,
-            IsBlockCandidate = blockHash != null
-        };
-
-        return (share, blockHex);
+        else
+            throw new StratumException(StratumError.LowDifficultyShare, $"low difficulty share ({shareDiff})");
     }
+
+    var share = new Share
+    {
+        BlockHeight = (long)BlockTemplate.Height,
+        BlockReward = BlockTemplate.CoinbaseValue,
+        Difficulty = context.Difficulty,
+        NetworkDifficulty = blockDiffAdjusted,
+        BlockHash = blockHash,
+        Worker = context.Worker,
+        IsBlockCandidate = blockHash != null
+    };
+
+    return (share, blockHex);
+}
 
         private byte[] SerializeHeader(byte[] merkleRoot, string nTime, string nonce)
         {

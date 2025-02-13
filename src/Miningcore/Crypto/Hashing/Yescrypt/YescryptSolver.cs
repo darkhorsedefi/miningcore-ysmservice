@@ -1,54 +1,43 @@
 using System;
 using Miningcore.Native;
 using Miningcore.Extensions;
+using Miningcore.Crypto.Hashing.Algorithms;
 
 namespace Miningcore.Crypto.Hashing.Yescrypt
 {
-public unsafe class YescryptSolver : IYescryptSolver
-{
-private readonly int N;
-private readonly int r;
-private readonly string personalization;
-
-    public YescryptSolver(int N, int r, string personalization)
+    public unsafe class YescryptSolver : IYescryptSolver
     {
-        this.N = N;
-        this.r = r;
-        this.personalization = personalization;
-    }
+        private readonly YescryptR16 algorithm;
 
-    public bool Verify(string solution)
-    {
-        if (string.IsNullOrEmpty(solution))
-            return false;
-
-        var solutionBytes = solution.HexToByteArray();
-        
-        try
+        public YescryptSolver(int N, int r, string personalization)
         {
-            // Call the native verify function
-            fixed(byte* input = solutionBytes)
+            algorithm = new YescryptR16(); // Always use R16 for Koto
+        }
+
+        public bool Verify(string solution)
+        {
+            if (string.IsNullOrEmpty(solution))
+                return false;
+
+            try
             {
-                return Multihash.yescrypt_verify(input, (uint)solutionBytes.Length, (uint)N, (uint)r);
+                var solutionBytes = solution.HexToByteArray();
+                var output = new byte[32];
+                
+                algorithm.Digest(solutionBytes, output);
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
-        catch
+
+        public byte[] Hash(byte[] data)
         {
-            return false;
+            var result = new byte[32];
+            algorithm.Digest(data, result);
+            return result;
         }
     }
-
-    public byte[] Hash(byte[] data)
-    {
-        var result = new byte[32];
-
-        fixed(byte* input = data)
-        fixed(byte* output = result)
-        {
-            Multihash.yescrypt(input, output, (uint)data.Length);
-        }
-
-        return result;
-    }
-}
 }

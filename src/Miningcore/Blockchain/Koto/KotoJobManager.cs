@@ -198,17 +198,18 @@ return (true, jobId);
 
         var context = worker.ContextAs<KotoWorkerContext>();
 
-        var workerValue = (submitParams[0] as string)?.Trim();
-        var jobId = submitParams[1] as string;
-        var nTime = submitParams[2] as string;
-        var extraNonce2 = submitParams[3] as string;
-        var solution = submitParams[4] as string;
+        // extract params
+        var workerValue = (submitParams[0] as string)?.Trim();  // username
+        var jobId = submitParams[1] as string;                  // job_id
+        var extraNonce2 = submitParams[2] as string;            // extraNonce2
+        var nTime = submitParams[3] as string;                  // nTime
+        var nonce = submitParams[4] as string;                  // nonce solution
 
         if(string.IsNullOrEmpty(workerValue))
             throw new StratumException(StratumError.Other, "missing or invalid workername");
 
-        if(string.IsNullOrEmpty(solution))
-            throw new StratumException(StratumError.Other, "missing or invalid solution");
+        if(string.IsNullOrEmpty(nonce))
+            throw new StratumException(StratumError.Other, "missing or invalid nonce");
 
         KotoJob job;
 
@@ -222,13 +223,7 @@ return (true, jobId);
 
         try
         {
-            // Verify yescrypt solution using solver
-            var isValid = yescryptSolver.Verify(solution);
-            if (!isValid)
-                throw new StratumException(StratumError.Other, "invalid solution");
-
-            // Process share as normal
-            var (share, blockHex) = job.ProcessShare(worker, extraNonce2, nTime, solution);
+            var (share, blockHex) = job.ProcessShare(worker, extraNonce2, nTime, nonce);
 
             // Submit block if it's a candidate
             if(share.IsBlockCandidate)
@@ -250,7 +245,7 @@ return (true, jobId);
                 }
             }
 
-            // Enrich share with common data
+            // enrich share metadata
             share.PoolId = poolConfig.Id;
             share.IpAddress = worker.RemoteEndpoint.Address.ToString();
             share.Miner = context.Miner;
