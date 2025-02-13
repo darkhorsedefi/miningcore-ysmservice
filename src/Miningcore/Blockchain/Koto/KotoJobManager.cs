@@ -126,15 +126,16 @@ return (true, jobId);
 
         return new object[]
         {
-            job.JobId,
-            job.PreviousBlockHash,
-            job.CoinbaseTransaction,
-            job.Transactions,
-            job.merkleBranch,
-            ((uint)job.BlockTemplate.Version).ToStringHex8(),
-            job.Bits,
-            ((uint)job.BlockTemplate.CurTime).ToStringHex8(),
-            isNew
+            job.JobId,                                                    // params[0] - job_id
+            job.BlockTemplate.PreviousBlockHash,                         // params[1] - prevhash
+            job.CoinbaseTransaction.Substring(0, job.CoinbaseTransaction.Length - ExtranonceBytes * 2), // params[2] - coinb1
+            job.CoinbaseTransaction.Substring(job.CoinbaseTransaction.Length - ExtranonceBytes * 2),    // params[3] - coinb2
+            job.merkleBranch,                                         // params[4] - merkle array
+            job.BlockTemplate.Version.ToStringHex8(),                   // params[5] - version
+            job.BlockTemplate.Bits,                                     // params[6] - nbits 
+            ((uint)job.BlockTemplate.CurTime).ToStringHex8(),         // params[7] - ntime
+            isNew,                                                     // params[8] - clean jobs flag
+            job.BlockTemplate.FinalSaplingRootHash                    // params[9] - final sapling root hash (for version 5)
         };
     }
 
