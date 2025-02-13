@@ -213,3 +213,5 @@ fabric.properties
 /*/*/*/*/*/*/*/*/*.o
 /*/*/*/*/*/*/*/*/*/*.o
 /*/*/*/*/*/*/*/*/*/*.o
+recovered-shares.txt
+config.json

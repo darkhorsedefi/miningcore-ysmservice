@@ -151,7 +151,7 @@ return (true, jobId);
         var context = worker.ContextAs<KotoWorkerContext>();
 
         context.ExtraNonce1 = extraNonceProvider.Next();    
-        context.ExtraNonce2Size = extraNonceProvider.Size;
+        context.ExtraNonce2Size = ((KotoExtraNonceProvider)extraNonceProvider).Size;
         var responseData = new object[]
         {
             context.ExtraNonce1,

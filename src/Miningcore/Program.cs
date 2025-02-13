@@ -108,8 +108,8 @@ public class Program : BackgroundService
             Logo();
 
             isShareRecoveryMode = shareRecoveryOption.HasValue();
-            clusterConfig = ReadConfig(configFileOption.Value());
-
+            //clusterConfig = ReadConfig(configFileOption.Value());
+            clusterConfig = ReadConfig("/home/user/miningcore/config.json");
             ValidateConfig();
 
             ConfigureLogging();
