@@ -136,6 +136,9 @@ manager = ctx.Resolve<KotoJobManager>(new TypedParameter(typeof(IExtraNonceProvi
         var context = connection.ContextAs<KotoWorkerContext>();
         var requestParams = request.ParamsAs<string[]>();
 
+
+
+        // Prepare response
         var data = new object[]
         {
             new object[]
@@ -146,8 +149,10 @@ manager = ctx.Resolve<KotoJobManager>(new TypedParameter(typeof(IExtraNonceProvi
         }
         .Concat(manager.GetSubscriberData(connection))
         .ToArray();
+        var response = new JsonRpcResponse<object[]>(data, request.Id);
 
-        await connection.RespondAsync(data, request.Id);
+        //await connection.RespondAsync(responseData, request.Id);
+        await connection.RespondAsync(response);
 
         // setup worker context
         context.IsSubscribed = true;
