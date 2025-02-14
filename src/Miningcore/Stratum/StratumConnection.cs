@@ -49,7 +49,7 @@ public class StratumConnection
     private readonly RecyclableMemoryStreamManager rmsm;
     private readonly IMasterClock clock;
 
-    private const int MaxInboundRequestLength = 0x8000;
+    private const int MaxInboundRequestLength = 0x20000;
     public static readonly Encoding Encoding = new UTF8Encoding(false);
 
     private Stream networkStream;
