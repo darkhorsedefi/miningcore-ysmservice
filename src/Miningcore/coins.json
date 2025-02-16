@@ -58,6 +58,35 @@
         "explorerTxLink": "https://explorer.koto.dev/tx/{0}",
         "explorerAccountLink": "https://explorer.koto.dev/address/{0}"
     },
+    "skydoge": {
+        "name": "Skydoge",
+        "canonicalName": "Skydoge",
+        "symbol": "SKYDOGE",
+        "family": "bitcoin",
+        "website": "",
+        "market": "",
+        "twitter": "",
+        "telegram": "",
+        "discord": "",
+        "coinbaseHasher": {
+            "hash": "sha256d"
+        },
+        "headerHasher": {
+            "hash": "skydoge"
+        },
+        "blockHasher": {
+            "hash": "reverse",
+            "args": [
+                {
+                    "hash": "sha256d"
+                }
+            ]
+        },
+        "coinbaseIgnoreAuxFlags": true,
+        "explorerBlockLink": "",
+        "explorerTxLink": "",
+        "explorerAccountLink": ""
+    },
     "phicoin": {
         "name": "Phicoin",
         "symbol": "PHI",
@@ -2063,7 +2092,7 @@
                 }
             ]
         },
-        "shareMultiplier": 256,
+        "shareMultiplier": 256000000000,
         "explorerBlockLink": "https://bchain.info/MONA/block/$height$",
         "explorerTxLink": "https://bchain.info/MONA/tx/{0}",
         "explorerAccountLink": "https://bchain.info/MONA/addr/{0}"
