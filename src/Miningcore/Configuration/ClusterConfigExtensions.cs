@@ -168,6 +168,8 @@ public partial class BitcoinTemplate
                 return HeaderHasherValue.GetType().Name + " + " + ShareHasherValue.GetType().Name;
             case "KCN":
                 return HeaderHasherValue.GetType().Name;
+            case "CYTX":
+                return "Cryptixhash";   
             default:
                 var hash = HeaderHasherValue;
 

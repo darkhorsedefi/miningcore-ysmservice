@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Numerics;
+using Miningcore.Configuration;
 using Miningcore.Crypto.Hashing.Ethash;
 using Miningcore.Extensions;
 using Miningcore.Stratum;
@@ -10,13 +11,13 @@ namespace Miningcore.Blockchain.Ethereum;
 
 public class EthereumJob
 {
-    public EthereumJob(string id, EthereumBlockTemplate blockTemplate, ILogger logger, IEthashLight ethash)
+    public EthereumJob(string id, EthereumBlockTemplate blockTemplate, ILogger logger, IEthashLight ethash, int shareMultiplier = 1)
     {
         Id = id;
         BlockTemplate = blockTemplate;
         this.logger = logger;
         this.ethash = ethash;
-
+        this.shareM = shareMultiplier;
         var target = blockTemplate.Target;
         if(target.StartsWith("0x"))
             target = target.Substring(2);
@@ -31,6 +32,7 @@ public class EthereumJob
     protected uint256 blockTarget;
     protected ILogger logger;
     protected IEthashLight ethash;
+    protected double shareM = 1.0;
 
     public record SubmitResult(Share Share, string FullNonceHex = null, string HeaderHash = null, string MixHash = null);
 
@@ -78,7 +80,7 @@ public class EthereumJob
         resultBytes.ReverseInPlace();
         var resultValue = new uint256(resultBytes);
         var resultValueBig = resultBytes.AsSpan().ToBigInteger();
-        var shareDiff = (double) BigInteger.Divide(EthereumConstants.BigMaxValue, resultValueBig) / EthereumConstants.Pow2x32;
+        var shareDiff = (double) BigInteger.Divide(EthereumConstants.BigMaxValue, resultValueBig) / EthereumConstants.Pow2x32 * shareM;
         var stratumDifficulty = context.Difficulty;
         var ratio = shareDiff / stratumDifficulty;
         var isBlockCandidate = resultValue <= blockTarget;

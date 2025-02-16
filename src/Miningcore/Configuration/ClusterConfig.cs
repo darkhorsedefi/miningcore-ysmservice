@@ -737,6 +737,10 @@ public partial class EthereumCoinTemplate : CoinTemplate
     /// Which hashing algorithm to use. (ethash, etchash, ubqhash or ethashb3)
     /// </summary>
     public string Ethasher { get; set; } = "ethash";
+
+    [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+    [DefaultValue(1)]
+    public int ShareMultiplier { get; set; } = 1;
 }
 
 public partial class KaspaCoinTemplate : CoinTemplate

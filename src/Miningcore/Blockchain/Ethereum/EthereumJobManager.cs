@@ -61,10 +61,9 @@ public class EthereumJobManager : JobManagerBase<EthereumJob>
         switch(coin.Symbol)
         {
             case "CTXC":
-                return extraPoolConfig?.ChainTypeOverride == "Bernard" ? new EthereumJob(jobId, blockTemplate, logger, ethash) : new CortexJob(jobId, blockTemplate, logger, ethash);
+                return extraPoolConfig?.ChainTypeOverride == "Bernard" ? new EthereumJob(jobId, blockTemplate, logger, ethash, coin.ShareMultiplier) : new CortexJob(jobId, blockTemplate, logger, ethash);
         }
-
-        return new EthereumJob(jobId, blockTemplate, logger, ethash);
+        return new EthereumJob(jobId, blockTemplate, logger, ethash, coin.ShareMultiplier);
     }
 
     protected async Task<bool> UpdateJob(CancellationToken ct, string via = null)

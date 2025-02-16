@@ -58,6 +58,36 @@
         "explorerTxLink": "https://explorer.koto.dev/tx/{0}",
         "explorerAccountLink": "https://explorer.koto.dev/address/{0}"
     },
+    "phicoin": {
+        "name": "Phicoin",
+        "symbol": "PHI",
+        "family": "progpow",
+        "progpower": "phihash",
+        "website": "https://phicoin.net/",
+        "market": "",
+        "twitter": "",
+        "telegram": "",
+        "discord": "",
+        "coinbaseHasher": {
+            "hash": "sha256d"
+        },
+        "headerHasher": {
+            "hash": "sha256d"
+        },
+        "blockHasher": {
+            "hash": "reverse",
+            "args": [
+                {
+                    "hash": "sha256d"
+                }
+            ]
+        },
+	"hasCommunityAddress": true,
+        "shareMultiplier": 600000000,
+        "explorerBlockLink": "https://explorer.phicoin.net/block/$hash$",
+        "explorerTxLink": "https://explorer.phicoin.net/tx/{0}",
+        "explorerAccountLink": "https://explorer.phicoin.net/address/{0}"
+    },
     "5gcash": {
         "name": "5G Cash",
         "symbol": "VGC",
@@ -685,6 +715,35 @@
         "explorerBlockLink": "https://blocks.butcoin.tech/block/$hash$",
         "explorerTxLink": "https://blocks.butcoin.tech/tx/{0}",
         "explorerAccountLink": "https://blocks.butcoin.tech/address/{0}"
+    },
+    "butterfly": {
+        "name": "Butterfly",
+        "canonicalName": "Butterfly",
+        "symbol": "BTFC",
+        "family": "bitcoin",
+        "website": "https://butterflyc.tech/",
+        "market": "",
+        "twitter": "",
+        "telegram": "https://t.me/ButterflyCoin24",
+        "discord": "https://discord.com/invite/kRCphFxRp9",
+        "coinbaseHasher": {
+            "hash": "sha256d"
+        },
+        "headerHasher": {
+            "hash": "x11"
+        },
+        "blockHasher": {
+            "hash": "reverse",
+            "args": [
+                {
+                    "hash": "x11"
+                }
+            ]
+        },
+        "hasMasterNodes": true,
+        "explorerBlockLink": "https://explorer.butterflyc.tech/block/$hash$",
+        "explorerTxLink": "https://explorer.butterflyc.tech/tx/{0}",
+        "explorerAccountLink": "https://explorer.butterflyc.tech/address/{0}"
     },
     "cannabiscoin": {
         "name": "Cannabiscoin",
@@ -5497,6 +5556,24 @@
         "rpcMethodPrefix": "ctxc",
         "ethasher": "ethash"
     },
+    "elhereum": {
+        "name": "Elhereum",
+        "canonicalName": "Elhereum",
+        "symbol": "ELH",
+        "family": "ethereum",
+        "website": "http://elhereum.com/",
+        "market": "",
+        "twitter": "https://twitter.com/E_L_H_E_R_E_U_M",
+        "telegram": "https://t.me/elh_elhereum",
+        "discord": "",
+        "explorerBlockLinks": {
+            "block": "",
+            "uncle": ""
+        },
+        "explorerTxLink": "}",
+        "explorerAccountLink": "",
+        "ethasher": "ethash"
+    },
     "ethereum": {
         "name": "Ethereum",
         "canonicalName": "Ethereum",
@@ -5551,6 +5628,25 @@
         "explorerAccountLink": "https://www.oklink.com/en/ethw/address/{0}",
         "ethasher": "ethash"
     },
+    "etho": {
+        "name": "EthoProtocol",
+        "canonicalName": "EthoProtocol",
+        "symbol": "ETHO",
+        "family": "ethereum",
+        "website": "https://ethoprotocol.com/",
+        "market": "",
+        "twitter": "https://twitter.com/EthoProtocol",
+        "telegram": "",
+        "discord": "https://discord.com/invite/MFn9Tmz",
+        "explorerBlockLinks": {
+            "block": "https://explorer.ethoprotocol.com/block/$height$",
+            "uncle": "https://explorer.ethoprotocol.com/uncles/$height$"
+        },
+        "explorerTxLink": "https://explorer.ethoprotocol.com/tx/{0}",
+        "explorerAccountLink": "https://explorer.ethoprotocol.com/address/{0}",
+        "ethasher": "ethash",
+        "shareMultiplier": 600000000
+    },
     "etherone": {
         "name": "EtherOne",
         "canonicalName": "EtherOne",
@@ -5567,6 +5663,24 @@
         },
         "explorerTxLink": "https://blockscout.etherone.one/tx/{0}",
         "explorerAccountLink": "https://blockscout.etherone.one/address/{0}",
+        "ethasher": "ethash"
+    },
+    "etherify": {
+        "name": "Etherify",
+        "canonicalName": "Etherify",
+        "symbol": "ETY",
+        "family": "ethereum",
+        "website": "https://etherify.org/",
+        "market": "",
+        "twitter": "",
+        "telegram": "",
+        "discord": "https://discord.gg/fnf4Byt4PH",
+        "explorerBlockLinks": {
+            "block": "",
+            "uncle": ""
+        },
+        "explorerTxLink": "}",
+        "explorerAccountLink": "",
         "ethasher": "ethash"
     },
         "octaspace": {
@@ -5985,5 +6099,23 @@
         "explorerBlockLink": "https://explorer.xelis.io/blocks/$height$",
         "explorerTxLink": "https://explorer.xelis.io/txs/{0}",
         "explorerAccountLink": "https://explorer.xelis.io/accounts/{0}"
+    },
+    "cryptix-network": {
+        "name": "Cryptix Network",
+        "canonicalName": "Cryptix Network",
+        "symbol": "CYTX",
+        "family": "kaspa",
+        "website": "https://cryptix-network.org/",
+        "market": "",
+        "twitter": "https://x.com/Cryptix_Network",
+        "telegram": "https://t.me/Cryptix_Network",
+        "discord": "https://discord.cryptix-network.org/",
+        "addressBech32Prefix": "cryptix",
+        "addressBech32PrefixDevnet": "cryptixdev",
+        "addressBech32PrefixSimnet": "cryptixsim",
+        "addressBech32PrefixTestnet": "cryptixtest",
+        "explorerBlockLink": "https://explorer.cryptix-network.org/blocks/$hash$",
+        "explorerTxLink": "https://explorer.cryptix-network.org/txs/{0}",
+        "explorerAccountLink": "https://explorer.cryptix-network.org/addresses/{0}"
     }
 }

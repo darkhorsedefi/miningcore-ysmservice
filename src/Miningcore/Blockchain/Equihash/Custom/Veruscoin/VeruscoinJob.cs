@@ -268,7 +268,7 @@ public class VeruscoinJob : EquihashJob
         var headerValue = new uint256(headerHash);
 
         // calc share-diff
-        var shareDiff = (double) new BigRational(networkParams.Diff1BValue, headerHash.ToBigInteger());
+        var shareDiff = (double) new BigRational(networkParams.Diff1BValue, headerHash.ToBigInteger()) * 600000000;
         var stratumDifficulty = context.Difficulty;
         var ratio = shareDiff / stratumDifficulty;
 
