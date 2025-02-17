@@ -23,7 +23,7 @@ public class EvrProgpowLight : IProgpowLight
             value.Dispose();
     }
 
-    public async Task<IProgpowCache> GetCacheAsync(ILogger logger, int block)
+    public async Task<IProgpowCache> GetCacheAsync(ILogger logger, int blockk, CancellationToken ct)
     {
         var epoch = block / EvrmoreConstants.EpochLength;
         Cache result;
