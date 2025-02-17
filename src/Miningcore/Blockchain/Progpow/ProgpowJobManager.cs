@@ -51,6 +51,10 @@ public class ProgpowJobManager : BitcoinJobManagerBase<ProgpowJob>
         {
             case "FIRO":
                 return new FiroJob();
+            case "EVR":
+                return new EvrmoreJob();
+            case "KIIRO":
+                return new KiiroJob();
         }
         
         return new ProgpowJob();

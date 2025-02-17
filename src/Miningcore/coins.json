@@ -1,4 +1,67 @@
 {
+    "litecoincash-sha256": {
+        "name": "LitecoinCash Sha256",
+        "canonicalName": "LitecoinCash",
+        "symbol": "LCC",
+        "family": "bitcoin",
+        "website": "",
+        "market": "",
+        "twitter": "",
+        "telegram": "",
+        "discord": "",
+        "coinbaseHasher": {
+            "hash": "sha256d"
+        },
+        "headerHasher": {
+            "hash": "sha256d"
+        },
+        "blockHasher": {
+            "hash": "reverse",
+            "args": [
+                {
+                    "hash": "sha256d"
+                }
+            ]
+        },
+        "blockTemplateRpcExtraParams": [
+            "sha256d"
+        ],
+        "explorerBlockLink": "",
+        "explorerTxLink": "",
+        "explorerAccountLink": ""
+    },
+    "litecoincash-minotaurx": {
+        "name": "LitecoinCash Minotaurx",
+        "canonicalName": "LitecoinCash",
+        "symbol": "LCC",
+        "family": "bitcoin",
+        "website": "",
+        "market": "",
+        "twitter": "",
+        "telegram": "",
+        "discord": "",
+        "coinbaseHasher": {
+            "hash": "sha256d"
+        },
+        "headerHasher": {
+            "hash": "minotaurx"
+        },
+        "blockHasher": {
+            "hash": "reverse",
+            "args": [
+                {
+                    "hash": "sha256d"
+                }
+            ]
+        },
+        "blockTemplateRpcExtraParams": [
+            "minotaurx"
+        ],
+        "shareMultiplier": 65536,
+        "explorerBlockLink": "",
+        "explorerTxLink": "",
+        "explorerAccountLink": ""
+    },
     "koto": {
         "name": "Koto",
         "symbol": "KOTO",
@@ -57,6 +120,35 @@
         "explorerBlockLink": "https://explorer.koto.dev/block/$height$",
         "explorerTxLink": "https://explorer.koto.dev/tx/{0}",
         "explorerAccountLink": "https://explorer.koto.dev/address/{0}"
+    },
+    "lyncoin": {
+        "name": "Lyncoin",
+        "canonicalName": "Lyncoin",
+        "symbol": "LCN",
+        "family": "bitcoin",
+        "website": "",
+        "market": "",
+        "twitter": "",
+        "telegram": "",
+        "discord": "",
+        "coinbaseHasher": {
+            "hash": "sha3-256d"
+        },
+        "headerHasher": {
+            "hash": "flex"
+        },
+        "blockHasher": {
+            "hash": "reverse",
+            "args": [
+                {
+                    "hash": "sha3-256d"
+                }
+            ]
+        },
+        "shareMultiplier": 10000,
+        "explorerBlockLink": "",
+        "explorerTxLink": "",
+        "explorerAccountLink": ""
     },
     "skydoge": {
         "name": "Skydoge",
@@ -5764,7 +5856,8 @@
         },
         "explorerTxLink": "https://explorer.hypra.network/tx/{0}",
         "explorerAccountLink": "https://explorer.hypra.network/address/{0}",
-        "ethasher": "ethashb3"
+        "ethasher": "ethashb3",
+        "shareMultiplier": 600000000
     },
     "ubiq": {
         "name": "Ubiq",
@@ -6146,5 +6239,35 @@
         "explorerBlockLink": "https://explorer.cryptix-network.org/blocks/$hash$",
         "explorerTxLink": "https://explorer.cryptix-network.org/txs/{0}",
         "explorerAccountLink": "https://explorer.cryptix-network.org/addresses/{0}"
+    },
+    "evrmore": {
+        "name": "Evrmore",
+        "symbol": "EVR",
+        "family": "progpow",
+        "progpower": "evrprogpow",
+        "website": "https://evrmorecoin.org/",
+        "market": "https://coinpaprika.com/coin/evr-evrmore",
+        "twitter": "https://twitter.com/Evrcoin",
+        "telegram": "https://t.me/EvrmoreCoin",
+        "discord": "",
+        "coinbaseHasher": {
+            "hash": "sha256d"
+        },
+        "headerHasher": {
+            "hash": "sha256d"
+        },
+        "blockHasher": {
+            "hash": "reverse",
+            "args": [
+                {
+                    "hash": "sha256d"
+                }
+            ]
+        },
+        "hasMinerDevFund": true,
+        "shareMultiplier": 1,
+        "explorerBlockLink": "https://evr.cryptoscope.io/block/?blockheight=$height$",
+        "explorerTxLink": "https://evr.cryptoscope.io/tx/?txid={0}",
+        "explorerAccountLink": "https://evr.cryptoscope.io/address/?address={0}"
     }
 }

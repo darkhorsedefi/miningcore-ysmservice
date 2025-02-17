@@ -13,3 +13,10 @@ public class RavencoinExtraNonceProvider : ExtraNonceProviderBase
     {
     }
 }
+
+public class EvrmoreExtraNonceProvider : ExtraNonceProviderBase
+{
+    public EvrmoreExtraNonceProvider(string poolId, byte? clusterInstanceId) : base(poolId, EvrmoreConstants.ExtranoncePlaceHolderLength, clusterInstanceId)
+    {
+    }
+}
