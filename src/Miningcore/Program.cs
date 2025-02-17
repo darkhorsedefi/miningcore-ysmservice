@@ -31,6 +31,7 @@ using Miningcore.Crypto.Hashing.Ethash.Etchash;
 using Miningcore.Crypto.Hashing.Ethash.Ethash;
 using Miningcore.Crypto.Hashing.Ethash.Ethashb3;
 using Miningcore.Crypto.Hashing.Ethash.Ubqhash;
+using Miningcore.Crypto.Hashing.Progpow.Evrprogpow;
 using Miningcore.Crypto.Hashing.Progpow.Firopow;
 using Miningcore.Crypto.Hashing.Progpow.Kawpow;
 using Miningcore.Crypto.Hashing.Progpow.Meowpow;
@@ -825,6 +826,9 @@ public class Program : BackgroundService
         
         // Configure BeamHash
         BeamHash.messageBus = messageBus;
+
+        // Configure Evrprogpow
+        Miningcore.Crypto.Hashing.Progpow.Evrprogpow.Cache.messageBus = messageBus;
         
         // Configure FiroPow
         Miningcore.Crypto.Hashing.Progpow.Firopow.Cache.messageBus = messageBus;
