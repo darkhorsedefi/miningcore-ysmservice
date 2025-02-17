@@ -3,6 +3,8 @@ using Miningcore.Blockchain.Bitcoin;
 using Miningcore.Blockchain.Bitcoin.Configuration;
 using Miningcore.Blockchain.Bitcoin.DaemonResponses;
 using Miningcore.Blockchain.Progpow.Custom.Firo;
+using Miningcore.Blockchain.Progpow.Custom.Evrmore;
+using Miningcore.Blockchain.Progpow.Custom.Kiiro;
 using Miningcore.Configuration;
 using Miningcore.Contracts;
 using Miningcore.Crypto;
