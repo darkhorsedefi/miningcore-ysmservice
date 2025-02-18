@@ -27,6 +27,33 @@ HAVE_AVX512F=$(../Native/check_cpu.sh avx512f && echo -DHAVE_AVX512F || echo)
 
 export HAVE_FEATURE="$HAVE_AES $HAVE_SSE2 $HAVE_SSE3 $HAVE_SSSE3 $HAVE_PCLMUL $HAVE_AVX $HAVE_AVX2 $HAVE_AVX512F"
 
+# libsnarkとその依存関係のインストール
+if [ ! -d "/usr/local/include/libsnark" ]; then
+    echo "Installing libsnark dependencies..."
+    sudo apt-get update
+    sudo apt-get install -y \
+        build-essential \
+        cmake \
+        git \
+        libgmp-dev \
+        libboost-all-dev \
+        libssl-dev \
+        pkg-config
+
+    echo "Building and installing libsnark..."
+    cd /tmp
+    rm -rf libsnark
+    git clone https://github.com/scipr-lab/libsnark.git
+    cd libsnark
+    git submodule init && git submodule update
+    mkdir build && cd build
+    cmake -DCMAKE_INSTALL_PREFIX=/usr/local ..
+    make -j$(nproc)
+    sudo make install
+    cd "$OLDPWD"
+fi
+
+# 既存のライブラリのビルド
 (cd ../Native/libmultihash && make clean && make) && mv ../Native/libmultihash/libmultihash.so "$OutDir"
 (cd ../Native/libbeamhash && make clean && make) && mv ../Native/libbeamhash/libbeamhash.so "$OutDir"
 (cd ../Native/libetchash && make clean && make) && mv ../Native/libetchash/libetchash.so "$OutDir"
@@ -46,7 +73,9 @@ export HAVE_FEATURE="$HAVE_AES $HAVE_SSE2 $HAVE_SSE3 $HAVE_SSSE3 $HAVE_PCLMUL $H
 (cd ../Native/libzanonote && make clean && make) && mv ../Native/libzanonote/libzanonote.so "$OutDir"
 (cd ../Native/libphihash && make -j clean && make -j) && mv ../Native/libphihash/libphihash.so "$OutDir"
 (cd ../Native/libxehash && make -j clean && make -j) && mv ../Native/libxehash/libxehash.so "$OutDir"
+(cd ../Native/libzksnark && make -j clean && make -j) && mv ../Native/libzksnark/libzksnark.so "$OutDir"
 
+# その他の依存ライブラリのビルド
 ((cd /tmp && rm -rf secp256k1 && git clone https://github.com/bitcoin-ABC/secp256k1 && cd secp256k1 && git checkout 04fabb44590c10a19e35f044d11eb5058aac65b2 && mkdir build && cd build && cmake -GNinja .. -DCMAKE_C_FLAGS=-fPIC -DSECP256K1_ENABLE_MODULE_RECOVERY=OFF -DSECP256K1_ENABLE_COVERAGE=OFF -DSECP256K1_ENABLE_MODULE_SCHNORR=ON && ninja) && (cd ../Native/libnexapow && cp /tmp/secp256k1/build/libsecp256k1.a . && make clean && make) && mv ../Native/libnexapow/libnexapow.so "$OutDir")
 ((cd /tmp && rm -rf RandomX && git clone https://github.com/tevador/RandomX && cd RandomX && git checkout tags/v1.2.1 && mkdir build && cd build && cmake -DARCH=native -DCMAKE_C_FLAGS=-Wa,--noexecstack -DCMAKE_CXX_FLAGS=-Wa,--noexecstack .. && make) && (cd ../Native/librandomx && cp /tmp/RandomX/build/librandomx.a . && make clean && make) && mv ../Native/librandomx/librandomx.so "$OutDir")
 ((cd /tmp && rm -rf RandomARQ && git clone https://github.com/arqma/RandomARQ && cd RandomARQ && git checkout 3bcb6bafe63d70f8e6f78a0d431e71be2b638083 && mkdir build && cd build && cmake -DARCH=native -DCMAKE_C_FLAGS=-Wa,--noexecstack -DCMAKE_CXX_FLAGS=-Wa,--noexecstack .. && make) && (cd ../Native/librandomarq && cp /tmp/RandomARQ/build/librandomx.a . && make clean && make) && mv ../Native/librandomarq/librandomarq.so "$OutDir")
