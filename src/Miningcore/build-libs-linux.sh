@@ -38,7 +38,8 @@ if [ ! -d "/usr/local/include/libsnark" ]; then
         libgmp-dev \
         libboost-all-dev \
         libssl-dev \
-        pkg-config
+        pkg-config \
+        libprocps-dev
 
     echo "Building and installing libsnark..."
     cd /tmp
