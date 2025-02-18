@@ -26,6 +26,7 @@ using System.Reactive;
 using Miningcore.Mining;
 using Miningcore.Rpc;
 using Newtonsoft.Json.Linq;
+using Miningcore.Blockchain.Ethereum.Custom.XeChain;
 
 namespace Miningcore.Blockchain.Ethereum;
 
@@ -62,6 +63,8 @@ public class EthereumJobManager : JobManagerBase<EthereumJob>
         {
             case "CTXC":
                 return extraPoolConfig?.ChainTypeOverride == "Bernard" ? new EthereumJob(jobId, blockTemplate, logger, ethash, coin.ShareMultiplier) : new CortexJob(jobId, blockTemplate, logger, ethash);
+            case "XE":
+                return new XeJob(jobId, blockTemplate, logger, ethash);
         }
         return new EthereumJob(jobId, blockTemplate, logger, ethash, coin.ShareMultiplier);
     }

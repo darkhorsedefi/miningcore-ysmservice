@@ -1,4 +1,22 @@
 {
+    "xechain": {
+        "name": "XEchain",
+        "canonicalName": "XEchain",
+        "symbol": "XE",
+        "family": "ethereum",
+        "website": "https://xechain.org/",
+        "market": "",
+        "twitter": "https://x.com/XeChainPoW",
+        "telegram": "https://t.me/XeChain",
+        "discord": "https://discord.com/invite/kX85QDx86k",
+        "explorerBlockLinks": {
+            "block": "",
+            "uncle": ""
+        },
+        "explorerTxLink": "",
+        "explorerAccountLink": "",
+        "ethasher": "ethash"
+    },
     "litecoincash-sha256": {
         "name": "LitecoinCash Sha256",
         "canonicalName": "LitecoinCash",
