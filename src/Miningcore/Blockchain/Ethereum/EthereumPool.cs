@@ -656,7 +656,7 @@ public class EthereumPool : PoolBase
 
         context.UserAgent = requestParams.FirstOrDefault()?.Trim();
 
-        var data = connection.ConnectionId;
+        var data = (object)connection.ConnectionId;
 
         // Nicehash's stupid validator insists on "error" property present
         // in successful responses which is a violation of the JSON-RPC spec
