@@ -26,7 +26,7 @@ HAVE_AVX2=$(../Native/check_cpu.sh avx2 && echo -DHAVE_AVX2 || echo)
 HAVE_AVX512F=$(../Native/check_cpu.sh avx512f && echo -DHAVE_AVX512F || echo)
 
 export HAVE_FEATURE="$HAVE_AES $HAVE_SSE2 $HAVE_SSE3 $HAVE_SSSE3 $HAVE_PCLMUL $HAVE_AVX $HAVE_AVX2 $HAVE_AVX512F"
-
+export OLDPWD="$(pwd)"
 # libsnarkとその依存関係のインストール
 if [ ! -d "/usr/local/include/libsnark" ]; then
     echo "Installing libsnark dependencies..."
