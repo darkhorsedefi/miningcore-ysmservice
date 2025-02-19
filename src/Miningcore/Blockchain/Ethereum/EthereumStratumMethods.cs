@@ -56,4 +56,9 @@ public static class EthereumStratumMethods
     /// Ignored
     /// </summary>
     public const string SubmitHashrate = "_submitHashrate";
+
+    /// <summary>
+    /// Used to subscribe to work from a server, required before all other communication.
+    /// </summary>
+    public const string V1Subscribe = "_subscribe";
 }

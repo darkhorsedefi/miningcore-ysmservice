@@ -17,6 +17,7 @@ using Miningcore.Persistence.Repositories;
 using Miningcore.Stratum;
 using Miningcore.Time;
 using Newtonsoft.Json;
+using Org.BouncyCastle.Asn1.Ocsp;
 using static Miningcore.Util.ActionUtils;
 
 namespace Miningcore.Blockchain.Ethereum;
@@ -617,6 +618,11 @@ public class EthereumPool : PoolBase
                     }
 
                     await connection.RespondAsync(responseSubmitHashrate);
+                    break;
+
+                case var _ when request.Method == coin.RpcMethodPrefix + EthereumStratumMethods.V1Subscribe:
+                    context.ProtocolVersion = 1;    // lock in protocol version
+                    await OnSubscribeAsync(connection, tsRequest);
                     break;
 
                 default:
