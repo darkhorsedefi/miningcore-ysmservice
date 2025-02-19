@@ -656,12 +656,10 @@ public class EthereumPool : PoolBase
 
         context.UserAgent = requestParams.FirstOrDefault()?.Trim();
 
-        var data = (object)connection.ConnectionId;
 
         // Nicehash's stupid validator insists on "error" property present
         // in successful responses which is a violation of the JSON-RPC spec
-        var response = new JsonRpcResponse<object[]>(data, request.Id);
-
+        var response = new JsonRpcResponse<object[]>(connection.ConnectionId, request.Id);
         if(context.IsNicehash || poolConfig.EnableAsicBoost == true)
         {
             response.Extra = new Dictionary<string, object>();
