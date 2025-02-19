@@ -44,7 +44,7 @@ if [ ! -d "/usr/local/include/libsnark" ]; then
     echo "Building and installing libsnark..."
     cd /tmp
     rm -rf libsnark
-    git clone https://github.com/scipr-lab/libsnark.git
+    git clone --recursive https://github.com/scipr-lab/libsnark.git
     cd libsnark
     git submodule init && git submodule update
     mkdir build && cd build
