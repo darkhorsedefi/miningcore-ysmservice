@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -Wall -fPIC -O2 -std=c++17
+CFLAGS = -Wall -fPIC -O2 -std=c++17 -DCURVE_BN128
 CXXFLAGS = $(CFLAGS)
 LDFLAGS = -shared
 LDLIBS = -lgmp -lgmpxx -lsnark
