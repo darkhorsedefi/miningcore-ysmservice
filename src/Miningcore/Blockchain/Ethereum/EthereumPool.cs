@@ -622,7 +622,7 @@ public class EthereumPool : PoolBase
 
                 case var _ when request.Method == coin.RpcMethodPrefix + EthereumStratumMethods.V1Subscribe:
                     context.ProtocolVersion = 1;    // lock in protocol version
-                    await OnSubscribeAsync(connection, tsRequest);
+                    await OnSubscribeAsyncV1(connection, tsRequest);
                     break;
 
                 default:
@@ -637,6 +637,41 @@ public class EthereumPool : PoolBase
         {
             await connection.RespondErrorAsync(ex.Code, ex.Message, request.Id, false);
         }
+    }
+
+    private async Task OnSubscribeAsyncV1(StratumConnection connection, Timestamped<JsonRpcRequest> tsRequest)
+    {
+        var request = tsRequest.Value;
+        var context = connection.ContextAs<EthereumWorkerContext>();
+
+        if(request.Id == null)
+            throw new StratumException(StratumError.Other, "missing request id");
+
+        var requestParams = request.ParamsAs<string[]>();
+
+        if(requestParams == null || requestParams.Length < 2 || requestParams.Any(string.IsNullOrEmpty))
+            throw new StratumException(StratumError.MinusOne, "invalid request");
+
+        manager.PrepareWorker(connection);
+
+        context.UserAgent = requestParams.FirstOrDefault()?.Trim();
+
+        var data = connection.ConnectionId;
+
+        // Nicehash's stupid validator insists on "error" property present
+        // in successful responses which is a violation of the JSON-RPC spec
+        var response = new JsonRpcResponse<object[]>(data, request.Id);
+
+        if(context.IsNicehash || poolConfig.EnableAsicBoost == true)
+        {
+            response.Extra = new Dictionary<string, object>();
+            response.Extra["error"] = null;
+        }
+
+        await connection.RespondAsync(response);
+
+        // setup worker context
+        context.IsSubscribed = true;
     }
 
     public override double HashrateFromShares(double shares, double interval)
