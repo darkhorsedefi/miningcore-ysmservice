@@ -49,7 +49,7 @@ if [ ! -d "/usr/local/include/libsnark" ]; then
     git submodule init && git submodule update
     mkdir build && cd build
     cmake -DCMAKE_INSTALL_PREFIX=/usr/local ..
-    make -j$(nproc)
+    make -j$(nproc) CXXFLAGS="-DCURVE_BN128"
     sudo make install
     cd "$OLDPWD"
 fi
