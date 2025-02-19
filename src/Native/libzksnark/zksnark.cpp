@@ -2,6 +2,8 @@
 #include <libsnark/common/default_types/r1cs_ppzksnark_pp.hpp>
 #include <libsnark/zk_proof_systems/ppzksnark/r1cs_ppzksnark/r1cs_ppzksnark.hpp>
 #include <libff/algebra/curves/alt_bn128/alt_bn128_pp.hpp>
+#include <libsnark/gadgetlib1/protoboard.hpp>
+#include <libsnark/gadgetlib1/pb_variable.hpp>
 #include <stdexcept>
 #include <sstream>
 #include <vector>

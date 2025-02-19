@@ -51,6 +51,8 @@ if [ ! -d "/usr/local/include/libsnark" ]; then
     cmake -DCMAKE_INSTALL_PREFIX=/usr/local ..
     make -j$(nproc) CXXFLAGS="-DCURVE_BN128"
     sudo make install
+    sudo mkdir /usr/local/include/libff/depends
+    sudo cp ../depends/ate-pairing /usr/local/include/libff/depends/ate-pairing -r
     cd "$OLDPWD"
 fi
 
