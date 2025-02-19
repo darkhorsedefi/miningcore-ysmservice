@@ -19,6 +19,7 @@ using Miningcore.Blockchain.Koto;
 using Miningcore.Blockchain.Warthog;
 using Miningcore.Blockchain.Xelis;
 using Miningcore.Blockchain.Zano;
+using Miningcore.Blockchain.Aleo;
 using Miningcore.Configuration;
 using Miningcore.Crypto;
 using Miningcore.Crypto.Hashing.Equihash;
@@ -129,6 +130,9 @@ public class AutofacModule : Module
             .SingleInstance();
 
         builder.RegisterType<KotoJobManager>()
+            .AsSelf();
+
+        builder.RegisterType<AleoJobManager>()
             .AsSelf();
 
         builder.RegisterAssemblyTypes(ThisAssembly)

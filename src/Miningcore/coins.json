@@ -6258,6 +6258,21 @@
         "explorerTxLink": "https://explorer.cryptix-network.org/txs/{0}",
         "explorerAccountLink": "https://explorer.cryptix-network.org/addresses/{0}"
     },
+    "aleo": {
+        "name": "Aleo Network",
+        "canonicalName": "Aleo",
+        "symbol": "ALEO",
+        "family": "aleo",
+        "website": "https://www.aleo.org/",
+        "market": "https://coinmarketcap.com/currencies/aleo/",
+        "twitter": "https://twitter.com/AleoHQ",
+        "telegram": "https://t.me/aleoorg",
+        "discord": "https://discord.com/invite/aleohq",
+        "explorerBlockLink": "https://explorer.aleo.org/blocks?query=$height$",
+        "explorerTxLink": "https://explorer.aleo.org/transactions/{0}",
+        "explorerAccountLink": "https://explorer.aleo.org/addresses/{0}",
+        "shareMultiplier": 256
+    },
     "evrmore": {
         "name": "Evrmore",
         "symbol": "EVR",

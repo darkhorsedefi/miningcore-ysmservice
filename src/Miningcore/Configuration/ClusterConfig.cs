@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using AspNetCoreRateLimit;
+using Miningcore.Blockchain.Aleo.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
@@ -63,6 +64,9 @@ public enum CoinFamily
 
     [EnumMember(Value = "zano")]
     Zano,
+
+    [EnumMember(Value = "aleo")]
+    Aleo,
 
 }
 
@@ -176,6 +180,7 @@ public enum CoinFamily
             {CoinFamily.Warthog, typeof(WarthogCoinTemplate)},
             {CoinFamily.Xelis, typeof(XelisCoinTemplate)},
             {CoinFamily.Zano, typeof(ZanoCoinTemplate)},
+            {CoinFamily.Aleo, typeof(AleoCoinTemplate)},
         };
     }
 
