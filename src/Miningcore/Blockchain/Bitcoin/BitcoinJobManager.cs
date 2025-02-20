@@ -47,10 +47,23 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
 
         if(coin.BlockTemplateRpcExtraParams != null)
         {
-            if(coin.BlockTemplateRpcExtraParams.Type == JTokenType.Array)
-                result = result.Concat(coin.BlockTemplateRpcExtraParams.ToObject<object[]>() ?? Array.Empty<object>()).ToArray();
-            else
-                result = result.Concat(new []{ coin.BlockTemplateRpcExtraParams.ToObject<object>()}).ToArray();
+            if(coin.Symbol == "LCC" && coin.BlockTemplateRpcExtraParams.Type == JTokenType.Array)
+                result = result
+                    .Select(item => {
+                            dynamic d = item;
+                                    return new {
+                                        rules = d.rules,
+                                        powalgo = coin.BlockTemplateRpcExtraParams.ToObject<object[]>()[0]
+                                    };
+                        })
+                    .ToArray();
+            else {
+                if(coin.BlockTemplateRpcExtraParams.Type == JTokenType.Array)
+                    result = result.Concat(coin.BlockTemplateRpcExtraParams.ToObject<object[]>() ?? Array.Empty<object>()).ToArray();
+                else
+                    result = result.Concat(new []{ coin.BlockTemplateRpcExtraParams.ToObject<object>()}).ToArray();
+            }
+     
         }
 
         return result;
