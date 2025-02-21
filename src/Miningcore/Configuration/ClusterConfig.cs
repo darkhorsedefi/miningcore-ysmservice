@@ -183,6 +183,7 @@ public enum CoinFamily
             {CoinFamily.Xelis, typeof(XelisCoinTemplate)},
             {CoinFamily.Zano, typeof(ZanoCoinTemplate)},
             {CoinFamily.Aleo, typeof(AleoCoinTemplate)},
+            {CoinFamily.Dynex, typeof(DynexCoinTemplate)},
         };
     }
 
