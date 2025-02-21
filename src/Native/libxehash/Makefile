@@ -6,19 +6,25 @@ LDFLAGS = -shared
 LDLIBS = -lsodium
 TARGET  = libxehash.so
 
-# **すべてのサブフォルダを含めた .cpp ファイルを検索**
-SOURCES = $(shell find . -type f -name "*.cpp")
+# **サブフォルダを含めた .cpp, .c ファイルを検索**
+SOURCES = $(shell find . -type f \( -name "*.cpp" -o -name "*.c" \))
 OBJECTS = $(SOURCES:.cpp=.o)
+OBJECTS := $(OBJECTS:.c=.o)
 
 all: $(TARGET)
 
 $(TARGET): $(OBJECTS)
 	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
-# **各 .o のコンパイル**
+# **C++ の .o ファイルを作成**
 %.o: %.cpp
 	@mkdir -p $(dir $@)  # サブフォルダの .o を格納するためのディレクトリ作成
 	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# **C の .o ファイルを作成**
+%.o: %.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
 	$(RM) $(TARGET) $(OBJECTS)
