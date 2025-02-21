@@ -42,6 +42,7 @@
             "block": "",
             "uncle": ""
         },
+        "shareMultiplier": 600000,
         "explorerTxLink": "",
         "explorerAccountLink": "",
         "ethasher": "ethash"

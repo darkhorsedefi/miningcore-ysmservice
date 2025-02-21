@@ -16,7 +16,7 @@ public class XeJob : EthereumJob
 {
     private XeHash xehasher;
 
-    public XeJob(string id, EthereumBlockTemplate blockTemplate, ILogger logger, IEthashLight ethash) : base(id, blockTemplate, logger, ethash)
+    public XeJob(string id, EthereumBlockTemplate blockTemplate, ILogger logger, IEthashLight ethash, int shareMultiplier = 1) : base(id, blockTemplate, logger, ethash, shareMultiplier)
     {
         xehasher = new XeHash();
     }
@@ -52,7 +52,7 @@ public class XeJob : EthereumJob
         var resultValueBig = resultBytes.AsSpan().ToBigInteger();
         var shareDiff = (double) BigInteger.Divide(EthereumConstants.BigMaxValue, resultValueBig) / EthereumConstants.Pow2x32;
         var stratumDifficulty = context.Difficulty;
-        var ratio = shareDiff / stratumDifficulty;
+        var ratio = shareDiff / stratumDifficulty * shareM;
         var isBlockCandidate = resultValue <= blockTarget;
 
         if(!isBlockCandidate && ratio < 0.99)

@@ -19,7 +19,7 @@ public class CortexJob : EthereumJob
     protected Sha3_256 sha3Hasher;
     protected Blake2b blake2bHasher;
 
-    public CortexJob(string id, EthereumBlockTemplate blockTemplate, ILogger logger, IEthashLight ethash) : base(id, blockTemplate, logger, ethash)
+    public CortexJob(string id, EthereumBlockTemplate blockTemplate, ILogger logger, IEthashLight ethash, int shareMultiplier = 1) : base(id, blockTemplate, logger, ethash, shareMultiplier)
     {
         this.cortexCuckooCycleHasher = new CortexCuckooCycle();
         this.sha3Hasher = new Sha3_256();
@@ -107,7 +107,7 @@ public class CortexJob : EthereumJob
         var resultValueBig = resultBytes.AsSpan().ToBigInteger();
         var shareDiff = (double) BigInteger.Divide(EthereumConstants.BigMaxValue, resultValueBig) / EthereumConstants.Pow2x32;
         var stratumDifficulty = context.Difficulty;
-        var ratio = shareDiff / stratumDifficulty;
+        var ratio = shareDiff / stratumDifficulty * shareM;
         var isBlockCandidate = resultValue <= blockTarget;
 
         if(!isBlockCandidate && ratio < 0.99)
