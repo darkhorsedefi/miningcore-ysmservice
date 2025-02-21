@@ -4,17 +4,14 @@
 #include <stddef.h>
 
 #ifdef _WIN32
-#define XE_EXPORT __declspec(dllexport)
+    #define XE_EXPORT __declspec(dllexport)
 #else
-#define XE_EXPORT
+    #define XE_EXPORT __attribute__((visibility("default")))
 #endif
 
-#ifdef __cplusplus
 extern "C" {
-#endif
 
-XE_EXPORT void xehash(const uint8_t* input, uint8_t* output);
 
-#ifdef __cplusplus
+XE_EXPORT void __cdecl xehash(const uint8_t* input, uint8_t* output);
+
 }
-#endif
