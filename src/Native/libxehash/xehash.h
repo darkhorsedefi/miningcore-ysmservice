@@ -1,5 +1,8 @@
 #pragma once
 
+#include <stdint.h>
+#include <stddef.h>
+
 #ifdef _WIN32
 #define XE_EXPORT __declspec(dllexport)
 #else
@@ -10,7 +13,7 @@
 extern "C" {
 #endif
 
-XE_EXPORT void xehash(const unsigned char* input, unsigned char* output);
+XE_EXPORT void xehash(const uint8_t* input, uint8_t* output);
 
 #ifdef __cplusplus
 }

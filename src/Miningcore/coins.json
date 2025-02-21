@@ -1,4 +1,33 @@
 {
+    "microbitcoin": {
+        "name": "MicroBitcoin",
+        "canonicalName": "MicroBitcoin",
+        "symbol": "MBC",
+        "family": "bitcoin",
+        "website": "",
+        "market": "",
+        "twitter": "",
+        "telegram": "",
+        "discord": "",
+        "coinbaseHasher": {
+            "hash": "sha256d"
+        },
+        "headerHasher": {
+            "hash": "power2b"
+        },
+        "blockHasher": {
+            "hash": "reverse",
+            "args": [
+                {
+                    "hash": "sha256d"
+                }
+            ]
+        },
+        "shareMultiplier": 6000000000,
+        "explorerBlockLink": "",
+        "explorerTxLink": "",
+        "explorerAccountLink": ""
+    },
     "xechain": {
         "name": "XEchain",
         "canonicalName": "XEchain",
