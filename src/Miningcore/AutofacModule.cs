@@ -8,6 +8,7 @@ using Miningcore.Blockchain.Beam;
 using Miningcore.Blockchain.Bitcoin;
 using Miningcore.Blockchain.Conceal;
 using Miningcore.Blockchain.Cryptonote;
+using Miningcore.Blockchain.Dynex;
 using Miningcore.Blockchain.Equihash;
 using Miningcore.Blockchain.Ergo;
 using Miningcore.Blockchain.Ethereum;
@@ -205,6 +206,7 @@ public class AutofacModule : Module
         builder.RegisterType<BitcoinJobManager>();
         builder.RegisterType<ConcealJobManager>();
         builder.RegisterType<CryptonoteJobManager>();
+        builder.RegisterType<DynexJobManager>();
         builder.RegisterType<EquihashJobManager>();
         builder.RegisterType<ErgoJobManager>();
         builder.RegisterType<EthereumJobManager>();

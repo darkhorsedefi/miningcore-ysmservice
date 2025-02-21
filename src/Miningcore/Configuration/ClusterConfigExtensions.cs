@@ -287,6 +287,18 @@ public partial class CryptonoteCoinTemplate
     #endregion
 }
 
+public partial class DynexCoinTemplate
+{
+    #region Overrides of CoinTemplate
+
+    public override string GetAlgorithmName()
+    {
+                return "DynexSolve";
+    }
+
+    #endregion
+}
+
 public partial class ErgoCoinTemplate
 {
     #region Overrides of CoinTemplate

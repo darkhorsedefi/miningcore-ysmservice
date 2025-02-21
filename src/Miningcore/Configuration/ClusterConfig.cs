@@ -67,7 +67,9 @@ public enum CoinFamily
 
     [EnumMember(Value = "aleo")]
     Aleo,
-
+    
+    [EnumMember(Value = "dynex")]
+    Dynex,
 }
 
     public abstract partial class CoinTemplate
@@ -431,6 +433,12 @@ public enum CryptonoteSubfamily
     None,
 }
 
+public enum DynexSubfamily
+{
+    [EnumMember(Value = "none")]
+    None,
+}
+
 public enum CryptonightHashType
 {
     [EnumMember(Value = "randomx")]
@@ -513,7 +521,74 @@ public enum CryptonightHashType
 
     [EnumMember(Value = "progpowz")]
     ProgPowZ,
+
+    [EnumMember(Value = "dynexsolve")]
+    DynexSolve,
 }
+
+public partial class DynexCoinTemplate : CoinTemplate
+{
+    [JsonProperty(Order = -7, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+    [DefaultValue(DynexSubfamily.None)]
+    [JsonConverter(typeof(StringEnumConverter), true)]
+    public DynexSubfamily Subfamily { get; set; }
+
+    /// <summary>
+    /// Broader Cryptonight hash family
+    /// </summary>
+    [JsonConverter(typeof(StringEnumConverter), true)]
+    [JsonProperty(Order = -5)]
+    public CryptonightHashType Hash { get; set; }
+
+    /// <summary>
+    /// Set to 0 for automatic selection from blobtemplate
+    /// </summary>
+    [JsonProperty(Order = -4, DefaultValueHandling = DefaultValueHandling.Include)]
+    public int HashVariant { get; set; }
+
+    /// <summary>
+    /// Dynex network hashrate = `Difficulty / DifficultyTarget`
+    /// See: parameter -> DIFFICULTY_TARGET in src/CryptoNoteConfig.h
+    /// </summary>
+    public ulong DifficultyTarget { get; set; }
+
+    /// <summary>
+    /// Smallest unit for Blockreward formatting
+    /// </summary>
+    public decimal SmallestUnit { get; set; }
+
+    /// <summary>
+    /// Prefix of a valid address
+    /// See: parameter -> CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX in src/CryptoNoteConfig.h
+    /// </summary>
+    public ulong AddressPrefix { get; set; }
+
+    /// <summary>
+    /// Prefix of a valid testnet-address
+    /// See: parameter -> CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX in src/CryptoNoteConfig.h
+    /// </summary>
+    public ulong AddressPrefixTestnet { get; set; }
+
+    /// <summary>
+    /// Prefix of a valid integrated address
+    /// See: parameter -> CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX in src/CryptoNoteConfig.h
+    /// </summary>
+    public ulong AddressPrefixIntegrated { get; set; }
+
+    /// <summary>
+    /// Prefix of a valid integrated testnet-address
+    /// See: parameter -> CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX in src/CryptoNoteConfig.h
+    /// </summary>
+    public ulong AddressPrefixIntegratedTestnet { get; set; }
+
+    /// <summary>
+    /// Fraction of block reward, the pool really gets to keep
+    /// </summary>
+    [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+    [DefaultValue(1.0d)]
+    public decimal BlockrewardMultiplier { get; set; }
+}
+
 
 public partial class CryptonoteCoinTemplate : CoinTemplate
 {
