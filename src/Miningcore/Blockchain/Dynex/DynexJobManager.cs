@@ -496,6 +496,11 @@ public class DynexJobManager : JobManagerBase<DynexJob>
         return JToken.Parse(json);
     }
 
+    public override DynexJob GetJobForStratum()
+    {
+        return currentJob;
+    }
+
     #region Overrides
 
     protected override void ConfigureDaemons()
