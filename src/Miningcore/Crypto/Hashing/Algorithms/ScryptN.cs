@@ -1,3 +1,4 @@
+using Newtonsoft.Json.Linq;
 using Miningcore.Contracts;
 using Miningcore.Native;
 using Miningcore.Time;
@@ -7,9 +8,23 @@ namespace Miningcore.Crypto.Hashing.Algorithms;
 [Identifier("scryptn")]
 public unsafe class ScryptN : IHashAlgorithm
 {
-    public ScryptN(Tuple<long, long>[] timetable = null)
+    public ScryptN(object timetable = null)
     {
-        this.timetable = timetable ?? defaultTimetable;
+        if (timetable is JArray jArray)
+        {
+            this.timetable = jArray
+                .Select(x => Tuple.Create(x[0].Value<long>(), x[1].Value<long>()))
+                .OrderBy(x => x.Item2)
+                .ToArray();
+        }
+        else if (timetable is IEnumerable<Tuple<long, long>> enumerable)
+        {
+            this.timetable = enumerable.OrderBy(x => x.Item2).ToArray();
+        }
+        else
+        {
+            this.timetable = defaultTimetable;
+        }
     }
 
     private readonly Tuple<long, long>[] timetable;

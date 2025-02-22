@@ -1,4 +1,97 @@
 {
+    "bitcoinz": {
+        "name": "BitcoinZ",
+        "canonicalName": "BitcoinZ",
+        "symbol": "BTCZ",
+        "family": "equihash",
+        "website": "https://btcz.rocks/",
+        "market": "https://coinmarketcap.com/currencies/bitcoinz",
+        "twitter": "https://twitter.com/BitcoinZTeam",
+        "telegram": "",
+        "discord": "https://discordapp.com/invite/u3dkbFs",
+        "networks": {
+            "main": {
+                "diff1": "0007ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                "solutionSize": 100,
+                "solutionPreambleSize": 1,
+                "solver": {
+                    "hash": "equihash",
+                    "args": [
+                        144,
+                        5,
+                        "BgoldPoW"
+                    ]
+                },
+                "coinbaseTxNetwork": "main",
+                "payFoundersReward": false
+            },
+            "test": {
+                "diff1": "0007ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                "solutionSize": 100,
+                "solutionPreambleSize": 1,
+                "solver": {
+                    "hash": "equihash",
+                    "args": [
+                        144,
+                        5,
+                        "BgoldPoW"
+                    ]
+                },
+                "coinbaseTxNetwork": "testnet",
+                "payFoundersReward": false
+            },
+            "regtest": {
+                "diff1": "0007ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                "solutionSize": 100,
+                "solutionPreambleSize": 1,
+                "solver": {
+                    "hash": "equihash",
+                    "args": [
+                        144,
+                        5,
+                        "BgoldPoW"
+                    ]
+                },
+                "coinbaseTxNetwork": "regtest",
+                "payFoundersReward": false
+            }
+        },
+        "usesZCashAddressFormat": false,
+        "useBitcoinPayoutHandler": true,
+        "explorerBlockLink": "",
+        "explorerTxLink": "",
+        "explorerAccountLink": ""
+    },
+    "fujicoin": {
+        "name": "Fujicoin",
+        "canonicalName": "Fujicoin",
+        "symbol": "FJC",
+        "family": "bitcoin",
+        "website": "",
+        "market": "",
+        "twitter": "",
+        "telegram": "",
+        "discord": "",
+        "coinbaseHasher": {
+            "hash": "sha256d"
+        },
+        "headerHasher": {
+            "hash": "scryptn",
+            "args": [[[2048,1389306217]]]
+        },
+        "blockHasher": {
+            "hash": "reverse",
+            "args": [
+                {
+                    "hash": "sha256d"
+                }
+            ]
+        },
+        "shareMultiplier": 6000000000,
+        "explorerBlockLink": "",
+        "explorerTxLink": "",
+        "explorerAccountLink": ""
+    },
     "dynex": {
         "name": "Dynex",
         "canonicalName": "Dynex",
