@@ -280,6 +280,7 @@
     <ClInclude Include="x17.h" />
     <ClInclude Include="x21s.h" />
     <ClInclude Include="x22i.h" />
+    <ClInclude Include="xevan.h" />
     <ClInclude Include="sha512_256.h" />
     <ClInclude Include="minotaur\crypto\insecure_memzero.h" />
     <ClInclude Include="minotaur\crypto\sha256.h" />
@@ -427,6 +428,7 @@
     <ClCompile Include="x22i.c">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
     </ClCompile>
+    <ClCompile Include="xevan.c" />
     <ClCompile Include="sha512_256.c" />
     <ClCompile Include="minotaur\crypto\sha256.c" />
     <ClCompile Include="minotaur\crypto\yespower.c" />

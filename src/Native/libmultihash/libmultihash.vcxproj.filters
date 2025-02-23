@@ -544,6 +544,9 @@
     <ClCompile Include="x15.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="xevan.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="sha3\aes_helper.c">
       <Filter>Source Files</Filter>
     </ClCompile>
