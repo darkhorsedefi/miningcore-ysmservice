@@ -1,4 +1,63 @@
 {
+    "bitcloud": {
+        "name": "BitCloud",
+        "canonicalName": "BitCloud",
+        "symbol": "BTDX",
+        "family": "bitcoin",
+        "website": "",
+        "market": "",
+        "twitter": "",
+        "telegram": "",
+        "discord": "",
+        "coinbaseHasher": {
+            "hash": "sha256d"
+        },
+        "headerHasher": {
+            "hash": "quark"
+        },
+        "blockHasher": {
+            "hash": "reverse",
+            "args": [
+                {
+                    "hash": "sha256d"
+                }
+            ]
+        },
+        "shareMultiplier": 4096,
+        "hasMasterNodes": true,
+        "explorerBlockLink": "",
+        "explorerTxLink": "",
+        "explorerAccountLink": ""
+    },
+    "quarkcoin": {
+        "name": "Quarkcoin",
+        "canonicalName": "Quarkcoin",
+        "symbol": "QRK",
+        "family": "bitcoin",
+        "website": "",
+        "market": "",
+        "twitter": "",
+        "telegram": "",
+        "discord": "",
+        "coinbaseHasher": {
+            "hash": "sha256d"
+        },
+        "headerHasher": {
+            "hash": "quark"
+        },
+        "blockHasher": {
+            "hash": "reverse",
+            "args": [
+                {
+                    "hash": "sha256d"
+                }
+            ]
+        },
+        "shareMultiplier": 4096,
+        "explorerBlockLink": "",
+        "explorerTxLink": "",
+        "explorerAccountLink": ""
+    },
     "zeroclassic": {
         "name": "ZeroClassic",
         "canonicalName": "ZeroClassic",
@@ -19,7 +78,7 @@
                     "args": [
                         192,
                         7,
-                        "Zero_PoW"
+                        "ZERO_PoW"
                     ]
                 },
                 "coinbaseTxNetwork": "main",
@@ -34,7 +93,7 @@
                     "args": [
                         192,
                         7,
-                        "Zero_PoW"
+                        "ZERO_PoW"
                     ]
                 },
                 "coinbaseTxNetwork": "testnet",
@@ -49,7 +108,7 @@
                     "args": [
                         192,
                         7,
-                        "Zero_PoW"
+                        "ZERO_PoW"
                     ]
                 },
                 "coinbaseTxNetwork": "regtest",
@@ -82,7 +141,7 @@
                     "args": [
                         192,
                         7,
-                        "Zero_PoW"
+                        "ZERO_PoW"
                     ]
                 },
                 "coinbaseTxNetwork": "main",
@@ -97,7 +156,7 @@
                     "args": [
                         192,
                         7,
-                        "Zero_PoW"
+                        "ZERO_PoW"
                     ]
                 },
                 "coinbaseTxNetwork": "testnet",
@@ -112,7 +171,7 @@
                     "args": [
                         192,
                         7,
-                        "Zero_PoW"
+                        "ZERO_PoW"
                     ]
                 },
                 "coinbaseTxNetwork": "regtest",
