@@ -1,4 +1,193 @@
 {
+    "zeroclassic": {
+        "name": "ZeroClassic",
+        "canonicalName": "ZeroClassic",
+        "symbol": "ZERC",
+        "family": "equihash",
+        "website": "http://zeroclassic.org/",
+        "market": "",
+        "twitter": "https://twitter.com/zeroclassic_",
+        "telegram": "",
+        "discord": "https://discordapp.com/invite/TBDTycM",
+        "networks": {
+            "main": {
+                "diff1": "0007ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                "solutionSize": 400,
+                "solutionPreambleSize": 3,
+                "solver": {
+                    "hash": "equihash",
+                    "args": [
+                        192,
+                        7,
+                        "Zero_PoW"
+                    ]
+                },
+                "coinbaseTxNetwork": "main",
+                "payFoundersReward": false
+            },
+            "test": {
+                "diff1": "0007ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                "solutionSize": 400,
+                "solutionPreambleSize": 3,
+                "solver": {
+                    "hash": "equihash",
+                    "args": [
+                        192,
+                        7,
+                        "Zero_PoW"
+                    ]
+                },
+                "coinbaseTxNetwork": "testnet",
+                "payFoundersReward": false
+            },
+            "regtest": {
+                "diff1": "0007ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                "solutionSize": 400,
+                "solutionPreambleSize": 1,
+                "solver": {
+                    "hash": "equihash",
+                    "args": [
+                        192,
+                        7,
+                        "Zero_PoW"
+                    ]
+                },
+                "coinbaseTxNetwork": "regtest",
+                "payFoundersReward": false
+            }
+        },
+        "usesZCashAddressFormat": true,
+        "useBitcoinPayoutHandler": false,
+        "explorerBlockLink": "",
+        "explorerTxLink": "",
+        "explorerAccountLink": ""
+    },
+   "zero": {
+        "name": "Zero",
+        "canonicalName": "Zero",
+        "symbol": "ZER",
+        "family": "equihash",
+        "website": "https://zerocurrency.io/",
+        "market": "",
+        "twitter": "https://twitter.com/ZeroCurrencies",
+        "telegram": "",
+        "discord": "https://discord.gg/Jq5knn5",
+        "networks": {
+            "main": {
+                "diff1": "0007ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                "solutionSize": 400,
+                "solutionPreambleSize": 3,
+                "solver": {
+                    "hash": "equihash",
+                    "args": [
+                        192,
+                        7,
+                        "Zero_PoW"
+                    ]
+                },
+                "coinbaseTxNetwork": "main",
+                "payFoundersReward": false
+            },
+            "test": {
+                "diff1": "0007ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                "solutionSize": 400,
+                "solutionPreambleSize": 3,
+                "solver": {
+                    "hash": "equihash",
+                    "args": [
+                        192,
+                        7,
+                        "Zero_PoW"
+                    ]
+                },
+                "coinbaseTxNetwork": "testnet",
+                "payFoundersReward": false
+            },
+            "regtest": {
+                "diff1": "0007ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                "solutionSize": 400,
+                "solutionPreambleSize": 1,
+                "solver": {
+                    "hash": "equihash",
+                    "args": [
+                        192,
+                        7,
+                        "Zero_PoW"
+                    ]
+                },
+                "coinbaseTxNetwork": "regtest",
+                "payFoundersReward": false
+            }
+        },
+        "usesZCashAddressFormat": true,
+        "useBitcoinPayoutHandler": false,
+        "explorerBlockLink": "",
+        "explorerTxLink": "",
+        "explorerAccountLink": ""
+    },
+   "litecoinz": {
+        "name": "LitecoinZ",
+        "canonicalName": "LitecoinZ",
+        "symbol": "LTZ",
+        "family": "equihash",
+        "website": "https://litecoinz.org/",
+        "market": "",
+        "twitter": "https://twitter.com/LitecoinzTeam",
+        "telegram": "",
+        "discord": "https://discordapp.com/invite/QNcS4Pm",
+        "networks": {
+            "main": {
+                "diff1": "0007ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                "solutionSize": 100,
+                "solutionPreambleSize": 1,
+                "solver": {
+                    "hash": "equihash",
+                    "args": [
+                        144,
+                        5,
+                        "BgoldPoW"
+                    ]
+                },
+                "coinbaseTxNetwork": "main",
+                "payFoundersReward": false
+            },
+            "test": {
+                "diff1": "0007ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                "solutionSize": 100,
+                "solutionPreambleSize": 1,
+                "solver": {
+                    "hash": "equihash",
+                    "args": [
+                        144,
+                        5,
+                        "BgoldPoW"
+                    ]
+                },
+                "coinbaseTxNetwork": "testnet",
+                "payFoundersReward": false
+            },
+            "regtest": {
+                "diff1": "0007ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                "solutionSize": 100,
+                "solutionPreambleSize": 1,
+                "solver": {
+                    "hash": "equihash",
+                    "args": [
+                        144,
+                        5,
+                        "BgoldPoW"
+                    ]
+                },
+                "coinbaseTxNetwork": "regtest",
+                "payFoundersReward": false
+            }
+        },
+        "usesZCashAddressFormat": true,
+        "useBitcoinPayoutHandler": false,
+        "explorerBlockLink": "",
+        "explorerTxLink": "",
+        "explorerAccountLink": ""
+    },
     "bitcoinz": {
         "name": "BitcoinZ",
         "canonicalName": "BitcoinZ",

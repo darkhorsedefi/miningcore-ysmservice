@@ -378,7 +378,7 @@ public class EquihashJob
         // calc share-diff
         var shareDiff = (double) new BigRational(networkParams.Diff1BValue, headerHash.ToBigInteger());
         var stratumDifficulty = context.Difficulty;
-        var ratio = shareDiff / stratumDifficulty;
+        var ratio = shareDiff / stratumDifficulty * 5120;
 
         // check if the share meets the much harder block difficulty (block candidate)
         var isBlockCandidate = headerValue <= blockTargetValue;
