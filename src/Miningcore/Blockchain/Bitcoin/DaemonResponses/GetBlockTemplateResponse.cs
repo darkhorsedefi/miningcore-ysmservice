@@ -72,6 +72,8 @@ public class BlockTemplate
     /// </summary>
     public uint Height { get; set; }
 
+    public string Hex { get; set; } = null;
+
     /// <summary>
     /// Contents of non-coinbase transactions that should be included in the next block
     /// </summary>

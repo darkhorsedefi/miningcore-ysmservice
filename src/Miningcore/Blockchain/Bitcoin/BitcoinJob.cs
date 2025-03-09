@@ -42,6 +42,8 @@ public class BitcoinJob
     protected string[] merkleBranchesHex;
     protected MerkleTree mt;
 
+    protected bool isGetWork = false;
+
     ///////////////////////////////////////////
     // GetJobParams related properties
 
@@ -292,8 +294,26 @@ public class BitcoinJob
         return submissions.TryAdd(key, true);
     }
 
-    protected byte[] SerializeHeader(Span<byte> coinbaseHash, uint nTime, uint nonce, uint? versionMask, uint? versionBits)
+    protected virtual byte[] SerializeHeader(Span<byte> coinbaseHash, uint nTime, uint nonce, uint? versionMask, uint? versionBits)
     {
+        // If we're using GetWork, use its data instead of BlockTemplate
+        if(isGetWork)
+        {
+            // GetWork data already contains the serialized header - just update nonce
+            var headerBytes = BlockTemplate.Hex.HexToByteArray();
+            
+            // Update nTime (4 bytes starting at position 68)
+            var nTimeBytes = BitConverter.GetBytes(nTime).ReverseArray();
+            Buffer.BlockCopy(nTimeBytes, 0, headerBytes, 68, 4);
+            
+            // Update nonce (4 bytes starting at position 76)
+            var nonceBytes = BitConverter.GetBytes(nonce).ReverseArray();
+            Buffer.BlockCopy(nonceBytes, 0, headerBytes, 76, 4);
+
+            return headerBytes;
+        }
+        
+        // For BlockTemplate flow use existing code
         // build merkle-root
         var merkleRoot = mt.WithFirst(coinbaseHash.ToArray());
 
@@ -316,7 +336,7 @@ public class BitcoinJob
             Nonce = nonce
         };
 
-            return blockHeader.ToBytes();
+        return blockHeader.ToBytes();
     }
 
     protected virtual (Share Share, string BlockHex) ProcessShareInternal(
@@ -325,66 +345,134 @@ public class BitcoinJob
         var context = worker.ContextAs<BitcoinWorkerContext>();
         var extraNonce1 = context.ExtraNonce1;
 
-        // build coinbase
-        var coinbase = SerializeCoinbase(extraNonce1, extraNonce2);
-        Span<byte> coinbaseHash = stackalloc byte[32];
-        coinbaseHasher.Digest(coinbase, coinbaseHash);
-
-        // hash block-header
-        var headerBytes = SerializeHeader(coinbaseHash, nTime, nonce, context.VersionRollingMask, versionBits);
         Span<byte> headerHash = stackalloc byte[32];
-        headerHasher.Digest(headerBytes, headerHash, (ulong) nTime, BlockTemplate, coin, networkParams);
-        var headerValue = new uint256(headerHash);
-
-        // calc share-diff
-        var shareDiff = (double) new BigRational(BitcoinConstants.Diff1, headerHash.ToBigInteger()) * shareMultiplier;
-        var stratumDifficulty = context.Difficulty;
-        var ratio = shareDiff / stratumDifficulty;
-
-        // check if the share meets the much harder block difficulty (block candidate)
-        var isBlockCandidate = headerValue <= blockTargetValue;
-
-        // test if share meets at least workers current difficulty
-        if(!isBlockCandidate && ratio < 0.99)
+        uint256 headerValue;
+        
+        if(isGetWork)
         {
-            // check if share matched the previous difficulty from before a vardiff retarget
-            if(context.VarDiff?.LastUpdate != null && context.PreviousDifficulty.HasValue)
+            // For GetWork, just use the header directly
+            var headerBytes = SerializeHeader(stackalloc byte[32], nTime, nonce, context.VersionRollingMask, versionBits);
+            
+            // hash block-header
+            headerHasher.Digest(headerBytes, headerHash, (ulong) nTime, BlockTemplate, coin, networkParams);
+            headerValue = new uint256(headerHash);
+            
+            // calc share-diff
+            var shareDiff = (double) new BigRational(BitcoinConstants.Diff1, headerHash.ToBigInteger()) * shareMultiplier;
+            var stratumDifficulty = context.Difficulty;
+            var ratio = shareDiff / stratumDifficulty * shareMultiplier;
+
+            // get block target
+            var targetBytes = BlockTemplate.Target.HexToByteArray().ReverseArray();
+            blockTargetValue = new uint256(targetBytes);
+
+            // check if the share meets the much harder block difficulty (block candidate)
+            var isBlockCandidate = headerValue <= blockTargetValue;
+
+            // test if share meets at least workers current difficulty
+            if(!isBlockCandidate && ratio < 0.99)
             {
-                ratio = shareDiff / context.PreviousDifficulty.Value;
+                // check if share matched the previous difficulty from before a vardiff retarget
+                if(context.VarDiff?.LastUpdate != null && context.PreviousDifficulty.HasValue)
+                {
+                    ratio = shareDiff / context.PreviousDifficulty.Value;
 
-                if(ratio < 0.99)
+                    if(ratio < 0.99)
+                        throw new StratumException(StratumError.LowDifficultyShare, $"low difficulty share ({shareDiff})");
+
+                    // use previous difficulty
+                    stratumDifficulty = context.PreviousDifficulty.Value;
+                }
+
+                else
                     throw new StratumException(StratumError.LowDifficultyShare, $"low difficulty share ({shareDiff})");
-
-                // use previous difficulty
-                stratumDifficulty = context.PreviousDifficulty.Value;
             }
 
-            else
-                throw new StratumException(StratumError.LowDifficultyShare, $"low difficulty share ({shareDiff})");
+            var result = new Share
+            {
+                BlockHeight = BlockTemplate?.Height ?? 0,
+                NetworkDifficulty = Difficulty,
+                Difficulty = stratumDifficulty / shareMultiplier,
+            };
+
+            if(isBlockCandidate)
+            {
+                result.IsBlockCandidate = true;
+
+                Span<byte> blockHash = stackalloc byte[32];
+                blockHasher.Digest(headerBytes, blockHash, nTime);
+                result.BlockHash = blockHash.ToHexString();
+
+                // For GetWork, the header is the block
+                var blockHex = headerBytes.ToHexString();
+
+                return (result, blockHex);
+            }
+
+            return (result, null);
         }
-
-        var result = new Share
+        else
         {
-            BlockHeight = BlockTemplate.Height,
-            NetworkDifficulty = Difficulty,
-            Difficulty = stratumDifficulty / shareMultiplier,
-        };
+            // build coinbase
+            var coinbase = SerializeCoinbase(extraNonce1, extraNonce2);
+            Span<byte> coinbaseHash = stackalloc byte[32];
+            coinbaseHasher.Digest(coinbase, coinbaseHash);
 
-        if(isBlockCandidate)
-        {
-            result.IsBlockCandidate = true;
+            // hash block-header
+            var headerBytes = SerializeHeader(coinbaseHash, nTime, nonce, context.VersionRollingMask, versionBits);
+            headerHasher.Digest(headerBytes, headerHash, (ulong) nTime, BlockTemplate, coin, networkParams);
+            headerValue = new uint256(headerHash);
 
-            Span<byte> blockHash = stackalloc byte[32];
-            blockHasher.Digest(headerBytes, blockHash, nTime);
-            result.BlockHash = blockHash.ToHexString();
+            // calc share-diff
+            var shareDiff = (double) new BigRational(BitcoinConstants.Diff1, headerHash.ToBigInteger()) * shareMultiplier;
+            var stratumDifficulty = context.Difficulty;
+            var ratio = shareDiff / stratumDifficulty * shareMultiplier;
 
-            var blockBytes = SerializeBlock(headerBytes, coinbase);
-            var blockHex = blockBytes.ToHexString();
+            // check if the share meets the much harder block difficulty (block candidate)
+            var isBlockCandidate = headerValue <= blockTargetValue;
 
-            return (result, blockHex);
+            // test if share meets at least workers current difficulty
+            if(!isBlockCandidate && ratio < 0.99)
+            {
+                // check if share matched the previous difficulty from before a vardiff retarget
+                if(context.VarDiff?.LastUpdate != null && context.PreviousDifficulty.HasValue)
+                {
+                    ratio = shareDiff / context.PreviousDifficulty.Value;
+
+                    if(ratio < 0.99)
+                        throw new StratumException(StratumError.LowDifficultyShare, $"low difficulty share ({shareDiff})");
+
+                    // use previous difficulty
+                    stratumDifficulty = context.PreviousDifficulty.Value;
+                }
+
+                else
+                    throw new StratumException(StratumError.LowDifficultyShare, $"low difficulty share ({shareDiff})");
+            }
+
+            var result = new Share
+            {
+                BlockHeight = BlockTemplate.Height,
+                NetworkDifficulty = Difficulty,
+                Difficulty = stratumDifficulty / shareMultiplier,
+            };
+
+            if(isBlockCandidate)
+            {
+                result.IsBlockCandidate = true;
+
+                Span<byte> blockHash = stackalloc byte[32];
+                blockHasher.Digest(headerBytes, blockHash, nTime);
+                result.BlockHash = blockHash.ToHexString();
+
+                var blockBytes = SerializeBlock(headerBytes, coinbase);
+                var blockHex = blockBytes.ToHexString();
+
+                return (result, blockHex);
+            }
+
+            return (result, null);
         }
-
-        return (result, null);
     }
 
     protected virtual byte[] SerializeCoinbase(string extraNonce1, string extraNonce2)
@@ -690,6 +778,8 @@ public class BitcoinJob
         this.clock = clock;
         this.poolAddressDestination = poolAddressDestination;
         BlockTemplate = blockTemplate;
+        if (BlockTemplate.Hex != null)
+            isGetWork = true;
         JobId = jobId;
 
         var coinbaseString = !string.IsNullOrEmpty(cc.PaymentProcessing?.CoinbaseString) ?
