@@ -161,4 +161,6 @@ public static class BitcoinCommands
 
     public const string GetDifficulty = "getdifficulty";
     public const string GetConnectionCount = "getconnectioncount";
+
+    public const string GetWork = "getwork";
 }

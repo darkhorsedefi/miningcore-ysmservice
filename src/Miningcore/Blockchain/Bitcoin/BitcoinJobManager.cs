@@ -77,10 +77,24 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
 
         do
         {
+            var isSynched = false;
+            
+            // Try GetBlockTemplate first
             var response = await rpc.ExecuteAsync<BlockTemplate>(logger,
                 BitcoinCommands.GetBlockTemplate, ct, GetBlockTemplateParams());
 
-            var isSynched = response.Error == null;
+            isSynched = response.Error == null;
+            
+            // If GetBlockTemplate failed and we have legacy daemon support, try GetWork
+            if(!isSynched && hasLegacyDaemon)
+            {
+                logger.Info(() => "GetBlockTemplate failed, trying GetWork");
+                var workResponse = await rpc.ExecuteAsync<GetWorkResponse>(logger, BitcoinCommands.GetWork, ct);
+                isSynched = workResponse.Error == null;
+                
+                if(isSynched)
+                    logger.Info(() => "Daemon supports GetWork");
+            }
 
             if(isSynched)
             {
@@ -100,6 +114,36 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
 
             await ShowDaemonSyncProgressAsync(ct);
         } while(await timer.WaitForNextTickAsync(ct));
+    }
+
+    protected async Task<RpcResponse<GetWorkResponse>> GetWorkAsync(CancellationToken ct)
+    {
+        var result = await rpc.ExecuteAsync<GetWorkResponse>(logger, BitcoinCommands.GetWork, ct);
+        return result;
+    }
+    
+    protected RpcResponse<GetWorkResponse> GetWorkFromJson(string json)
+    {
+        var result = JsonConvert.DeserializeObject<JsonRpcResponse>(json);
+        return new RpcResponse<GetWorkResponse>(result!.ResultAs<GetWorkResponse>());
+    }
+    
+    protected BlockTemplate GetBlockTemplateFromGetWorkResponse(GetWorkResponse getWorkResponse)
+    {
+        if(getWorkResponse == null)
+            return null;
+            
+        // Convert GetWork response to a BlockTemplate
+        var blockTemplate = new BlockTemplate
+        {
+            Target = getWorkResponse.Target,
+            Data = getWorkResponse.Data,
+            Height = BlockchainStats.BlockHeight + 1, // Estimate height based on last known height
+            Bits = getWorkResponse.Target, // Use target as bits since getwork doesn't provide bits explicitly
+            CurTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds(), // Use current time as curtime
+        };
+        
+        return blockTemplate;
     }
 
     protected async Task<RpcResponse<BlockTemplate>> GetBlockTemplateAsync(CancellationToken ct)
@@ -140,24 +184,80 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
             if(forceUpdate)
                 lastJobRebroadcast = clock.Now;
 
-            var response = string.IsNullOrEmpty(json) ?
-                await GetBlockTemplateAsync(ct) :
-                GetBlockTemplateFromJson(json);
+            BlockTemplate blockTemplate = null;
+            bool usedGetWork = false;
+            
+            // If we have JSON, parse it according to the format
+            if(!string.IsNullOrEmpty(json))
+            {
+                var jsonObj = JObject.Parse(json);
+                if(jsonObj["result"]?["data"] != null && jsonObj["result"]?["target"] != null)
+                {
+                    // This is a getwork response
+                    var getWorkResponse = GetWorkFromJson(json);
+                    if(getWorkResponse.Error == null && getWorkResponse.Response != null)
+                    {
+                        blockTemplate = GetBlockTemplateFromGetWorkResponse(getWorkResponse.Response);
+                        usedGetWork = true;
+                    }
+                }
+                else
+                {
+                    // This is a getblocktemplate response
+                    var response = GetBlockTemplateFromJson(json);
+                    blockTemplate = response.Response;
+                }
+            }
+            else
+            {
+                // Try getblocktemplate first
+                var response = await GetBlockTemplateAsync(ct);
+
+                // If getblocktemplate fails and we have legacy daemon support, try getwork
+                if(response.Error != null && hasLegacyDaemon)
+                {
+                    logger.Info(() => $"GetBlockTemplate failed: {response.Error.Message}, trying GetWork");
+                    var getWorkResponse = await GetWorkAsync(ct);
+                    
+                    if(getWorkResponse.Error == null && getWorkResponse.Response != null)
+                    {
+                        blockTemplate = GetBlockTemplateFromGetWorkResponse(getWorkResponse.Response);
+                        usedGetWork = true;
+                    }
+                    else
+                    {
+                        logger.Warn(() => $"Both GetBlockTemplate and GetWork failed. Daemon responded with: {getWorkResponse.Error?.Message ?? response.Error.Message}");
+                        return (false, forceUpdate);
+                    }
+                }
+                else if(response.Error != null)
+                {
+                    logger.Warn(() => $"Unable to update job. Daemon responded with: {response.Error.Message} Code {response.Error.Code}");
+                    return (false, forceUpdate);
+                }
+                else
+                {
+                    blockTemplate = response.Response;
+                }
+            }
 
             // may happen if daemon is currently not connected to peers
-            if(response.Error != null)
+            if(blockTemplate == null)
             {
-                logger.Warn(() => $"Unable to update job. Daemon responded with: {response.Error.Message} Code {response.Error.Code}");
+                logger.Warn(() => $"Unable to update job. Blocktemplate was null");
                 return (false, forceUpdate);
             }
 
-            var blockTemplate = response.Response;
             var job = currentJob;
 
-            var isNew = job == null ||
-                (blockTemplate != null &&
-                    (job.BlockTemplate?.PreviousBlockhash != blockTemplate.PreviousBlockhash ||
-                        blockTemplate.Height > job.BlockTemplate?.Height));
+            // If using getwork, we can only check if we're forcing an update since getwork doesn't provide
+            // enough information to determine if it's a new block
+            var isNew = usedGetWork ? 
+                (job == null || forceUpdate) :
+                (job == null ||
+                    (blockTemplate != null &&
+                        (job.BlockTemplate?.PreviousBlockhash != blockTemplate.PreviousBlockhash ||
+                            blockTemplate.Height > job.BlockTemplate?.Height)));
 
             if(isNew)
                 messageBus.NotifyChainHeight(poolConfig.Id, blockTemplate.Height, poolConfig.Template);
@@ -173,10 +273,11 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
 
                 if(isNew)
                 {
+                    var source = usedGetWork ? "GetWork" : "GetBlockTemplate";
                     if(via != null)
-                        logger.Info(() => $"Detected new block {blockTemplate.Height} [{via}]");
+                        logger.Info(() => $"Detected new block {blockTemplate.Height} [{via}] via {source}");
                     else
-                        logger.Info(() => $"Detected new block {blockTemplate.Height}");
+                        logger.Info(() => $"Detected new block {blockTemplate.Height} via {source}");
 
                     // update stats
                     BlockchainStats.LastNetworkBlockTime = clock.Now;
@@ -185,7 +286,6 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
                     BlockchainStats.NextNetworkTarget = blockTemplate.Target;
                     BlockchainStats.NextNetworkBits = blockTemplate.Bits;
                 }
-
                 else
                 {
                     if(via != null)
