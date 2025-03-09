@@ -137,10 +137,12 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
         var blockTemplate = new BlockTemplate
         {
             Target = getWorkResponse.Target,
-            Data = getWorkResponse.Data,
-            Height = BlockchainStats.BlockHeight + 1, // Estimate height based on last known height
+            // Use 'Hex' property instead of 'Data' which doesn't exist
+            Hex = getWorkResponse.Data,
+            // Add explicit casts for numeric conversions
+            Height = (uint)(BlockchainStats.BlockHeight + 1), // Explicit cast from ulong to uint
             Bits = getWorkResponse.Target, // Use target as bits since getwork doesn't provide bits explicitly
-            CurTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds(), // Use current time as curtime
+            CurTime = (uint)DateTimeOffset.UtcNow.ToUnixTimeSeconds(), // Explicit cast from long to uint
         };
         
         return blockTemplate;
