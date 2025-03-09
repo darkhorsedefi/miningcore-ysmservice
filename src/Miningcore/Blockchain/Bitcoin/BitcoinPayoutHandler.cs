@@ -81,8 +81,18 @@ public class BitcoinPayoutHandler : PayoutHandlerBase,
         logger = LogUtil.GetPoolScopedLogger(typeof(BitcoinPayoutHandler), pc);
 
         var jsonSerializerSettings = ctx.Resolve<JsonSerializerSettings>();
-        rpcClient = new RpcClient(pc.Daemons.First(), jsonSerializerSettings, messageBus, pc.Id);
-
+        var walletDaemonEndpoints = pc.Daemons
+            .Where(x => x.Category?.ToLower() == BeamConstants.WalletDaemonCategory)
+            .Select(x =>
+            {
+                return x;
+            })
+            .ToArray();
+        if (walletDaemonEndpoints.Length == 0) {
+            rpcClient = new RpcClient(pc.Daemons.First(), jsonSerializerSettings, messageBus, pc.Id);
+        } else {
+            rpcClient = new RpcClient(walletDaemonEndpoints.First(), jsonSerializerSettings, messageBus, pc.Id);
+        }
         return Task.CompletedTask;
     }
 

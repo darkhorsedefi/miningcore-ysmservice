@@ -1,4 +1,148 @@
 {
+    "decred": {
+        "name": "Decred",
+        "canonicalName": "Decred",
+        "symbol": "DCR",
+        "family": "bitcoin",
+        "website": "",
+        "market": "",
+        "twitter": "",
+        "telegram": "",
+        "discord": "",
+        "coinbaseHasher": {
+            "hash": "blake3"
+        },
+        "headerHasher": {
+            "hash": "blake3"
+        },
+        "blockHasher": {
+            "hash": "reverse",
+            "args": [
+                {
+                    "hash": "blake3"
+                }
+            ]
+        },
+        "shareMultiplier": 60000000000,
+        "hasMasterNodes": false,
+        "explorerBlockLink": "https://dcrdata.decred.org/block/$height$",
+        "explorerTxLink": "https://dcrdata.decred.org/tx/{0}",
+        "explorerAccountLink": "https://dcrdata.decred.org/address/{0}"
+    },
+    "canxium": {
+        "name": "Canxium",
+        "canonicalName": "Canxium",
+        "symbol": "CAU",
+        "family": "ethereum",
+        "website": "https://canxium.org/",
+        "market": "",
+        "twitter": "https://twitter.com/canxiumchain",
+        "telegram": "https://t.me/canxium",
+        "discord": "https://discord.com/invite/SbxSPJ8FkD",
+        "explorerBlockLinks": {
+            "block": "https://scan.canxium.org/block/$height$",
+            "uncle": "https://scan.canxium.org/uncle/$height$"
+        },
+        "explorerTxLink": "https://scan.canxium.org/tx/{0}",
+        "explorerAccountLink": "https://scan.canxium.org/address/{0}",
+        "ethasher": "ethash"
+    },
+    "frencoin":  {
+    "name": "Frencoin",
+    "symbol": "FREN",
+    "family": "progpow",
+    "website": "https://frencoin.org/",
+    "market": "https://coinmarketcap.com/currencies/frencoin-org",
+    "twitter": "https://twitter.com/frencoinfren",
+    "telegram": "",
+    "discord": "",
+    "coinbaseHasher": {
+        "hash": "sha256d"
+    },
+    "headerHasher": {
+        "hash": "sha256d"
+    },
+    "blockHasher": {
+        "hash": "reverse",
+        "args": [
+            {
+                "hash": "sha256d"
+            }
+        ]
+    },
+    "shareMultiplier": 60000,
+    "progpower": "kawpow",
+    "explorerBlockLink": "https://explorer.neoxa.net/block/$hash$",
+    "explorerTxLink": "https://explorer.neoxa.net/tx/{0}",
+    "explorerAccountLink": "https://explorer.neoxa.net/address/{0}"
+},
+    "anuma-network": {
+        "name": "Anuma Network",
+        "canonicalName": "Anuma Network",
+        "symbol": "ANUM",
+        "family": "kaspa",
+        "website": "https://anuma.network/",
+        "market": "",
+        "twitter": "",
+        "telegram": "",
+        "discord": "",
+        "addressBech32Prefix": "anuma",
+        "addressBech32PrefixDevnet": "anumadev",
+        "addressBech32PrefixSimnet": "anumasim",
+        "addressBech32PrefixTestnet": "anumatest",
+        "explorerBlockLink": "https://explorer.anuma.network/blocks/$hash$",
+        "explorerTxLink": "https://explorer.anuma.network/txs/{0}",
+        "explorerAccountLink": "https://explorer.anuma.network/addresses/{0}"
+    },
+    "quai": {
+        "name": "Quai",
+        "canonicalName": "Quai",
+        "symbol": "QUAI",
+        "family": "ethereum",
+        "website": "",
+        "market": "",
+        "twitter": "",
+        "telegram": "",
+        "discord": "",
+        "explorerBlockLinks": {
+            "block": "",
+            "uncle": ""
+        },
+        "shareMultiplier": 600000000,
+        "explorerTxLink": "",
+        "explorerAccountLink": "",
+        "ethasher": "ethash"
+    },
+    "zenzo": {
+        "name": "Zenzo",
+        "canonicalName": "Zenzo",
+        "symbol": "ZNZ",
+        "family": "bitcoin",
+        "website": "",
+        "market": "",
+        "twitter": "",
+        "telegram": "",
+        "discord": "",
+        "coinbaseHasher": {
+            "hash": "sha256d"
+        },
+        "headerHasher": {
+            "hash": "xevan"
+        },
+        "blockHasher": {
+            "hash": "reverse",
+            "args": [
+                {
+                    "hash": "xevan"
+                }
+            ]
+        },
+        "shareMultiplier": 60000000000,
+        "hasMasterNodes": true,
+        "explorerBlockLink": "",
+        "explorerTxLink": "",
+        "explorerAccountLink": ""
+    },
     "bitcloud": {
         "name": "BitCloud",
         "canonicalName": "BitCloud",
