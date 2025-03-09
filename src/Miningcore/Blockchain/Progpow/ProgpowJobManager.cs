@@ -52,6 +52,7 @@ public class ProgpowJobManager : BitcoinJobManagerBase<ProgpowJob>
         switch(coin.Symbol)
         {
             case "FIRO":
+            case "SCC":
                 return new FiroJob();
             case "EVR":
                 return new EvrmoreJob();

@@ -27,6 +27,7 @@ using Miningcore.Mining;
 using Miningcore.Rpc;
 using Newtonsoft.Json.Linq;
 using Miningcore.Blockchain.Ethereum.Custom.XeChain;
+using Miningcore.Blockchain.Ethereum.Custom.Quai;
 
 namespace Miningcore.Blockchain.Ethereum;
 
@@ -65,6 +66,9 @@ public class EthereumJobManager : JobManagerBase<EthereumJob>
                 return extraPoolConfig?.ChainTypeOverride == "Bernard" ? new EthereumJob(jobId, blockTemplate, logger, ethash, coin.ShareMultiplier) : new CortexJob(jobId, blockTemplate, logger, ethash, coin.ShareMultiplier);
             case "XE":
                 return new XeJob(jobId, blockTemplate, logger, ethash, coin.ShareMultiplier);
+            case "QUAI":
+                return new QuaiJob(jobId, blockTemplate, logger, ethash, coin.ShareMultiplier);
+
         }
         return new EthereumJob(jobId, blockTemplate, logger, ethash, coin.ShareMultiplier);
     }
