@@ -82,7 +82,7 @@ public class BitcoinPayoutHandler : PayoutHandlerBase,
 
         var jsonSerializerSettings = ctx.Resolve<JsonSerializerSettings>();
         var walletDaemonEndpoints = pc.Daemons
-            .Where(x => x.Category?.ToLower() == BeamConstants.WalletDaemonCategory)
+            .Where(x => x.Category?.ToLower() == "wallet")
             .Select(x =>
             {
                 return x;
