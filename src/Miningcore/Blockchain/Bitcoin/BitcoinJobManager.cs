@@ -86,7 +86,7 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
                 if(hasLegacyDaemon)
                 {
                     var daemonInfo = await rpc.ExecuteAsync<GetWorkResponse>(logger, BitcoinCommands.GetWork, ct);
-                    var isSynched = response.Error == null;
+                    isSynched = response.Error == null;
                 }
             }
             if(isSynched)

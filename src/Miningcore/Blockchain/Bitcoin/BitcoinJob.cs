@@ -303,11 +303,11 @@ public class BitcoinJob
             var headerBytes = BlockTemplate.Hex.HexToByteArray();
             
             // Update nTime (4 bytes starting at position 68)
-            var nTimeBytes = BitConverter.GetBytes(nTime).ReverseArray();
+            var nTimeBytes = BitConverter.GetBytes(nTime).ToNewReverseArray();
             Buffer.BlockCopy(nTimeBytes, 0, headerBytes, 68, 4);
             
             // Update nonce (4 bytes starting at position 76)
-            var nonceBytes = BitConverter.GetBytes(nonce).ReverseArray();
+            var nonceBytes = BitConverter.GetBytes(nonce).ToNewReverseArray();
             Buffer.BlockCopy(nonceBytes, 0, headerBytes, 76, 4);
 
             return headerBytes;
@@ -363,7 +363,7 @@ public class BitcoinJob
             var ratio = shareDiff / stratumDifficulty * shareMultiplier;
 
             // get block target
-            var targetBytes = BlockTemplate.Target.HexToByteArray().ReverseArray();
+            var targetBytes = BlockTemplate.Target.HexToByteArray().ToNewReverseArray();
             blockTargetValue = new uint256(targetBytes);
 
             // check if the share meets the much harder block difficulty (block candidate)
