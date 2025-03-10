@@ -183,18 +183,18 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
                     if(legacyResponse.Error == null)
                     {
                         job = currentJob;
-                        var bcs = await rpc.ExecuteAsync<BlockchainInfoResponse>(logger, BitcoinCommands.GetBlockchainInfo, ct);
-        var mempoolTxIds = await rpc.ExecuteAsync<List<string>>(BitcoinCommands.GetRawMempool);
+                        var bcs = await rpc.ExecuteAsync<BlockchainInfo>(logger, BitcoinCommands.GetBlockchainInfo, ct);
+        var mempoolTxIds = (await rpc.ExecuteAsync<List<string>>(logger, BitcoinCommands.GetRawMempool, ct)).Response;
         BitcoinBlockTransaction[] transactions = new BitcoinBlockTransaction[mempoolTxIds.Count];
 
         foreach (var txId in mempoolTxIds)
         {
-            var rawTx = await rpc.ExecuteAsync<string>(logger, BitcoinCommands.GetRawTransaction, ct, new[] { txId });
+            var rawTx = await rpc.ExecuteAsync<RawTransaction>(logger, BitcoinCommands.GetRawTransaction, ct, new object[] { txId, true});
             var tx = new BitcoinBlockTransaction
             {
                 TxId = txId,
-                Hash = rawTx.GetSha256().ToHexString(),
-                Data = rawTx
+                Hash = rawTx.Response.Hash,
+                Data = rawTx.Response.Hex
             };
             transactions.Append(tx);
 
@@ -208,7 +208,7 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
             PreviousBlockhash = legacyResponse.Response.Data.Substring(8, 64).HexToByteArray().ReverseByteOrder().ToHexString(),
             Bits = legacyResponse.Response.Data.Substring(144, 8),
             CurTime = legacyResponse.Response.Data.Substring(152, 8).HexToUInt32(),
-            Height = bcs.Response.Blocks + 1,
+            Height = (uint)(bcs.Response.Blocks + 1),
             Transactions = transactions,
         };
                         isNew = job == null || job.BlockTemplate?.Height < bcs.Response.Blocks + 1 || forceUpdate;
