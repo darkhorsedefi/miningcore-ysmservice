@@ -176,9 +176,9 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
 
                     if(legacyResponse.Error == null)
                     {
-                        var job = currentJob;
-                        var bcs = await rpc.ExecuteAsync<GetBlockChainInfoResponse>(BitcoinCommands.GetBlockChainInfo);
-                        var isNew = job == null || job.BlockTemplate?.Height < bcs.Response.Blocks + 1 || forceUpdate;
+                        job = currentJob;
+                        var bcs = await rpc.ExecuteAsync<GetBlockchainInfoResponse>(BitcoinCommands.GetBlockchainInfo);
+                        isNew = job == null || job.BlockTemplate?.Height < bcs.Response.Blocks + 1 || forceUpdate;
 
                         if(isNew)
                         {
