@@ -163,4 +163,6 @@ public static class BitcoinCommands
     public const string GetConnectionCount = "getconnectioncount";
 
     public const string GetWork = "getwork";
+    public const string GetRawMempool = "getrawmempool";
+    public const string GetRawTransaction = "getrawtransaction";
 }

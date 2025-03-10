@@ -780,6 +780,22 @@ public class BitcoinJob
         this.clock = clock;
         this.poolAddressDestination = poolAddressDestination;
         var bcs = await rpc.ExecuteAsync<GetBlockChainInfoResponse>(BitcoinCommands.GetBlockChainInfo);
+        var mempoolTxIds = await RpcClient.ExecuteAsync<List<string>>(logger, BitcoinCommands.GetRawMempool);
+        BitcoinBlockTransaction[] transactions = new BitcoinBlockTransaction[mempoolTxIds.Count];
+
+        foreach (var txId in mempoolTxIds)
+        {
+            var rawTx = await RpcClient.ExecuteAsync<string>(logger, BitcoinCommands.GetRawTransaction, new[] { txId });
+            var tx = new BitcoinBlockTransaction
+            {
+                TxId = txId,
+                Hash = rawTx.GetSha256().ToHexString(),
+                Data = rawTx
+            };
+            transactions.Append(tx);
+
+        }
+
         BlockTemplate = new BlockTemplate
         {
             Hex = getworkresponse.Data,
@@ -789,6 +805,7 @@ public class BitcoinJob
             Bits = getworkresponse.Data[144:152],
             CurTime = getworkresponse.Data[152:160].HexToUInt32(),
             Height = bcs.Response.Blocks + 1,
+            Transactions = transactions,
         };
         isGetWork = true;
         JobId = jobId;
