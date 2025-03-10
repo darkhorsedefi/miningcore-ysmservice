@@ -800,10 +800,10 @@ public class BitcoinJob
         {
             Hex = getworkresponse.Data,
             Target = getworkresponse.Target,
-            Version = getworkresponse.Data[0..8].HexToUInt32(),
-            PreviousBlockhash = getworkresponse.Data[8:72].HexToByteArray().ReverseByteOrder().ToHexString(),
-            Bits = getworkresponse.Data[144:152],
-            CurTime = getworkresponse.Data[152:160].HexToUInt32(),
+            Version = getworkresponse.Data.Substring(0, 8).HexToUInt32(),
+            PreviousBlockhash = getworkresponse.Data.Substring(8, 64).HexToByteArray().ReverseByteOrder().ToHexString(),
+            Bits = getworkresponse.Data.Substring(144, 8),
+            CurTime = getworkresponse.Data.Substring(152, 8).HexToUInt32(),
             Height = bcs.Response.Blocks + 1,
             Transactions = transactions,
         };
