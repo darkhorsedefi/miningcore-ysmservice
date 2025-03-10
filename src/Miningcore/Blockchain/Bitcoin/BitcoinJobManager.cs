@@ -206,8 +206,8 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
                         logger.Warn(() => $"Unable to update job. Daemon responded with: {response.Error.Message} Code {response.Error.Code}");
                         return (false, forceUpdate);
                     }
+                }
             }
-
             var blockTemplate = response.Response;
             var job = currentJob;
 
