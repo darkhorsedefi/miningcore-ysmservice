@@ -179,8 +179,8 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
                     if(legacyResponse.Error == null)
                     {
                         job = currentJob;
-                        var bcs = await rpc.ExecuteAsync<BlockchainInfoResponse>(logger, BitcoinCommands.GetBlockchainInfo, ct);
-        var mempoolTxIds = await rpc.ExecuteAsync<List<string>>(BitcoinCommands.GetRawMempool);
+                        var bcs = await rpc.ExecuteAsync<BlockchainInfo>(logger, BitcoinCommands.GetBlockchainInfo, ct);
+        var mempoolTxIds = (await rpc.ExecuteAsync<List<string>>(logger, BitcoinCommands.GetRawMempool, ct)).Response;
         BitcoinBlockTransaction[] transactions = new BitcoinBlockTransaction[mempoolTxIds.Count];
 
         foreach (var txId in mempoolTxIds)
@@ -190,7 +190,7 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
             {
                 TxId = txId,
                 Hash = rawTx.GetSha256().ToHexString(),
-                Data = rawTx
+                Data = rawTx.Response
             };
             transactions.Append(tx);
 
