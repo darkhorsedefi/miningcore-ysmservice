@@ -1,7 +1,10 @@
 using System.Diagnostics;
 using System.Security.Cryptography;
+using Miningcore.Crypto.Hashing.Algorithms;
 using NBitcoin;
 using NBitcoin.DataEncoders;
+using Miningcore.Native;
+using System.Runtime.InteropServices;
 
 namespace Miningcore.Blockchain.Bitcoin;
 
@@ -88,9 +91,8 @@ public static class BitcoinUtils
         var payload = data.Slice(0, data.Length - 4);
 
         // Calculate double SHA256 checksum per DCRUtil implementation
-        using var sha256 = SHA256.Create();
-        var hash1 = sha256.ComputeHash(payload.ToArray());
-        var hash2 = sha256.ComputeHash(hash1);
+        var hash1 = ComputeBlake256(payload.ToArray());
+        var hash2 = ComputeBlake256(hash1);
         var calculatedChecksum = hash2.Take(4).ToArray();
 
         // Verify checksum (first 4 bytes of double SHA256)
@@ -98,6 +100,18 @@ public static class BitcoinUtils
             throw new FormatException($"Invalid checksum {BitConverter.ToString(checksum.ToArray())} != {BitConverter.ToString(calculatedChecksum)}");
 
         return payload.ToArray();
+    }
+
+    private static unsafe byte[] ComputeBlake256(byte[] input)
+    {
+        byte* hash = stackalloc byte[32];
+        fixed (byte* data = input)
+        {
+            Multihash.blake(data, hash, (uint) input.Length);
+        }
+        var result = new byte[32];
+        Marshal.Copy((IntPtr)hash, result, 0, 32);
+        return result;
     }
 }
 
