@@ -757,7 +757,7 @@ public class BitcoinJob
     public string JobId { get; protected set; }
 
 
-    public async Task InitLegacy(GetWorkResponse getworkresponse, string jobId,
+    public async Task InitLegacy(BlockTemplate bt, string jobId,
         PoolConfig pc, BitcoinPoolConfigExtra extraPoolConfig,
         ClusterConfig cc, IMasterClock clock,
         IDestination poolAddressDestination, Network network,
@@ -780,34 +780,7 @@ public class BitcoinJob
         this.network = network;
         this.clock = clock;
         this.poolAddressDestination = poolAddressDestination;
-        var bcs = await rpc.ExecuteAsync<GetBlockchainInfoResponse>(BitcoinCommands.GetBlockchainInfo);
-        var mempoolTxIds = await rpc.ExecuteAsync<List<string>>(BitcoinCommands.GetRawMempool);
-        BitcoinBlockTransaction[] transactions = new BitcoinBlockTransaction[mempoolTxIds.Count];
-
-        foreach (var txId in mempoolTxIds)
-        {
-            var rawTx = await rpc.ExecuteAsync<string>(BitcoinCommands.GetRawTransaction, new[] { txId });
-            var tx = new BitcoinBlockTransaction
-            {
-                TxId = txId,
-                Hash = rawTx.GetSha256().ToHexString(),
-                Data = rawTx
-            };
-            transactions.Append(tx);
-
-        }
-
-        BlockTemplate = new BlockTemplate
-        {
-            Hex = getworkresponse.Data,
-            Target = getworkresponse.Target,
-            Version = getworkresponse.Data.Substring(0, 8).HexToUInt32(),
-            PreviousBlockhash = getworkresponse.Data.Substring(8, 64).HexToByteArray().ReverseByteOrder().ToHexString(),
-            Bits = getworkresponse.Data.Substring(144, 8),
-            CurTime = getworkresponse.Data.Substring(152, 8).HexToUInt32(),
-            Height = bcs.Response.Blocks + 1,
-            Transactions = transactions,
-        };
+        BlockTemplate = bt;
         isGetWork = true;
         JobId = jobId;
 
