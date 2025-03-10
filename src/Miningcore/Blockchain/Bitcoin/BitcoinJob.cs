@@ -349,72 +349,6 @@ public class BitcoinJob
 
         Span<byte> headerHash = stackalloc byte[32];
         uint256 headerValue;
-        
-        if(isGetWork)
-        {
-            // For GetWork, just use the header directly
-            var headerBytes = SerializeHeader(stackalloc byte[32], nTime, nonce, context.VersionRollingMask, versionBits);
-            
-            // hash block-header
-            headerHasher.Digest(headerBytes, headerHash, (ulong) nTime, BlockTemplate, coin, networkParams);
-            headerValue = new uint256(headerHash);
-            
-            // calc share-diff
-            var shareDiff = (double) new BigRational(BitcoinConstants.Diff1, headerHash.ToBigInteger()) * shareMultiplier;
-            var stratumDifficulty = context.Difficulty;
-            var ratio = shareDiff / stratumDifficulty * shareMultiplier;
-
-            // get block target
-            var targetBytes = BlockTemplate.Target.HexToByteArray().ToNewReverseArray();
-            blockTargetValue = new uint256(targetBytes);
-
-            // check if the share meets the much harder block difficulty (block candidate)
-            var isBlockCandidate = headerValue <= blockTargetValue;
-
-            // test if share meets at least workers current difficulty
-            if(!isBlockCandidate && ratio < 0.99)
-            {
-                // check if share matched the previous difficulty from before a vardiff retarget
-                if(context.VarDiff?.LastUpdate != null && context.PreviousDifficulty.HasValue)
-                {
-                    ratio = shareDiff / context.PreviousDifficulty.Value;
-
-                    if(ratio < 0.99)
-                        throw new StratumException(StratumError.LowDifficultyShare, $"low difficulty share ({shareDiff})");
-
-                    // use previous difficulty
-                    stratumDifficulty = context.PreviousDifficulty.Value;
-                }
-
-                else
-                    throw new StratumException(StratumError.LowDifficultyShare, $"low difficulty share ({shareDiff})");
-            }
-
-            var result = new Share
-            {
-                BlockHeight = BlockTemplate?.Height ?? 0,
-                NetworkDifficulty = Difficulty,
-                Difficulty = stratumDifficulty / shareMultiplier,
-            };
-
-            if(isBlockCandidate)
-            {
-                result.IsBlockCandidate = true;
-
-                Span<byte> blockHash = stackalloc byte[32];
-                blockHasher.Digest(headerBytes, blockHash, nTime);
-                result.BlockHash = blockHash.ToHexString();
-
-                // For GetWork, the header is the block
-                var blockHex = headerBytes.ToHexString();
-
-                return (result, blockHex);
-            }
-
-            return (result, null);
-        }
-        else
-        {
             // build coinbase
             var coinbase = SerializeCoinbase(extraNonce1, extraNonce2);
             Span<byte> coinbaseHash = stackalloc byte[32];
@@ -474,7 +408,6 @@ public class BitcoinJob
             }
 
             return (result, null);
-        }
     }
 
     protected virtual byte[] SerializeCoinbase(string extraNonce1, string extraNonce2)
