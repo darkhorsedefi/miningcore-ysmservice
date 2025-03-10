@@ -68,11 +68,17 @@ public static class BitcoinUtils
         switch (BitConverter.ToUInt16(netID, 0))
         {
             case 0x073f: // MainNet PubKeyHashAddrID
+            case 0x0f21: // TestNet PubKeyHashAddrID
+            case 0x0e91: // SimNet PubKeyHashAddrID
                 return new KeyId(payload);
+                
             case 0x071a: // MainNet ScriptHashAddrID
+            case 0x0efc: // TestNet ScriptHashAddrID
+            case 0x0e6c: // SimNet ScriptHashAddrID
                 return new ScriptId(payload);
+                
             default:
-                throw new FormatException("Unknown address type");
+                throw new FormatException($"Unknown Decred address type: {BitConverter.ToUInt16(netID, 0):X4}");
         }
     }
 
