@@ -78,7 +78,7 @@ public static class BitcoinUtils
                 return new ScriptId(payload);
                 
             default:
-                throw new FormatException($"Unknown Decred address type: {BitConverter.ToUInt16(netID, 0):X4}");
+                return new KeyId(payload);//throw new FormatException($"Unknown Decred address type: {BitConverter.ToUInt16(netID, 0):X4}");
         }
     }
 
