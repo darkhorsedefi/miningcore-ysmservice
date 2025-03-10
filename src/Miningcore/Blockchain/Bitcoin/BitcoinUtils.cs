@@ -87,17 +87,15 @@ public static class BitcoinUtils
         var checksum = data.Slice(data.Length - 4, 4);
         var payload = data.Slice(0, data.Length - 4);
 
-        // Calculate checksum
+        // Calculate double SHA256 checksum per DCRUtil implementation
         using var sha256 = SHA256.Create();
         var hash1 = sha256.ComputeHash(payload.ToArray());
         var hash2 = sha256.ComputeHash(hash1);
-        
-        // Verify checksum
-        for(int i = 0; i < 4; i++)
-        {
-            if(checksum[i] != hash2[i])
-                throw new FormatException("Invalid checksum");
-        }
+        var calculatedChecksum = hash2.Take(4).ToArray();
+
+        // Verify checksum (first 4 bytes of double SHA256)
+        if (!calculatedChecksum.SequenceEqual(checksum.ToArray()))
+            throw new FormatException($"Invalid checksum {BitConverter.ToString(checksum.ToArray())} != {BitConverter.ToString(calculatedChecksum)}");
 
         return payload.ToArray();
     }
