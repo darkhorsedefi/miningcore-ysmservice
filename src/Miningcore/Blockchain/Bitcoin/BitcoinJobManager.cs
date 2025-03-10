@@ -195,10 +195,10 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
 
                             // update stats
                             BlockchainStats.LastNetworkBlockTime = clock.Now;
-                            BlockchainStats.BlockHeight = legacyResponse.Response.Height;
+                            BlockchainStats.BlockHeight = job.BlockTemplate.Height;
                             BlockchainStats.NetworkDifficulty = job.Difficulty;
                             BlockchainStats.NextNetworkTarget = legacyResponse.Response.Target;
-                            BlockchainStats.NextNetworkBits = legacyResponse.Response.Bits;
+                            BlockchainStats.NextNetworkBits = job.BlockTemplate.Bits;
                         }
 
                         return (true, forceUpdate);
