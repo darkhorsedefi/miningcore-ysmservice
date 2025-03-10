@@ -178,13 +178,40 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
                     {
                         job = currentJob;
                         var bcs = await rpc.ExecuteAsync<GetBlockchainInfoResponse>(BitcoinCommands.GetBlockchainInfo);
+        var mempoolTxIds = await rpc.ExecuteAsync<List<string>>(BitcoinCommands.GetRawMempool);
+        BitcoinBlockTransaction[] transactions = new BitcoinBlockTransaction[mempoolTxIds.Count];
+
+        foreach (var txId in mempoolTxIds)
+        {
+            var rawTx = await rpc.ExecuteAsync<string>(BitcoinCommands.GetRawTransaction, new[] { txId });
+            var tx = new BitcoinBlockTransaction
+            {
+                TxId = txId,
+                Hash = rawTx.GetSha256().ToHexString(),
+                Data = rawTx
+            };
+            transactions.Append(tx);
+
+        }
+
+        var BlockTemplate = new BlockTemplate
+        {
+            Hex = getworkresponse.Data,
+            Target = getworkresponse.Target,
+            Version = getworkresponse.Data.Substring(0, 8).HexToUInt32(),
+            PreviousBlockhash = getworkresponse.Data.Substring(8, 64).HexToByteArray().ReverseByteOrder().ToHexString(),
+            Bits = getworkresponse.Data.Substring(144, 8),
+            CurTime = getworkresponse.Data.Substring(152, 8).HexToUInt32(),
+            Height = bcs.Response.Blocks + 1,
+            Transactions = transactions,
+        };
                         isNew = job == null || job.BlockTemplate?.Height < bcs.Response.Blocks + 1 || forceUpdate;
 
                         if(isNew)
                         {
                             job = CreateJob();
 
-                            job.InitLegacy(legacyResponse.Response, NextJobId(),
+                            job.InitLegacy(BlockTemplate, NextJobId(),
                                 poolConfig, extraPoolConfig, clusterConfig, clock, poolAddressDestination, network, isPoS,
                                 ShareMultiplier, coin.CoinbaseHasherValue, coin.HeaderHasherValue,
                                 !isPoS ? coin.BlockHasherValue : coin.PoSBlockHasherValue ?? coin.BlockHasherValue, rpc);
