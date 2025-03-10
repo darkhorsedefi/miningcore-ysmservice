@@ -53,4 +53,47 @@ public static class BitcoinUtils
         Debug.Assert(result.GetAddress(litecoin).ToString() == address);
         return result;
     }
+
+    public static IDestination DecredAddressToDestination(string address, Network expectedNetwork)
+    {
+        const int DECRED_VERSION_BYTES = 2;
+        const int DECRED_P2PKH_VERSION = 0x073f;  // Ds prefix
+        const int DECRED_P2SH_VERSION = 0x071a;   // Dc prefix
+        const int CHECKSUM_LENGTH = 4;
+
+        // First decode from base58 string
+        var base58Decoded = Encoders.Base58.DecodeData(address);
+        
+        // Check minimum length (2 version + 20 hash + 4 checksum)
+        if (base58Decoded.Length < DECRED_VERSION_BYTES + 20 + CHECKSUM_LENGTH)
+            throw new ArgumentException("Invalid address length", nameof(address));
+
+        // Verify checksum
+        var withoutChecksum = base58Decoded.Take(base58Decoded.Length - CHECKSUM_LENGTH).ToArray();
+        var checksum = base58Decoded.Skip(base58Decoded.Length - CHECKSUM_LENGTH).ToArray();
+        var hash = NBitcoin.Crypto.Hashes.SHA256(withoutChecksum);
+        var expectedChecksum = new byte[CHECKSUM_LENGTH];
+        Buffer.BlockCopy(hash, 0, expectedChecksum, 0, CHECKSUM_LENGTH);
+
+        if (!checksum.SequenceEqual(expectedChecksum))
+            throw new ArgumentException("Invalid checksum", nameof(address));
+
+        // Get version and payload
+        var version = (base58Decoded[0] << 8) | base58Decoded[1];
+        var addressBytes = base58Decoded.Skip(DECRED_VERSION_BYTES).Take(20).ToArray();
+
+        // Handle based on version
+        switch(version)
+        {
+            case DECRED_P2PKH_VERSION:
+                return new KeyId(addressBytes);
+            
+            case DECRED_P2SH_VERSION:
+                return new ScriptId(addressBytes);
+                
+            default:
+                throw new ArgumentException("Invalid Decred address version", nameof(address));
+        }
+    }
+
 }
