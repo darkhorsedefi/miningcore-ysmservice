@@ -189,7 +189,7 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
             var tx = new BitcoinBlockTransaction
             {
                 TxId = txId,
-                Hash = rawTx.GetSha256().ToHexString(),
+                Hash = rawTx.Response.GetSha256().ToHexString(),
                 Data = rawTx.Response
             };
             transactions.Append(tx);
@@ -204,7 +204,7 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
             PreviousBlockhash = legacyResponse.Response.Data.Substring(8, 64).HexToByteArray().ReverseByteOrder().ToHexString(),
             Bits = legacyResponse.Response.Data.Substring(144, 8),
             CurTime = legacyResponse.Response.Data.Substring(152, 8).HexToUInt32(),
-            Height = bcs.Response.Blocks + 1,
+            Height = (uint)(bcs.Response.Blocks + 1),
             Transactions = transactions,
         };
                         isNew = job == null || job.BlockTemplate?.Height < bcs.Response.Blocks + 1 || forceUpdate;
