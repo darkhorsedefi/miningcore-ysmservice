@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Security.Cryptography;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 
@@ -56,44 +57,105 @@ public static class BitcoinUtils
 
     public static IDestination DecredAddressToDestination(string address, Network expectedNetwork)
     {
-        const int DECRED_VERSION_BYTES = 2;
-        const int DECRED_P2PKH_VERSION = 0x073f;  // Ds prefix
-        const int DECRED_P2SH_VERSION = 0x071a;   // Dc prefix
-        const int CHECKSUM_LENGTH = 4;
+        var decoded = Base58CheckDecode(address);
+        var networkVersionBytes = expectedNetwork.GetVersionBytes(Base58Type.PUBKEY_ADDRESS, true);
+        var netID = new byte[] { decoded[0], decoded[1] };
+        var payload = decoded.Skip(2).ToArray();
 
-        // First decode from base58 string
-        var base58Decoded = Encoders.Base58.DecodeData(address);
-        
-        // Check minimum length (2 version + 20 hash + 4 checksum)
-        if (base58Decoded.Length < DECRED_VERSION_BYTES + 20 + CHECKSUM_LENGTH)
-            throw new ArgumentException("Invalid address length", nameof(address));
-
-        // Verify checksum
-        var withoutChecksum = base58Decoded.Take(base58Decoded.Length - CHECKSUM_LENGTH).ToArray();
-        var checksum = base58Decoded.Skip(base58Decoded.Length - CHECKSUM_LENGTH).ToArray();
-        var hash = NBitcoin.Crypto.Hashes.SHA256(withoutChecksum);
-        var expectedChecksum = new byte[CHECKSUM_LENGTH];
-        Buffer.BlockCopy(hash, 0, expectedChecksum, 0, CHECKSUM_LENGTH);
-
-        if (!checksum.SequenceEqual(expectedChecksum))
-            throw new ArgumentException("Invalid checksum", nameof(address));
-
-        // Get version and payload
-        var version = (base58Decoded[0] << 8) | base58Decoded[1];
-        var addressBytes = base58Decoded.Skip(DECRED_VERSION_BYTES).Take(20).ToArray();
-
-        // Handle based on version
-        switch(version)
+        switch (BitConverter.ToUInt16(netID, 0))
         {
-            case DECRED_P2PKH_VERSION:
-                return new KeyId(addressBytes);
-            
-            case DECRED_P2SH_VERSION:
-                return new ScriptId(addressBytes);
-                
+            case 0x073f: // MainNet PubKeyHashAddrID
+                return new KeyId(payload);
+            case 0x071a: // MainNet ScriptHashAddrID
+                return new ScriptId(payload);
             default:
-                throw new ArgumentException("Invalid Decred address version", nameof(address));
+                throw new FormatException("Unknown address type");
         }
     }
 
+        public static byte[] Base58CheckDecode(string input)
+    {
+        var bytes = Base58.Decode(input);
+        if (bytes.Length < 4)
+        {
+            throw new FormatException("Invalid Base58Check string");
+        }
+
+        var data = bytes.Take(bytes.Length - 4).ToArray();
+        var checksum = bytes.Skip(bytes.Length - 4).ToArray();
+
+        using (var sha256 = SHA256.Create())
+        {
+            var hash = sha256.ComputeHash(sha256.ComputeHash(data));
+            if (!checksum.SequenceEqual(hash.Take(4)))
+            {
+                throw new FormatException("Invalid checksum" + checksum + " != " + hash.Take(4));
+            }
+        }
+
+        return data;
+    }
+
+}
+
+public static class Base58
+{
+    private const string Alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+    private static readonly int[] Indexes = new int[128];
+
+    static Base58()
+    {
+        for (int i = 0; i < Indexes.Length; i++)
+        {
+            Indexes[i] = -1;
+        }
+        for (int i = 0; i < Alphabet.Length; i++)
+        {
+            Indexes[Alphabet[i]] = i;
+        }
+    }
+
+    public static byte[] Decode(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+        {
+            return new byte[0];
+        }
+
+        var input58 = new int[input.Length];
+        for (int i = 0; i < input.Length; i++)
+        {
+            var c = input[i];
+            var digit = c < 128 ? Indexes[c] : -1;
+            if (digit < 0)
+            {
+                throw new FormatException($"Invalid Base58 character '{c}' at position {i}");
+            }
+            input58[i] = digit;
+        }
+
+        int leadingZeroes = input.TakeWhile(c => c == '1').Count();
+        var decoded = new byte[input.Length];
+        int j = decoded.Length;
+
+        foreach (var t in input58)
+        {
+            int carry = t;
+            for (int k = decoded.Length - 1; k >= 0; k--)
+            {
+                carry += 58 * decoded[k];
+                decoded[k] = (byte)(carry % 256);
+                carry /= 256;
+            }
+        }
+
+        while (j < decoded.Length && decoded[j] == 0)
+        {
+            j++;
+        }
+
+        var result = new byte[decoded.Length - j + leadingZeroes];
+        Array.Copy(decoded, j, result, leadingZeroes, result.Length - leadingZeroes);
+        return result;
+    }
 }
