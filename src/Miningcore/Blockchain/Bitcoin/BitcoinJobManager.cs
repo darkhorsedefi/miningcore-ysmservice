@@ -185,12 +185,12 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
 
         foreach (var txId in mempoolTxIds)
         {
-            var rawTx = await rpc.ExecuteAsync<string>(logger, BitcoinCommands.GetRawTransaction, ct, new[] { txId });
+            var rawTx = await rpc.ExecuteAsync<RawTransaction>(logger, BitcoinCommands.GetRawTransaction, ct, new[] { txId, true});
             var tx = new BitcoinBlockTransaction
             {
                 TxId = txId,
-                Hash = rawTx.Response.GetSha256().ToHexString(),
-                Data = rawTx.Response
+                Hash = rawTx.Response.Hash,
+                Data = rawTx.Response.Hex
             };
             transactions.Append(tx);
 
