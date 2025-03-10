@@ -79,13 +79,13 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
         {
             var response = await rpc.ExecuteAsync<BlockTemplate>(logger,
                 BitcoinCommands.GetBlockTemplate, ct, GetBlockTemplateParams());
-
+            var daemonInfo = null;
             var isSynched = response.Error == null;
             if (!isSynched)
             {
                 if(hasLegacyDaemon)
                 {
-                    var daemonInfo = await rpc.ExecuteAsync<GetWorkResponse>(logger, BitcoinCommands.GetWork, ct);
+                    daemonInfo = await rpc.ExecuteAsync<GetWorkResponse>(logger, BitcoinCommands.GetWork, ct);
                     isSynched = response.Error == null;
                 }
             }
@@ -96,7 +96,11 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
             }
             else
             {
-                logger.Debug(() => $"Daemon reports error: {response.Error?.Message}");
+                if(hasLegacyDaemon) {
+                    logger.Debug(() => $"Legacy Daemon reports error: {daemonInfo.Error?.Message}");
+                } else {
+                    logger.Debug(() => $"Daemon reports error: {response.Error?.Message}");
+                }
             }
 
             if(!syncPendingNotificationShown)
