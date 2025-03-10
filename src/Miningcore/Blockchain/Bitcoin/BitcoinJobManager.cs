@@ -185,7 +185,7 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
 
         foreach (var txId in mempoolTxIds)
         {
-            var rawTx = await rpc.ExecuteAsync<RawTransaction>(logger, BitcoinCommands.GetRawTransaction, ct, new[] { txId, true});
+            var rawTx = await rpc.ExecuteAsync<RawTransaction>(logger, BitcoinCommands.GetRawTransaction, ct, new object[] { txId, true});
             var tx = new BitcoinBlockTransaction
             {
                 TxId = txId,
