@@ -124,6 +124,20 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
         return new RpcResponse<BlockTemplate>(result!.ResultAs<BlockTemplate>());
     }
 
+    protected async Task<RpcResponse<GetWorkResponse>> GetWorkAsync(CancellationToken ct)
+    {
+        var result = await rpc.ExecuteAsync<GetWorkResponse>(logger, BitcoinCommands.GetWork, ct);
+
+        return result;
+    }
+
+    protected RpcResponse<GetWorkResponse> GetWorkFromJson(string json)
+    {
+        var result = JsonConvert.DeserializeObject<JsonRpcResponse>(json);
+
+        return new RpcResponse<GetWorkResponse>(result!.ResultAs<GetWorkResponse>());
+    }
+
     private BitcoinJob CreateJob()
     {
         return new();
@@ -154,8 +168,44 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
             // may happen if daemon is currently not connected to peers
             if(response.Error != null)
             {
-                logger.Warn(() => $"Unable to update job. Daemon responded with: {response.Error.Message} Code {response.Error.Code}");
-                return (false, forceUpdate);
+                if(hasLegacyDaemon)
+                {
+                    var legacyResponse = string.IsNullOrEmpty(json) ?
+                        await GetWorkAsync(ct) :
+                        GetWorkFromJson(json);
+
+                    if(legacyResponse.Error == null)
+                    {
+                        var job = currentJob;
+                        var bcs = await rpc.ExecuteAsync<GetBlockChainInfoResponse>(BitcoinCommands.GetBlockChainInfo);
+                        var isNew = job == null || job.BlockTemplate?.Height < bcs.Response.Blocks + 1 || forceUpdate;
+
+                        if(isNew)
+                        {
+                            job = CreateJob();
+
+                            job.InitLegacy(legacyResponse.Response, NextJobId(),
+                                poolConfig, extraPoolConfig, clusterConfig, clock, poolAddressDestination, network, isPoS,
+                                ShareMultiplier, coin.CoinbaseHasherValue, coin.HeaderHasherValue,
+                                !isPoS ? coin.BlockHasherValue : coin.PoSBlockHasherValue ?? coin.BlockHasherValue);
+
+                            currentJob = job;
+
+                            logger.Info(() => $"Detected new block {legacyResponse.Response.Height} [{via}]");
+
+                            // update stats
+                            BlockchainStats.LastNetworkBlockTime = clock.Now;
+                            BlockchainStats.BlockHeight = legacyResponse.Response.Height;
+                            BlockchainStats.NetworkDifficulty = job.Difficulty;
+                            BlockchainStats.NextNetworkTarget = legacyResponse.Response.Target;
+                            BlockchainStats.NextNetworkBits = legacyResponse.Response.Bits;
+                        }
+
+                        return (true, forceUpdate);
+                    } else {
+                        logger.Warn(() => $"Unable to update job. Daemon responded with: {response.Error.Message} Code {response.Error.Code}");
+                        return (false, forceUpdate);
+                    }
             }
 
             var blockTemplate = response.Response;

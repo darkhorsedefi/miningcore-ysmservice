@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text;
+using System.Threading.Tasks;
 using Miningcore.Blockchain.Bitcoin.Configuration;
 using Miningcore.Blockchain.Bitcoin.DaemonResponses;
 using Miningcore.Configuration;
@@ -753,6 +754,92 @@ public class BitcoinJob
     public double Difficulty { get; protected set; }
 
     public string JobId { get; protected set; }
+
+
+    public async Task InitLegacy(GetWorkResponse getworkresponse, string jobId,
+        PoolConfig pc, BitcoinPoolConfigExtra extraPoolConfig,
+        ClusterConfig cc, IMasterClock clock,
+        IDestination poolAddressDestination, Network network,
+        bool isPoS, double shareMultiplier, IHashAlgorithm coinbaseHasher,
+        IHashAlgorithm headerHasher, IHashAlgorithm blockHasher)
+    {
+        Contract.RequiresNonNull(getworkresponse);
+        Contract.RequiresNonNull(pc);
+        Contract.RequiresNonNull(cc);
+        Contract.RequiresNonNull(clock);
+        Contract.RequiresNonNull(poolAddressDestination);
+        Contract.RequiresNonNull(coinbaseHasher);
+        Contract.RequiresNonNull(headerHasher);
+        Contract.RequiresNonNull(blockHasher);
+        Contract.Requires<ArgumentException>(!string.IsNullOrEmpty(jobId));
+
+        coin = pc.Template.As<BitcoinTemplate>();
+        networkParams = coin.GetNetwork(network.ChainName);
+        txVersion = coin.CoinbaseTxVersion;
+        this.network = network;
+        this.clock = clock;
+        this.poolAddressDestination = poolAddressDestination;
+        var bcs = await rpc.ExecuteAsync<GetBlockChainInfoResponse>(BitcoinCommands.GetBlockChainInfo);
+        BlockTemplate = new BlockTemplate
+        {
+            Hex = getworkresponse.Data,
+            Target = getworkresponse.Target,
+            Version = getworkresponse.Data[0..8].HexToUInt32(),
+            PreviousBlockhash = getworkresponse.Data[8:72].HexToByteArray().ReverseByteOrder().ToHexString(),
+            Bits = getworkresponse.Data[144:152],
+            CurTime = getworkresponse.Data[152:160].HexToUInt32(),
+            Height = bcs.Response.Blocks + 1,
+        };
+        isGetWork = true;
+        JobId = jobId;
+
+        var coinbaseString = !string.IsNullOrEmpty(cc.PaymentProcessing?.CoinbaseString) ?
+            cc.PaymentProcessing?.CoinbaseString.Trim() : "Miningcore";
+
+        scriptSigFinalBytes = new Script(Op.GetPushOp(Encoding.UTF8.GetBytes(coinbaseString))).ToBytes();
+
+        Difficulty = new Target(System.Numerics.BigInteger.Parse(getworkresponse.Target, NumberStyles.HexNumber)).Difficulty;
+
+        extraNoncePlaceHolderLength = BitcoinConstants.ExtranoncePlaceHolderLength;
+        this.isPoS = isPoS;
+        this.shareMultiplier = shareMultiplier;
+
+        txComment = !string.IsNullOrEmpty(extraPoolConfig?.CoinbaseTxComment) ?
+            extraPoolConfig.CoinbaseTxComment : coin.CoinbaseTxComment;
+
+        this.coinbaseHasher = coinbaseHasher;
+        this.headerHasher = headerHasher;
+        this.blockHasher = blockHasher;
+
+        if(!string.IsNullOrEmpty(BlockTemplate.Target))
+            blockTargetValue = new uint256(BlockTemplate.Target);
+        else
+        {
+            var tmp = new Target(BlockTemplate.Bits.HexToByteArray());
+            blockTargetValue = tmp.ToUInt256();
+        }
+
+        previousBlockHashReversedHex = BlockTemplate.PreviousBlockhash
+            .HexToByteArray()
+            .ReverseByteOrder()
+            .ToHexString();
+
+        BuildMerkleBranches();
+        BuildCoinbase();
+
+        jobParams = new object[]
+        {
+            JobId,
+            previousBlockHashReversedHex,
+            coinbaseInitialHex,
+            coinbaseFinalHex,
+            merkleBranchesHex,
+            BlockTemplate.Version.ToStringHex8(),
+            BlockTemplate.Bits,
+            BlockTemplate.CurTime.ToStringHex8(),
+            false
+        };
+    }
 
     public void Init(BlockTemplate blockTemplate, string jobId,
         PoolConfig pc, BitcoinPoolConfigExtra extraPoolConfig,
