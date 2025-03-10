@@ -191,7 +191,7 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
 
                             currentJob = job;
 
-                            logger.Info(() => $"Detected new block {legacyResponse.Response.Height} [{via}]");
+                            logger.Info(() => $"Detected new block {(bcs.Response.Blocks + 1)} [{via}]");
 
                             // update stats
                             BlockchainStats.LastNetworkBlockTime = clock.Now;
