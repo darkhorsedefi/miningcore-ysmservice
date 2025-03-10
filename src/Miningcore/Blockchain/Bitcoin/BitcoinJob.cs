@@ -10,6 +10,7 @@ using Miningcore.Extensions;
 using Miningcore.Stratum;
 using Miningcore.Time;
 using Miningcore.Util;
+using Miningcore.Rpc;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using Newtonsoft.Json.Linq;
@@ -761,7 +762,7 @@ public class BitcoinJob
         ClusterConfig cc, IMasterClock clock,
         IDestination poolAddressDestination, Network network,
         bool isPoS, double shareMultiplier, IHashAlgorithm coinbaseHasher,
-        IHashAlgorithm headerHasher, IHashAlgorithm blockHasher)
+        IHashAlgorithm headerHasher, IHashAlgorithm blockHasher, RpcClient rpc)
     {
         Contract.RequiresNonNull(getworkresponse);
         Contract.RequiresNonNull(pc);
@@ -779,13 +780,13 @@ public class BitcoinJob
         this.network = network;
         this.clock = clock;
         this.poolAddressDestination = poolAddressDestination;
-        var bcs = await rpc.ExecuteAsync<GetBlockChainInfoResponse>(BitcoinCommands.GetBlockChainInfo);
-        var mempoolTxIds = await RpcClient.ExecuteAsync<List<string>>(logger, BitcoinCommands.GetRawMempool);
+        var bcs = await rpc.ExecuteAsync<GetBlockchainInfoResponse>(BitcoinCommands.GetBlockChainInfo);
+        var mempoolTxIds = await rpc.ExecuteAsync<List<string>>(BitcoinCommands.GetRawMempool);
         BitcoinBlockTransaction[] transactions = new BitcoinBlockTransaction[mempoolTxIds.Count];
 
         foreach (var txId in mempoolTxIds)
         {
-            var rawTx = await RpcClient.ExecuteAsync<string>(logger, BitcoinCommands.GetRawTransaction, new[] { txId });
+            var rawTx = await rpc.ExecuteAsync<string>(BitcoinCommands.GetRawTransaction, new[] { txId });
             var tx = new BitcoinBlockTransaction
             {
                 TxId = txId,

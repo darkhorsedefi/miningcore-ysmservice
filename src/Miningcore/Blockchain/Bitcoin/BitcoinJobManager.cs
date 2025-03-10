@@ -187,7 +187,7 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
                             job.InitLegacy(legacyResponse.Response, NextJobId(),
                                 poolConfig, extraPoolConfig, clusterConfig, clock, poolAddressDestination, network, isPoS,
                                 ShareMultiplier, coin.CoinbaseHasherValue, coin.HeaderHasherValue,
-                                !isPoS ? coin.BlockHasherValue : coin.PoSBlockHasherValue ?? coin.BlockHasherValue);
+                                !isPoS ? coin.BlockHasherValue : coin.PoSBlockHasherValue ?? coin.BlockHasherValue, rpc);
 
                             currentJob = job;
 

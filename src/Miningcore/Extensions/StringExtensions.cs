@@ -70,6 +70,11 @@ public static class StringExtensions
         return sb.ToString();
     }
 
+    public static uint HexToUInt32(this string str)
+    {
+        return uint.Parse(str, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+    }
+
     public static string ToStringHexWithPrefix(this ulong value)
     {
         if(value == 0)
