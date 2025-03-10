@@ -780,7 +780,7 @@ public class BitcoinJob
         this.network = network;
         this.clock = clock;
         this.poolAddressDestination = poolAddressDestination;
-        var bcs = await rpc.ExecuteAsync<GetBlockchainInfoResponse>(BitcoinCommands.GetBlockChainInfo);
+        var bcs = await rpc.ExecuteAsync<GetBlockchainInfoResponse>(BitcoinCommands.GetBlockchainInfo);
         var mempoolTxIds = await rpc.ExecuteAsync<List<string>>(BitcoinCommands.GetRawMempool);
         BitcoinBlockTransaction[] transactions = new BitcoinBlockTransaction[mempoolTxIds.Count];
 
