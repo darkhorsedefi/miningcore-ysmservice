@@ -764,7 +764,7 @@ public class BitcoinJob
         bool isPoS, double shareMultiplier, IHashAlgorithm coinbaseHasher,
         IHashAlgorithm headerHasher, IHashAlgorithm blockHasher, RpcClient rpc)
     {
-        Contract.RequiresNonNull(getworkresponse);
+        Contract.RequiresNonNull(bt);
         Contract.RequiresNonNull(pc);
         Contract.RequiresNonNull(cc);
         Contract.RequiresNonNull(clock);
@@ -789,7 +789,7 @@ public class BitcoinJob
 
         scriptSigFinalBytes = new Script(Op.GetPushOp(Encoding.UTF8.GetBytes(coinbaseString))).ToBytes();
 
-        Difficulty = new Target(System.Numerics.BigInteger.Parse(getworkresponse.Target, NumberStyles.HexNumber)).Difficulty;
+        Difficulty = new Target(System.Numerics.BigInteger.Parse(bt.Target, NumberStyles.HexNumber)).Difficulty;
 
         extraNoncePlaceHolderLength = BitcoinConstants.ExtranoncePlaceHolderLength;
         this.isPoS = isPoS;

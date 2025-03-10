@@ -164,6 +164,8 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
             var response = string.IsNullOrEmpty(json) ?
                 await GetBlockTemplateAsync(ct) :
                 GetBlockTemplateFromJson(json);
+            var isNew = false;
+            BitcoinJob job = null;
 
             // may happen if daemon is currently not connected to peers
             if(response.Error != null)
@@ -177,7 +179,7 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
                     if(legacyResponse.Error == null)
                     {
                         job = currentJob;
-                        var bcs = await rpc.ExecuteAsync<GetBlockchainInfoResponse>(logger, BitcoinCommands.GetBlockchainInfo, ct);
+                        var bcs = await rpc.ExecuteAsync<BlockchainInfoResponse>(logger, BitcoinCommands.GetBlockchainInfo, ct);
         var mempoolTxIds = await rpc.ExecuteAsync<List<string>>(BitcoinCommands.GetRawMempool);
         BitcoinBlockTransaction[] transactions = new BitcoinBlockTransaction[mempoolTxIds.Count];
 
@@ -196,12 +198,12 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
 
         var BlockTemplate = new BlockTemplate
         {
-            Hex = getworkresponse.Data,
-            Target = getworkresponse.Target,
-            Version = getworkresponse.Data.Substring(0, 8).HexToUInt32(),
-            PreviousBlockhash = getworkresponse.Data.Substring(8, 64).HexToByteArray().ReverseByteOrder().ToHexString(),
-            Bits = getworkresponse.Data.Substring(144, 8),
-            CurTime = getworkresponse.Data.Substring(152, 8).HexToUInt32(),
+            Hex = legacyResponse.Response.Data,
+            Target = legacyResponse.Response.Target,
+            Version = legacyResponse.Response.Data.Substring(0, 8).HexToUInt32(),
+            PreviousBlockhash = legacyResponse.Response.Data.Substring(8, 64).HexToByteArray().ReverseByteOrder().ToHexString(),
+            Bits = legacyResponse.Response.Data.Substring(144, 8),
+            CurTime = legacyResponse.Response.Data.Substring(152, 8).HexToUInt32(),
             Height = bcs.Response.Blocks + 1,
             Transactions = transactions,
         };
@@ -236,9 +238,9 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
                 }
             }
             var blockTemplate = response.Response;
-            var job = currentJob;
+            job = currentJob;
 
-            var isNew = job == null ||
+            isNew = job == null ||
                 (blockTemplate != null &&
                     (job.BlockTemplate?.PreviousBlockhash != blockTemplate.PreviousBlockhash ||
                         blockTemplate.Height > job.BlockTemplate?.Height));
