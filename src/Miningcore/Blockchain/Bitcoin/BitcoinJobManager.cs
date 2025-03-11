@@ -187,18 +187,18 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
         var mempoolTxIds = (await rpc.ExecuteAsync<List<string>>(logger, BitcoinCommands.GetRawMempool, ct)).Response;
         BitcoinBlockTransaction[] transactions = new BitcoinBlockTransaction[mempoolTxIds.Count];
 
-        foreach (var txId in mempoolTxIds)
-        {
-            var rawTx = await rpc.ExecuteAsync<RawTransaction>(logger, BitcoinCommands.GetRawTransaction, ct, new object[] { txId, 1});
-            var tx = new BitcoinBlockTransaction
-            {
-                TxId = txId,
-                Hash = rawTx.Response.Hash,
-                Data = rawTx.Response.Hex
-            };
-            transactions.Append(tx);
+for (int i = 0; i < mempoolTxIds.Count; i++)
+{
+    var txId = mempoolTxIds[i];
+    var rawTx = await rpc.ExecuteAsync<RawTransaction>(logger, BitcoinCommands.GetRawTransaction, ct, new object[] { txId, 1 });
 
-        }
+    transactions[i] = new BitcoinBlockTransaction
+    {
+        TxId = txId,
+        Hash = rawTx.Response.Hash,
+        Data = rawTx.Response.Hex
+    };
+}
 
         var BlockTemplate = new BlockTemplate
         {
