@@ -10,7 +10,7 @@
         "telegram": "",
         "discord": "",
         "coinbaseHasher": {
-            "hash": "blake3"
+            "hash": "blake"
         },
         "headerHasher": {
             "hash": "blake3"
@@ -19,7 +19,7 @@
             "hash": "reverse",
             "args": [
                 {
-                    "hash": "blake3"
+                    "hash": "blake"
                 }
             ]
         },
