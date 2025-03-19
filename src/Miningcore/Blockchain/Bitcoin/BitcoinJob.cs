@@ -789,9 +789,8 @@ public class BitcoinJob
         this.clock = clock;
         this.poolAddressDestination = poolAddressDestination;
         BlockTemplate = blockTemplate;
-        if (BlockTemplate.Hex != null)
-            isGetWork = true;
         JobId = jobId;
+        isGetWork = false;
 
         var coinbaseString = !string.IsNullOrEmpty(cc.PaymentProcessing?.CoinbaseString) ?
             cc.PaymentProcessing?.CoinbaseString.Trim() : "Miningcore";
