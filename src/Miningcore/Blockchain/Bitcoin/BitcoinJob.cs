@@ -16,6 +16,7 @@ using NBitcoin.DataEncoders;
 using Newtonsoft.Json.Linq;
 using Contract = Miningcore.Contracts.Contract;
 using Transaction = NBitcoin.Transaction;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Miningcore.Blockchain.Bitcoin;
 
@@ -690,7 +691,7 @@ public class BitcoinJob
     public string JobId { get; protected set; }
 
 
-    public async Task InitLegacy(BlockTemplate bt, string jobId,
+    public virtual async Task InitLegacy(BlockTemplate bt, string jobId,
         PoolConfig pc, BitcoinPoolConfigExtra extraPoolConfig,
         ClusterConfig cc, IMasterClock clock,
         IDestination poolAddressDestination, Network network,

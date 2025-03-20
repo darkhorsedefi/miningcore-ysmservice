@@ -1,6 +1,7 @@
 using Autofac;
 using Miningcore.Blockchain.Bitcoin.Configuration;
 using Miningcore.Blockchain.Bitcoin.DaemonResponses;
+using Miningcore.Blockchain.Bitcoin.Custom.Decred;
 using Miningcore.Configuration;
 using Miningcore.Contracts;
 using Miningcore.Crypto;
@@ -144,7 +145,13 @@ public class BitcoinJobManager : BitcoinJobManagerBase<BitcoinJob>
 
     private BitcoinJob CreateJob()
     {
-        return new();
+        switch(coin.Symbol)
+        {
+            case "DCR":
+                return new DecredJob();
+            default:
+                return new();
+        }
     }
 
     protected override void PostChainIdentifyConfigure()
@@ -217,7 +224,7 @@ for (int i = 0; i < mempoolTxIds.Count; i++)
                         {
                             job = CreateJob();
 
-                            job.InitLegacy(BlockTemplate, NextJobId(),
+                            await job.InitLegacy(BlockTemplate, NextJobId(),
                                 poolConfig, extraPoolConfig, clusterConfig, clock, poolAddressDestination, network, isPoS,
                                 ShareMultiplier, coin.CoinbaseHasherValue, coin.HeaderHasherValue,
                                 !isPoS ? coin.BlockHasherValue : coin.PoSBlockHasherValue ?? coin.BlockHasherValue, rpc);
