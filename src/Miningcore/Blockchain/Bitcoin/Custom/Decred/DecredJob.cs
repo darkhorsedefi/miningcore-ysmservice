@@ -54,7 +54,7 @@ namespace Miningcore.Blockchain.Bitcoin.Custom.Decred
                 prevBlock,       // prevBlock (previous block hash)
                 genTx1,         // genTx1 (generation tx part 1)
                 "",             // genTx2 (empty for Decred)
-                new string[] {}, // merkle branches (empty array for Decred)
+                null, // merkle branches (empty array for Decred)
                 blockVersion,    // blockVersion 
                 nBits,          // nBits (target bits)
                 true            // cleanJob
