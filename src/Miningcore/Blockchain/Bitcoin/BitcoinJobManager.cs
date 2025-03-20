@@ -241,7 +241,7 @@ for (int i = 0; i < mempoolTxIds.Count; i++)
                             BlockchainStats.NextNetworkBits = job.BlockTemplate.Bits;
                         }
 
-                        return (true, forceUpdate);
+                        return (isNew, forceUpdate);
                     } else {
                         logger.Warn(() => $"Unable to update job. Daemon responded with: {response.Error.Message} Code {response.Error.Code}");
                         return (false, forceUpdate);
