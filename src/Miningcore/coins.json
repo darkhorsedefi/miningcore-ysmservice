@@ -1,4 +1,33 @@
 {
+    "rinchcoin": {
+        "name": "Rincoin",
+        "canonicalName": "Rincoin",
+        "symbol": "RIN",
+        "family": "bitcoin",
+        "website": "https://coin.rin.so/",
+        "market": "",
+        "twitter": "",
+        "telegram": "",
+        "discord": "https://discord.gg/Ap7TUXYRBf",
+        "coinbaseHasher": {
+            "hash": "sha256d"
+        },
+        "headerHasher": {
+            "hash": "rinhash"
+        },
+        "blockHasher": {
+            "hash": "reverse",
+            "args": [
+                {
+                    "hash": "rinhash"
+                }
+            ]
+        },
+        "shareMultiplier": 6000000000,
+        "explorerBlockLink": "https://explorer.rin.so/block/$hash$",
+        "explorerTxLink": "https://explorer.rin.so/tx/{0}",
+        "explorerAccountLink": "https://explorer.rin.so/address/{0}"
+    },
     "decred": {
         "name": "Decred",
         "canonicalName": "Decred",
@@ -4444,6 +4473,7 @@
         "blockTemplateRpcExtraParams": [
             "x17"
         ],
+        "shareMultiplier": 600000000,
         "explorerBlockLink": "https://verge-blockchain.info/block/$hash$",
         "explorerTxLink": "https://verge-blockchain.info/tx/{0}",
         "explorerAccountLink": "https://verge-blockchain.info/address/{0}"
@@ -4480,6 +4510,7 @@
         "blockTemplateRpcExtraParams": [
             "blake"
         ],
+        "shareMultiplier": 600000000,
         "explorerBlockLink": "https://verge-blockchain.info/block/$hash$",
         "explorerTxLink": "https://verge-blockchain.info/tx/{0}",
         "explorerAccountLink": "https://verge-blockchain.info/address/{0}"
@@ -4516,6 +4547,7 @@
         "blockTemplateRpcExtraParams": [
             "groestl"
         ],
+        "shareMultiplier": 600000000,
         "explorerBlockLink": "https://verge-blockchain.info/block/$hash$",
         "explorerTxLink": "https://verge-blockchain.info/tx/{0}",
         "explorerAccountLink": "https://verge-blockchain.info/address/{0}"

@@ -1,10 +1,6 @@
 using System.Diagnostics;
-using System.Security.Cryptography;
-using Miningcore.Crypto.Hashing.Algorithms;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using Miningcore.Native;
-using System.Runtime.InteropServices;
 
 namespace Miningcore.Blockchain.Bitcoin;
 
@@ -19,6 +15,7 @@ public static class BitcoinUtils
     /// (these addresses begin with the digit '1')
     /// The resulting hash in both of these cases is always exactly 20 bytes.
     /// </summary>
+    /// 
     public static IDestination AddressToDestination(string address, Network expectedNetwork)
     {
         var decoded = Encoders.Base58Check.DecodeData(address);
@@ -60,131 +57,24 @@ public static class BitcoinUtils
 
     public static IDestination DecredAddressToDestination(string address, Network expectedNetwork)
     {
-        var decoded = Base58CheckDecode(address);
-        var networkVersionBytes = expectedNetwork.GetVersionBytes(Base58Type.PUBKEY_ADDRESS, true);
-        var netID = new byte[] { decoded[0], decoded[1] };
-        var payload = decoded.Skip(2).ToArray();
-
-        switch (BitConverter.ToUInt16(netID, 0))
+        try
         {
-            case 0x073f: // MainNet PubKeyHashAddrID
-            case 0x0f21: // TestNet PubKeyHashAddrID
-            case 0x0e91: // SimNet PubKeyHashAddrID
-                return new KeyId(payload);
-                
-            case 0x071a: // MainNet ScriptHashAddrID
-            case 0x0efc: // TestNet ScriptHashAddrID
-            case 0x0e6c: // SimNet ScriptHashAddrID
-                return new ScriptId(payload);
-                
-            default:
-                return new KeyId(payload);//throw new FormatException($"Unknown Decred address type: {BitConverter.ToUInt16(netID, 0):X4}");
-        }
-    }
-
-    public static byte[] Base58CheckDecode(string input)
-    {
-        // Decode base58 string
-        var decoded = Base58.Decode(input);
-
-        // Check minimum length (version + payload + checksum)
-        if (decoded.Length < 6)
-            throw new FormatException("Invalid Base58Check string");
-
-        // Split decoded data
-        var data = decoded.AsSpan();
-        var checksum = data.Slice(data.Length - 4, 4);
-        var payload = data.Slice(0, data.Length - 4);
-
-        // Calculate double SHA256 checksum per DCRUtil implementation
-        var hash1 = ComputeBlake256(payload.ToArray());
-        var hash2 = ComputeBlake256(hash1);
-        var calculatedChecksum = hash2.Take(4).ToArray();
-
-        // Verify checksum (first 4 bytes of double SHA256)
-        if (!calculatedChecksum.SequenceEqual(checksum.ToArray()))
-            throw new FormatException($"Invalid checksum {BitConverter.ToString(checksum.ToArray())} != {BitConverter.ToString(calculatedChecksum)}");
-
-        return payload.ToArray();
-    }
-
-    private static unsafe byte[] ComputeBlake256(byte[] input)
-    {
-        byte* hash = stackalloc byte[32];
-        fixed (byte* data = input)
-        {
-            Multihash.blake(data, hash, (uint) input.Length);
-        }
-        var result = new byte[32];
-        Marshal.Copy((IntPtr)hash, result, 0, 32);
-        return result;
-    }
-}
-
-public static class Base58
-{
-    private const string ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-    private static readonly int[] INDEXES = BuildIndexes();
-
-    private static int[] BuildIndexes()
-    {
-        var indexes = new int[128];
-        for(int i = 0; i < indexes.Length; i++)
-            indexes[i] = -1;
-        
-        for(int i = 0; i < ALPHABET.Length; i++)
-            indexes[ALPHABET[i]] = i;
+            // Decred: Custom base58 decoding without checksum validation
+            var data = Encoders.Base58.DecodeData(address);
             
-        return indexes;
-    }
+            // Verify minimum length (2 version bytes + 20 bytes hash160)
+            if(data.Length < 22)
+                throw new FormatException("Invalid Decred address (too short)");
 
-    public static byte[] Decode(string input)
-    {
-        if (string.IsNullOrEmpty(input))
-            return Array.Empty<byte>();
-
-        // Convert input to indexes
-        int[] indexes = new int[input.Length];
-        for(int i = 0; i < input.Length; i++)
-        {
-            char c = input[i];
-            if(c >= 128 || (indexes[i] = INDEXES[c]) == -1)
-                throw new FormatException($"Invalid Base58 character '{c}' at position {i}");
-        }
-
-        // Count leading zeros
-        int leadingZeros = 0;
-        while(leadingZeros < input.Length && input[leadingZeros] == '1')
-            leadingZeros++;
-
-        // Decode
-        byte[] result = new byte[input.Length];
-        int length = 0;
-
-        for(int i = leadingZeros; i < input.Length; i++)
-        {
-            int carry = indexes[i];
+            // Extract the actual hash160 (skip 2 version bytes)
+            var hash160 = new byte[20];
+            Array.Copy(data, 2, hash160, 0, 20);
             
-            // Apply "b256 = b58 * 256"
-            for(int j = 0; j < length; j++)
-            {
-                carry += result[j] * 58;
-                result[j] = (byte)(carry & 0xff);
-                carry >>= 8;
-            }
-
-            while(carry > 0)
-            {
-                result[length++] = (byte)(carry & 0xff);
-                carry >>= 8;
-            }
+            return new KeyId(hash160);
         }
-
-        // Copy result
-        var decoded = new byte[leadingZeros + length];
-        Array.Copy(result, 0, decoded, leadingZeros, length);
-        Array.Reverse(decoded, leadingZeros, length);
-
-        return decoded;
+        catch(Exception)
+        {
+            throw new FormatException("Invalid Decred address format");
+        }
     }
 }
