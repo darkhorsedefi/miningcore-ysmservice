@@ -50,8 +50,8 @@ public unsafe class RinHash : IHashAlgorithm
         using (var argon2 = new Argon2(config))
         {
             var argon2Raw = argon2.Hash();
-            argon2Output = new byte[argon2Raw.Length];
-            Buffer.BlockCopy(argon2Raw.Buffer, 0, argon2Output, 0, argon2Raw.Length);
+            argon2Output = new byte[argon2Raw.Buffer.Length];
+            Buffer.BlockCopy(argon2Raw.Buffer, 0, argon2Output, 0, argon2Raw.Buffer.Length);
         }
 
         // 3. SHA3-256
