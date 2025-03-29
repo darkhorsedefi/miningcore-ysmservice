@@ -49,7 +49,7 @@ public unsafe class RinHash : IHashAlgorithm
         byte[] argon2Output;
         using (var argon2 = new Argon2(config))
         {
-            argon2Output = argon2.Hash().ByteArray;
+            argon2Output = (byte[])argon2.Hash();
         }
 
         // 3. SHA3-256
