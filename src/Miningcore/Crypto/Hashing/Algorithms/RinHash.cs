@@ -28,7 +28,7 @@ public class RinHash : IHashAlgorithm
         Contract.Requires<ArgumentException>(result.Length >= 32);
 
         // 1. BLAKE3
-        var blake3hasher =  new Blake3()
+        var blake3hasher =  new Blake3();
         var blake3Hashed = stackalloc byte[32];
         blake3hasher.Digest(data, blake3Hashed, extra);
 
