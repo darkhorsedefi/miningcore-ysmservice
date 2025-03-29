@@ -1,6 +1,5 @@
 using System;
 using System.Security.Cryptography;
-using Blake3;
 using Isopoh.Cryptography.Argon2;
 using Miningcore.Contracts;
 using SHA3.Net;
@@ -29,7 +28,9 @@ public class RinHash : IHashAlgorithm
         Contract.Requires<ArgumentException>(result.Length >= 32);
 
         // 1. BLAKE3
-        var blake3Hashed = Hasher.Hash(data.ToArray()).ToArray();
+        var blake3hasher =  new Blake3()
+        var blake3Hashed = stackalloc byte[32];
+        blake3hasher.Digest(data, blake3Hashed, extra);
 
         // 2. Argon2d
         var config = new Argon2Config
