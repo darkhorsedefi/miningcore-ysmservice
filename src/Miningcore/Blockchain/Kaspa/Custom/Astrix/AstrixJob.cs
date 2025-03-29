@@ -11,7 +11,7 @@ namespace Miningcore.Blockchain.Kaspa.Custom.Astrix;
 
 public class AstrixJob : KaspaJob
 {
-    protected Blake3 blake3Hasher;
+    protected Miningcore.Crypto.Hashing.Algorithms.Blake3 blake3Hasher;
     protected Sha3_256 sha3_256Hasher;
 
     public AstrixJob(IHashAlgorithm customBlockHeaderHasher, IHashAlgorithm customCoinbaseHasher, IHashAlgorithm customShareHasher) : base(customBlockHeaderHasher, customCoinbaseHasher, customShareHasher)
