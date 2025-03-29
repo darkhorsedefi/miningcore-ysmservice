@@ -11,7 +11,7 @@ namespace Miningcore.Crypto.Hashing.Algorithms;
 /// RinHash: BLAKE3 → Argon2d → SHA3-256
 /// </summary>
 [Identifier("rinhash")]
-public class RinHash : IHashAlgorithm
+public unsafe class RinHash : IHashAlgorithm
 {
     private static readonly byte[] Salt;
 
@@ -23,13 +23,13 @@ public class RinHash : IHashAlgorithm
         Array.Copy(saltBytes, Salt, saltBytes.Length);
     }
 
-    public void Digest(ReadOnlySpan<byte> data, Span<byte> result, params object[] extra)
+    public unsafe void Digest(ReadOnlySpan<byte> data, Span<byte> result, params object[] extra)
     {
         Contract.Requires<ArgumentException>(result.Length >= 32);
 
         // 1. BLAKE3
-        var blake3hasher =  new Blake3();
-        var blake3Hashed = stackalloc byte[32];
+        var blake3hasher = new Blake3();
+        Span<byte> blake3Hashed = stackalloc byte[32];
         blake3hasher.Digest(data, blake3Hashed, extra);
 
         // 2. Argon2d
@@ -41,7 +41,7 @@ public class RinHash : IHashAlgorithm
             MemoryCost = 65536, // 64 MB
             Lanes = 1,
             Threads = 1,
-            Password = blake3Hashed,
+            Password = blake3Hashed.ToArray(),
             Salt = Salt,
             HashLength = 32
         };
@@ -49,7 +49,7 @@ public class RinHash : IHashAlgorithm
         byte[] argon2Output;
         using (var argon2 = new Argon2(config))
         {
-            argon2Output = argon2.Hash();
+            argon2Output = argon2.Hash().ToArray();
         }
 
         // 3. SHA3-256
