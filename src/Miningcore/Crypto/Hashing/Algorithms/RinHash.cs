@@ -17,10 +17,7 @@ public unsafe class RinHash : IHashAlgorithm
 
     static RinHash()
     {
-        // "RinCoinSalt" を UTF-8 エンコードして16バイトにする（ゼロパディング）
-        Salt = new byte[16];
-        var saltBytes = Encoding.UTF8.GetBytes("RinCoinSalt");
-        Array.Copy(saltBytes, Salt, saltBytes.Length);
+        Salt = Encoding.UTF8.GetBytes("RinCoinSalt");
     }
 
     public unsafe void Digest(ReadOnlySpan<byte> data, Span<byte> result, params object[] extra)
@@ -38,7 +35,7 @@ public unsafe class RinHash : IHashAlgorithm
             Type = Argon2Type.DataDependentAddressing,
             Version = Argon2Version.Nineteen,
             TimeCost = 2,
-            MemoryCost = 65536, // 64 MB
+            MemoryCost = 64, // 64 MB
             Lanes = 1,
             Threads = 1,
             Password = blake3Hashed.ToArray(),
