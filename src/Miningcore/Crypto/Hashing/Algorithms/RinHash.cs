@@ -35,7 +35,7 @@ public unsafe class RinHash : IHashAlgorithm
             Type = Argon2Type.DataDependentAddressing,
             Version = Argon2Version.Nineteen,
             TimeCost = 2,
-            MemoryCost = 64, // 64 MB
+            MemoryCost = 65536, // 64 MB
             Lanes = 1,
             Threads = 1,
             Password = blake3Hashed.ToArray(),
