@@ -1,5 +1,5 @@
 {
-    "rinchcoin": {
+    "rincoin": {
         "name": "Rincoin",
         "canonicalName": "Rincoin",
         "symbol": "RIN",
@@ -23,6 +23,7 @@
                 }
             ]
         },
+        "hasMWEB": true,
         "shareMultiplier": 6000000000,
         "explorerBlockLink": "https://explorer.rin.so/block/$hash$",
         "explorerTxLink": "https://explorer.rin.so/tx/{0}",
@@ -6223,7 +6224,7 @@
         "explorerAccountLink": "https://explorer.callisto.network/address/{0}",
         "ethasher": "ethash"
     },
-    "rincoin": {
+    "yrincoin": {
         "name": "RIN Coin",
         "canonicalName": "RIN Coin",
         "symbol": "YRIN",
