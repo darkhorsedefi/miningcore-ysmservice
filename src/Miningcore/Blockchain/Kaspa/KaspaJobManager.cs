@@ -245,7 +245,7 @@ public class KaspaJobManager : JobManagerBase<KaspaJob>
                 {
                     string coinbaseBlockHash = KaspaConstants.CoinbaseBlockHash;
                     byte[] hashBytes = Encoding.UTF8.GetBytes(coinbaseBlockHash.PadRight(32, '\0')).Take(32).ToArray();
-                    customBlockHeaderHasher = new Blake3(hashBytes);
+                    customBlockHeaderHasher = new Blake3IHash(hashBytes);
                 }
 
                 if(customCoinbaseHasher is not Blake3IHash)
@@ -312,7 +312,7 @@ public class KaspaJobManager : JobManagerBase<KaspaJob>
                     {
                         string coinbaseBlockHash = KaspaConstants.CoinbaseBlockHash;
                         byte[] hashBytes = Encoding.UTF8.GetBytes(coinbaseBlockHash.PadRight(32, '\0')).Take(32).ToArray();
-                        customBlockHeaderHasher = new Blake3(hashBytes);
+                        customBlockHeaderHasher = new Blake3IHash(hashBytes);
                     }
 
                     if(customCoinbaseHasher is not Blake3IHash)
