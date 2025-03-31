@@ -26,7 +26,7 @@ public unsafe class RinHash : IHashAlgorithm
         Contract.Requires<ArgumentException>(result.Length >= 32);
 
         // 1. BLAKE3
-        var hash = Blake3.Hasher.Hash(header);
+        var hash = Blake3.Hasher.Hash(data);
         var blake3 = hash.AsSpanUnsafe().ToArray();
 
         // 2. Argon2d
@@ -43,11 +43,10 @@ public unsafe class RinHash : IHashAlgorithm
             HashLength = 32
         };
 
-        byte[] argon2Output;
         var argon2 = new Argon2(config);
-        var result = argon2.Hash();
+        var arresult = argon2.Hash();
 
-        var sha3 = Sha3.Sha3256().ComputeHash(result.Buffer);
+        var sha3 = Sha3.Sha3256().ComputeHash(arresult.Buffer);
 
         sha3.CopyTo(result);
     }

@@ -249,10 +249,10 @@ public class KaspaJobManager : JobManagerBase<KaspaJob>
                 }
 
                 if(customCoinbaseHasher is not Blake3)
-                        customCoinbaseHasher = new Blake3();
+                        customCoinbaseHasher = new Blake3IHash;
 
                 if(customShareHasher is not Blake3)
-                    customShareHasher = new Blake3();
+                    customShareHasher = new Blake3IHash;
 
                 return new PyrinJob(customBlockHeaderHasher, customCoinbaseHasher, customShareHasher);
             case "KLS":
@@ -262,7 +262,7 @@ public class KaspaJobManager : JobManagerBase<KaspaJob>
                     customBlockHeaderHasher = new Blake2b(Encoding.UTF8.GetBytes(KaspaConstants.CoinbaseBlockHash));
 
                 if(customCoinbaseHasher is not Blake3)
-                    customCoinbaseHasher = new Blake3();
+                    customCoinbaseHasher = new Blake3IHash;
 
                 if((karlsenNetwork == "testnet" && blockHeight >= KarlsencoinConstants.FishHashPlusForkHeightTestnet) || (karlsenNetwork == "mainnet" && blockHeight >= KarlsencoinConstants.FishHashPlusForkHeightMainnet))
                 {
@@ -297,7 +297,7 @@ public class KaspaJobManager : JobManagerBase<KaspaJob>
                     customBlockHeaderHasher = new Blake2b(Encoding.UTF8.GetBytes(KaspaConstants.CoinbaseBlockHash));
 
                 if(customCoinbaseHasher is not Blake3)
-                    customCoinbaseHasher = new Blake3();
+                    customCoinbaseHasher = new Blake3IHash;
 
                 if(customShareHasher is not CShake256)
                     customShareHasher = new CShake256(null, Encoding.UTF8.GetBytes(KaspaConstants.CoinbaseHeavyHash));
@@ -316,10 +316,10 @@ public class KaspaJobManager : JobManagerBase<KaspaJob>
                     }
 
                     if(customCoinbaseHasher is not Blake3)
-                        customCoinbaseHasher = new Blake3();
+                        customCoinbaseHasher = new Blake3IHash;
 
                     if(customShareHasher is not Blake3)
-                        customShareHasher = new Blake3();
+                        customShareHasher = new Blake3IHash;
                 }
                 else
                 {
