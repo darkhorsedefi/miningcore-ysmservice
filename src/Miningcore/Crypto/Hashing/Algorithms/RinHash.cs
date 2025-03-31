@@ -4,6 +4,7 @@ using Isopoh.Cryptography.Argon2;
 using Miningcore.Contracts;
 using SHA3.Net;
 using System.Text;
+using Blake3;
 
 namespace Miningcore.Crypto.Hashing.Algorithms;
 
@@ -25,9 +26,8 @@ public unsafe class RinHash : IHashAlgorithm
         Contract.Requires<ArgumentException>(result.Length >= 32);
 
         // 1. BLAKE3
-        var blake3hasher = new Blake3();
-        Span<byte> blake3Hashed = stackalloc byte[32];
-        blake3hasher.Digest(data, blake3Hashed, extra);
+        var hash = Blake3.Hasher.Hash(header);
+        var blake3 = hash.AsSpanUnsafe().ToArray();
 
         // 2. Argon2d
         var config = new Argon2Config
@@ -38,22 +38,17 @@ public unsafe class RinHash : IHashAlgorithm
             MemoryCost = 65536, // 64 MB
             Lanes = 1,
             Threads = 1,
-            Password = blake3Hashed.ToArray(),
+            Password = blake3,
             Salt = Salt,
             HashLength = 32
         };
 
         byte[] argon2Output;
-        using (var argon2 = new Argon2(config))
-        {
-            var argon2Raw = argon2.Hash();
-            argon2Output = new byte[argon2Raw.Buffer.Length];
-            Buffer.BlockCopy(argon2Raw.Buffer, 0, argon2Output, 0, argon2Raw.Buffer.Length);
-        }
+        var argon2 = new Argon2(config);
+        var result = argon2.Hash();
 
-        // 3. SHA3-256
-        var sha3Hashed = Sha3.Sha3256().ComputeHash(argon2Output);
+        var sha3 = Sha3.Sha3256().ComputeHash(result.Buffer);
 
-        sha3Hashed.CopyTo(result);
+        sha3.CopyTo(result);
     }
 }
