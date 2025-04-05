@@ -48,6 +48,6 @@ public unsafe class RinHash : IHashAlgorithm
 
         var sha3 = Sha3.Sha3256().ComputeHash(arresult.Buffer);
 
-        sha3.Reverse().ToArray().CopyTo(result);
+        sha3.ToArray().CopyTo(result);
     }
 }
