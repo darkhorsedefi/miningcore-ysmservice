@@ -361,7 +361,10 @@ public class BitcoinJob
             headerValue = new uint256(headerHash);
 
             // calc share-diff
-            var shareDiff = (double) new BigRational(BitcoinConstants.Diff1, headerHash.ToBigInteger()) * shareMultiplier;
+            var diff1 = coin.Diff1Target != null
+            ? new BigInteger(coin.Diff1Target.HexToByteArray(true))
+            : BitcoinConstants.Diff1; // 未指定時はBitcoin標準
+            var shareDiff = (double) new BigRational(diff1, headerHash.ToBigInteger()) * shareMultiplier;
             var stratumDifficulty = context.Difficulty;
             var ratio = shareDiff / stratumDifficulty * shareMultiplier;
 
