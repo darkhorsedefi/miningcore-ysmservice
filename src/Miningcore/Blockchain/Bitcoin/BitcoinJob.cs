@@ -17,6 +17,7 @@ using Newtonsoft.Json.Linq;
 using Contract = Miningcore.Contracts.Contract;
 using Transaction = NBitcoin.Transaction;
 using Microsoft.AspNetCore.Mvc;
+using System.Numerics;
 
 namespace Miningcore.Blockchain.Bitcoin;
 
@@ -362,7 +363,7 @@ public class BitcoinJob
 
             // calc share-diff
             var diff1 = coin.Diff1 != null
-            ? new BigInteger(coin.Diff1.HexToByteArray(true))
+            ? BigInteger.Parse(coin.Diff1)
             : BitcoinConstants.Diff1; // 未指定時はBitcoin標準
             var shareDiff = (double) new BigRational(diff1, headerHash.ToBigInteger()) * shareMultiplier;
             var stratumDifficulty = context.Difficulty;
