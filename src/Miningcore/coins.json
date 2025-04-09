@@ -24,7 +24,7 @@
             ]
         },
         "hasMWEB": true,
-        "shareMultiplier": 6000000000,
+        "diff1": "0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
         "explorerBlockLink": "https://explorer.rin.so/block/$hash$",
         "explorerTxLink": "https://explorer.rin.so/tx/{0}",
         "explorerAccountLink": "https://explorer.rin.so/address/{0}"
@@ -509,7 +509,8 @@
                 }
             ]
         },
-        "shareMultiplier": 6000000000,
+        "shareMultiplier": 1,
+        "diff1": "00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
         "explorerBlockLink": "",
         "explorerTxLink": "",
         "explorerAccountLink": ""
