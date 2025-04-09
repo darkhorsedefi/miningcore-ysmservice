@@ -367,7 +367,7 @@ public class BitcoinJob
             : BitcoinConstants.Diff1; // 未指定時はBitcoin標準
             var shareDiff = (double) new BigRational(diff1, headerHash.ToBigInteger()) * shareMultiplier;
             var stratumDifficulty = context.Difficulty;
-            var ratio = shareDiff / stratumDifficulty * shareMultiplier;
+            var ratio = shareDiff / stratumDifficulty;
 
             // check if the share meets the much harder block difficulty (block candidate)
             var isBlockCandidate = headerValue <= blockTargetValue;
