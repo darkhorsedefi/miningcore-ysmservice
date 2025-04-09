@@ -363,7 +363,7 @@ public class BitcoinJob
 
             // calc share-diff
             var diff1 = coin.Diff1 != null
-            ? BigInteger.Parse(coin.Diff1)
+            ? BigInteger.Parse(coin.Diff1, NumberStyles.HexNumber)
             : BitcoinConstants.Diff1; // 未指定時はBitcoin標準
             var shareDiff = (double) new BigRational(diff1, headerHash.ToBigInteger()) * shareMultiplier;
             var stratumDifficulty = context.Difficulty;
