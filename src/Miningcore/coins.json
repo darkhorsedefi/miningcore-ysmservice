@@ -24,7 +24,7 @@
             ]
         },
         "hasMWEB": true,
-        "shareMultiplier": 16,
+        "shareMultiplier": 7,
         "diff1": "0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
         "explorerBlockLink": "https://explorer.rin.so/block/$hash$",
         "explorerTxLink": "https://explorer.rin.so/tx/{0}",
