@@ -556,6 +556,8 @@ public abstract class BitcoinJobManagerBase<TJob> : JobManagerBase<TJob>
                 return BitcoinUtils.LitecoinAddressToDestination(poolConfig.Address, network);
             case BitcoinAddressType.Decred:
                 return BitcoinUtils.DecredAddressToDestination(poolConfig.Address, network);
+            case BitcoinAddressType.Rincoin:
+                return BitcoinUtils.RincoinAddressToDestination(poolConfig.Address, network);
             default:
                 return BitcoinUtils.AddressToDestination(poolConfig.Address, network);
         }

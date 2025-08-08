@@ -19,12 +19,17 @@ public enum BitcoinAddressType
     /// Bitcoin Cash
     /// </summary>
     BCash,
-    
+
     /// <summary>
     /// Litecoin
     /// </summary>
     Litecoin,
     Decred,
+
+    /// <summary>
+    /// Rincoin
+    /// </summary>
+    Rincoin
 }
 
 public enum BitcoinTransactionCategory

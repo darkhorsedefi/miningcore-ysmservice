@@ -36,6 +36,32 @@ public static class BitcoinUtils
         return result;
     }
 
+    public static IDestination RincoinAddressToDestination(string address, Network expectedNetwork)
+    {
+        if(address.StartsWith("rin1", StringComparison.OrdinalIgnoreCase))
+        {
+            // Rincoin Bech32 address
+            var encoder = expectedNetwork.GetBech32Encoder(Bech32Type.WITNESS_PUBKEY_ADDRESS, true);
+            var decoded = encoder.Decode(address, out var witVersion);
+            var result = new WitKeyId(decoded);
+
+            Debug.Assert(result.GetAddress(expectedNetwork).ToString() == address);
+            return result;
+        }
+        else if(address.StartsWith("R", StringComparison.OrdinalIgnoreCase))
+        {
+            // Rincoin legacy address
+            var legacy = expectedNetwork.GetVersionBytes(Base58Type.PUBKEY_ADDRESS, true);
+            var decoded = Encoders.Base58.DecodeData(address);
+            decoded = decoded.Skip(legacy.Length).ToArray();
+            var result = new KeyId(decoded);
+
+            Debug.Assert(result.GetAddress(expectedNetwork).ToString() == address);
+            return result;
+        }
+        throw new FormatException("Invalid Rincoin address format");
+    }
+
     public static IDestination BCashAddressToDestination(string address, Network expectedNetwork)
     {
         var bcash = NBitcoin.Altcoins.BCash.Instance.GetNetwork(expectedNetwork.ChainName);
