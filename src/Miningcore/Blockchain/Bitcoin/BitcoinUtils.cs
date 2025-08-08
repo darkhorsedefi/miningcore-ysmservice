@@ -48,7 +48,7 @@ public static class BitcoinUtils
             Debug.Assert(result.GetAddress(expectedNetwork).ToString() == address);
             return result;
         }
-        else if(address.StartsWith("R", StringComparison.OrdinalIgnoreCase))
+        else
         {
             // Rincoin legacy address
             var legacy = expectedNetwork.GetVersionBytes(Base58Type.PUBKEY_ADDRESS, true);
@@ -59,7 +59,6 @@ public static class BitcoinUtils
             Debug.Assert(result.GetAddress(expectedNetwork).ToString() == address);
             return result;
         }
-        throw new FormatException("Invalid Rincoin address format");
     }
 
     public static IDestination BCashAddressToDestination(string address, Network expectedNetwork)
